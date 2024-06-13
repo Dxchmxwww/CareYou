@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:careyou/pages/pill_box.dart';
 import 'package:careyou/pages/doctor_app.dart';
 import 'package:careyou/pages/doctor_app.dart';
+import 'pages/app_manage.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: PillBox(),
+      home: AppManage(),
     );
   }
 }

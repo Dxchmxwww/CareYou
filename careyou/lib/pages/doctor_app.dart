@@ -69,7 +69,7 @@ class DocApp extends StatelessWidget {
                   padding: EdgeInsets.only(top: 30, left: 20, right: 20),
                   child: Column(
                     children: [
-                      AppCard(),
+                      // AppCard(),
                     ],
                   ),
                 ),
@@ -88,4 +88,3 @@ class DocApp extends StatelessWidget {
     );
   }
 }
-
