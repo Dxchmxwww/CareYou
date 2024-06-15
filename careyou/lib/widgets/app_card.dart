@@ -17,15 +17,15 @@ class _AppCardState extends State<AppCard> {
     builder: (BuildContext context) {
       return Center(
         child: AlertDialog(
-          backgroundColor: Color(0xFFFFFFFF),
-          surfaceTintColor: Color(0xFFFFFFFF), // Set background color to white
+          backgroundColor: const Color(0xFFFFFFFF),
+          surfaceTintColor: const Color(0xFFFFFFFF), // Set background color to white
           title: Text(
             "Delete Appointment",
             textAlign: TextAlign.center,  // Center the title text
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w500,
               fontSize: 20,
-              color: Color(0xFF000000),
+              color: const Color(0xFF000000),
             ),
           ),
           content: Column(
@@ -37,7 +37,7 @@ class _AppCardState extends State<AppCard> {
                 textAlign: TextAlign.center,  // Center the text content
                 style: GoogleFonts.poppins(
                   fontSize: 11.12,
-                  color: Color(0xFF727070),
+                  color: const Color(0xFF727070),
                 ),
               ),
             ],
@@ -49,7 +49,7 @@ class _AppCardState extends State<AppCard> {
                 children: <Widget>[
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFDADADA),
+                      backgroundColor: const Color(0xFFDADADA),
                     ),
                     child: Text(
                       "Cancel",
@@ -66,7 +66,7 @@ class _AppCardState extends State<AppCard> {
                   const SizedBox(width: 8),  // Add spacing between buttons
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFFF0000),
+                      backgroundColor: const Color(0xFFFF0000),
                     ),
                     child: Text(
                       "Yes, Delete",
@@ -134,7 +134,7 @@ class _AppCardState extends State<AppCard> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.access_time, color: const Color(0xFF00916E)),
+                        const Icon(Icons.access_time, color: Color(0xFF00916E)),
                         const SizedBox(width: 4),
                         Text(
                           '24/06/2024   08:00 - 12:00',
@@ -144,7 +144,7 @@ class _AppCardState extends State<AppCard> {
                           ),
                         ),
                         const SizedBox(width: 20),
-                        Icon(Icons.place_outlined, color: const Color(0xFF00916E)),
+                        const Icon(Icons.place_outlined, color: Color(0xFF00916E)),
                         const SizedBox(width: 4),
                         Text(
                           'BPK 1 Hospital',

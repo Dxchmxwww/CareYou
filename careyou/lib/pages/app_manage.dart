@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:careyou/widgets/navbar.dart';
 import 'package:careyou/widgets/app_card.dart';
+import 'package:careyou/pages/add_app.dart'; // Import AddApp screen
 
 class AppManage extends StatefulWidget {
   const AppManage({Key? key}) : super(key: key);
@@ -11,7 +12,7 @@ class AppManage extends StatefulWidget {
 }
 
 class _AppManageState extends State<AppManage> {
-  bool showEditDeleteButtons = false;
+  bool showEditButton = true; // Initially show "Edit" button
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +62,7 @@ class _AppManageState extends State<AppManage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
+                    padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -75,45 +75,78 @@ class _AppManageState extends State<AppManage> {
                           ),
                           textAlign: TextAlign.left,
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              // Toggle the state to show/hide edit and delete buttons
-                              showEditDeleteButtons = !showEditDeleteButtons;
-                            });
-                          },
-                          child: Container(
-                            width: 71,
-                            height: 21,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF54900),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                showEditDeleteButtons ? '+ Add' : 'Edit',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
+                        Row(
+                          children: [
+                            if (showEditButton)
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    // Toggle the state to show/hide edit button
+                                    showEditButton = false;
+                                  });
+                                },
+                                child: Container(
+                                  width: 60,
+                                  height: 21,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF54900),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Edit',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
+                            if (!showEditButton)
+                              GestureDetector(
+                                onTap: () {
+                                  // Navigate to AddApp screen
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const AddApp()),
+                                  );
+                                },
+                                child: Container(
+                                  width: 60,
+                                  height: 21,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF54900),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '+Add',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                   Expanded(
                     child: Padding(
-                      padding:
-                          const EdgeInsets.only(top: 30, left: 20, right: 20),
+                      padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
                       child: Column(
                         children: [
                           AppCard(
-                            showButtons: showEditDeleteButtons,
+                            showButtons: !showEditButton,
                           ),
                           const SizedBox(height: 35),
+                          // Additional widgets can be added here
                         ],
                       ),
                     ),
@@ -124,7 +157,7 @@ class _AppManageState extends State<AppManage> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: NavBar(),
+                child: NavBar(), // Renders the navigation bar at the bottom
               ),
             ],
           );
