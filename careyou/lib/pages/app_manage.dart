@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:careyou/widgets/navbar.dart';
 import 'package:careyou/widgets/app_card.dart';
 import 'package:careyou/pages/add_app.dart'; // Import AddApp screen
@@ -29,7 +28,8 @@ class _AppManageState extends State<AppManage> {
                 Center(
                   child: Text(
                     'Appointment Management',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
                       fontSize: 20,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -62,13 +62,15 @@ class _AppManageState extends State<AppManage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
+                    padding: const EdgeInsets.only(
+                        left: 20.0, right: 20.0, top: 30.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Today is Wed 24, 2024',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFF00916E),
@@ -95,7 +97,8 @@ class _AppManageState extends State<AppManage> {
                                   child: Center(
                                     child: Text(
                                       'Edit',
-                                      style: GoogleFonts.poppins(
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
                                         color: Colors.white,
                                         fontWeight: FontWeight.w500,
                                         fontSize: 12,
@@ -110,7 +113,8 @@ class _AppManageState extends State<AppManage> {
                                   // Navigate to AddApp screen
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const AddApp()),
+                                    MaterialPageRoute(
+                                        builder: (context) => const AddApp()),
                                   );
                                 },
                                 child: Container(
@@ -123,7 +127,8 @@ class _AppManageState extends State<AppManage> {
                                   child: Center(
                                     child: Text(
                                       '+Add',
-                                      style: GoogleFonts.poppins(
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
                                         color: Colors.white,
                                         fontWeight: FontWeight.w500,
                                         fontSize: 12,
@@ -139,7 +144,8 @@ class _AppManageState extends State<AppManage> {
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+                      padding:
+                          const EdgeInsets.only(top: 30, left: 20, right: 20),
                       child: Column(
                         children: [
                           AppCard(
