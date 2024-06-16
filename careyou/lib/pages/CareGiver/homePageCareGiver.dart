@@ -4,6 +4,9 @@ import 'package:careyou/components/logOutButton.dart';
 import 'package:careyou/components/pillsCardCareGiver.dart';
 import 'package:flutter/material.dart';
 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 // ignore: camel_case_types
 class HomePageCareGiver extends StatefulWidget {
   const HomePageCareGiver({super.key});
@@ -13,6 +16,52 @@ class HomePageCareGiver extends StatefulWidget {
 }
 
 class _HomePageCareGiverState extends State<HomePageCareGiver> {
+  String username = '';
+
+  String jwtToken = 'your_jwt_token_here'; // Replace with actual JWT token
+
+  Future<void> fetchUsername() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8000/users/Showusername'),
+        headers: {
+          'Authorization': 'Bearer $jwtToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseData = json.decode(response.body);
+        setState(() {
+          username = responseData['username'];
+        });
+      } else if (response.statusCode == 401) {
+        // Handle unauthorized error
+        setState(() {
+          username = 'Guest'; // Set default username to 'Guest'
+        });
+        print('Unauthorized: ${response.statusCode}');
+      } else {
+        // Handle other HTTP errors
+        print('Failed to load username: ${response.statusCode}');
+        setState(() {
+          username = 'Guest'; // Set default username to 'Guest'
+        });
+      }
+    } catch (e) {
+      // Handle network or decoding errors
+      setState(() {
+        username = 'Guest'; // Set default username to 'Guest'
+      });
+      print('Error fetching username: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUsername();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +89,7 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
         ),
 
         // Text and Card List
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(top: 80.0, left: 50.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +98,7 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
               Padding(
                 padding: EdgeInsets.only(),
                 child: Text(
-                  "Hello, Bella",
+                  'Hello, ${username.isNotEmpty ? username : 'Guest'}',
                   // "Hi, ${user.displayName ?? 'Guest'}",
                   style: TextStyle(
                     fontFamily: 'Poppins',
@@ -140,14 +189,14 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
                 ),
 
                 //Pills Card
-                Positioned(
-                  left: 20.0,
-                  right: 20.0,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 0.5, left: 20.0, right: 20.0),
-                    child: PillsCardCareGiver(),
-                  ),
-                ),
+                // Positioned(
+                //   left: 20.0,
+                //   right: 20.0,
+                //   child: Padding(
+                //     padding: EdgeInsets.only(top: 0.5, left: 20.0, right: 20.0),
+                //     child: PillsCardCareGiver(),
+                //   ),
+                // ),
               ],
             )
           ],
