@@ -144,25 +144,53 @@ router.post('/register', async (req, res) => {
 //-----------------------------------Login------------------------------------------
 
 //http://localhost:8000/auth/login
-
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+async function getUserByEmail(email) {
     try {
-        const token = await authenticateUser(email, password);
-
-        // Set cookie with JWT token
-        res.cookie('authToken', token, {
-            httpOnly: true,
-            maxAge: 3600000, // 1 hour in milliseconds
-            secure: process.env.NODE_ENV === 'production' // Set to true in production
-        });
-
-        res.status(200).json({ message: 'Login successful', token });
+     const pool = await sql.connect(config.database);
+     const userCheck = await pool
+      .request()
+      .input("email", sql.VarChar, email)
+      .query("SELECT * FROM CareYou.[user] WHERE email = @email");
+   
+     if (userCheck.recordset.length === 0) {
+      return null; // Return null if user not found
+     }
+   
+     return userCheck.recordset[0]; // Return the first user found
     } catch (error) {
-        res.status(401).json({ error: error.message });
+     throw new Error(`Error retrieving user by email: ${error.message}`);
     }
-});
-
+   }
+   
+router.post("/login", async (req, res) => {
+    const { email, password, selectedRole } = req.body;
+    console.log(`Login attempt: email=${email}, role=${selectedRole}`);
+   try {
+    const { token, role } = await authenticateUser(email, password); // Assuming authenticateUser returns both token and role
+  
+    // Fetch user details from database
+    const user = await getUserByEmail(email);
+      console.log(`User data from database: ${JSON.stringify(user)}`);
+    // Check if user's role matches selectedRole
+    if (!user || user.role !== selectedRole) {
+     return res.status(401).json({ error: "Role mismatch" });
+    }
+  
+    // Set cookie with JWT token
+    res.cookie("authToken", token, {
+     httpOnly: true,
+     maxAge: 3600000, // 1 hour in milliseconds
+     secure: process.env.NODE_ENV === "production", // Set to true in production
+    });
+  
+    // Respond with token, role, and message
+    res.status(200).json({ message: "Login successful", token, role });
+   } catch (error) {
+    res.status(401).json({
+     error: "Please check your email and password and try again",
+    });
+   }
+  });
 //-----------------------------------Logout------------------------------------
   
   const blacklist = new Set();
