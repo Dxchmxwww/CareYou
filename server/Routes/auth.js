@@ -68,7 +68,7 @@ async function authenticateUser(email, password) {
 
         const token = generateToken(user.id);
 
-        return token;
+        return {token};
     } catch (error) {
         res.status(400).send(error.message);
     }
@@ -166,15 +166,17 @@ router.post("/login", async (req, res) => {
     const { email, password, selectedRole } = req.body;
     console.log(`Login attempt: email=${email}, role=${selectedRole}`);
    try {
-    const { token, role } = await authenticateUser(email, password); // Assuming authenticateUser returns both token and role
-  
-    // Fetch user details from database
+    const { token } = await authenticateUser(email, password); 
+    console.log(token)
+    
     const user = await getUserByEmail(email);
       console.log(`User data from database: ${JSON.stringify(user)}`);
-    // Check if user's role matches selectedRole
+    // // Check if user's role matches selectedRole
+    console.log(user);
+    const role = user.role;
     if (!user || user.role !== selectedRole) {
      return res.status(401).json({ error: "Role mismatch" });
-    }
+    } 
   
     // Set cookie with JWT token
     res.cookie("authToken", token, {
@@ -184,8 +186,9 @@ router.post("/login", async (req, res) => {
     });
   
     // Respond with token, role, and message
-    res.status(200).json({ message: "Login successful", token, role });
+    res.status(200).json({ message: "Login successful", token, role});
    } catch (error) {
+    console.log(error)
     res.status(401).json({
      error: "Please check your email and password and try again",
     });

@@ -132,7 +132,7 @@ router.get('/Elderly', verifyToken, async (req, res) => {
 });
 
 router.put('/EditPassword', verifyToken, async (req, res) => {
-    const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword} = req.body;
 
     if (!oldPassword || !newPassword) {
         return res.status(400).json({ error: 'Both old password and new password are required' });
@@ -180,6 +180,44 @@ router.put('/EditPassword', verifyToken, async (req, res) => {
             .query(updatePasswordQuery);
 
         res.status(200).json({ message: 'Password updated successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.put('/EditUsername', verifyToken, async (req, res) => {
+    const { newUsername } = req.body;
+
+
+    try {
+        const pool = await sql.connect(config);
+
+        // Fetch user's current hashed password from the database
+        const fetchUsernameQuery = `
+            SELECT username
+            FROM CareYou.[user]
+            WHERE id = @id
+        `;
+        const fetchUsernameResult = await pool.request()
+            .input('id', sql.Int, req.user.id)
+            .query(fetchUsernameQuery);
+
+        if (fetchUsernameResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        // Update the password in the database
+        const updateUsernameQuery = `
+            UPDATE CareYou.[user]
+            SET username = @NewUsername
+            WHERE id = @id
+        `;
+        await pool.request()
+            .input('NewUsername', sql.VarChar, newUsername)
+            .input('id', sql.Int, req.user.id)
+            .query(updateUsernameQuery);
+
+        res.status(200).json({ message: 'Username updated successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal Server Error' });
