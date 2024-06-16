@@ -1,3 +1,5 @@
+import 'package:careyou/pages/sign_up_page.dart';
+import 'package:careyou/pages/log_in_page.dart';
 import 'package:flutter/material.dart';
 
 class user_onboard_page extends StatefulWidget {
@@ -8,6 +10,8 @@ class user_onboard_page extends StatefulWidget {
 }
 
 class _HomepageState extends State<user_onboard_page> {
+  String selectedRole = ''; // Track the selected role
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -16,11 +20,10 @@ class _HomepageState extends State<user_onboard_page> {
       home: Scaffold(
         resizeToAvoidBottomInset: false,
         body: Container(
-          // Wrap SingleChildScrollView with Container
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            color: Color(0xFF00916E), // Changed to solid color
+            color: Color(0xFF00916E),
           ),
           child: SingleChildScrollView(
             child: Stack(
@@ -102,24 +105,32 @@ class _HomepageState extends State<user_onboard_page> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(
-                              top: 30.0), // Adjusted top padding
+                          padding: const EdgeInsets.only(top: 30.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(10.0),
                                 child: SizedBox(
-                                  width: 120, // Set width for Caregiver button
+                                  width: 120,
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      Navigator.pushNamed(context, '/login');
+                                      setState(() {
+                                        selectedRole = 'Caregiver';
+                                      });
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => log_in_page(
+                                            selectedRole: 'Caregiver',
+                                          ),
+                                        ),
+                                      );
                                     },
                                     style: ButtonStyle(
                                       backgroundColor:
                                           MaterialStateProperty.all<Color>(
-                                        const Color(
-                                            0xFF99D19C), // Color for Caregiver button
+                                        const Color(0xFF99D19C),
                                       ),
                                     ),
                                     child: Text(
@@ -133,16 +144,25 @@ class _HomepageState extends State<user_onboard_page> {
                               Padding(
                                 padding: const EdgeInsets.all(10.0),
                                 child: SizedBox(
-                                  width: 120, // Set width for Elder button
+                                  width: 120,
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      Navigator.pushNamed(context, '/login');
+                                      setState(() {
+                                        selectedRole = 'Elderly';
+                                      });
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => log_in_page(
+                                            selectedRole: 'Elderly',
+                                          ),
+                                        ),
+                                      );
                                     },
                                     style: ButtonStyle(
                                       backgroundColor:
                                           MaterialStateProperty.all<Color>(
-                                        const Color(
-                                            0xFF99D19C), // Color for Elder button
+                                        const Color(0xFF99D19C),
                                       ),
                                     ),
                                     child: Text(

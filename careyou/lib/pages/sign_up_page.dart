@@ -1,38 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class sign_up_page extends StatefulWidget {
-  const sign_up_page();
+class SignUpPage extends StatefulWidget {
+  final String selectedRole; // Add role parameter
+
+  const SignUpPage({required this.selectedRole}); // Require role parameter
 
   @override
-  State<sign_up_page> createState() => _SignUpPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _SignUpPageState extends State<sign_up_page> {
+class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
+  final _elderEmailController = TextEditingController();
+  final _relationController = TextEditingController();
   String _email = '';
   String _password = '';
   String _username = '';
   String _elderEmail = '';
   String _relation = '';
 
+  Future<void> _registerUser() async {
+    if (_formKey.currentState?.validate() == true) {
+      _formKey.currentState?.save();
+
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/auth/register'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': _username,
+          'password': _password,
+          'email': _email,
+          'role': widget.selectedRole,
+          'yourelderly_email': _elderEmail,
+          'yourelderly_relation': _relation,
+        }),
+      );
+
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 201) {
+        print('User registered successfully');
+        Navigator.pushNamed(context, '/login');
+      } else if (response.statusCode == 409) {
+        _showErrorDialog('The elderly user already has a caregiver assigned.');
+      } else if (response.statusCode == 404) {
+        _showErrorDialog('Elderly user not found with provided email.');
+      } else {
+        // Handle other status codes if needed
+        _showErrorDialog('Error: ${response.statusCode}');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return MaterialApp(
-      title: 'UserBoarding',
+      title: 'Sign up',
       home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Color(0xFF00916E),
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-        ),
         resizeToAvoidBottomInset: false,
         body: Container(
           width: double.infinity,
@@ -48,7 +80,7 @@ class _SignUpPageState extends State<sign_up_page> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 0.0, left: 20.0),
+                        padding: const EdgeInsets.only(top: 100.0, left: 20.0),
                         child: Image.asset(
                           'assets/images/plain_design.png',
                           width: 120,
@@ -80,10 +112,10 @@ class _SignUpPageState extends State<sign_up_page> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 160.0),
+                        padding: const EdgeInsets.only(top: 180.0),
                         child: Container(
                           width: double.infinity,
-                          height: screenHeight - 470.0,
+                          height: screenHeight - 430.0,
                           decoration: const BoxDecoration(
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(30),
@@ -97,24 +129,27 @@ class _SignUpPageState extends State<sign_up_page> {
                   ),
                 ),
                 Center(
-                    child: Column(children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 240),
-                    child: Container(
-                      width: 280,
-                      height: 290,
-                      child: Image.asset(
-                        'assets/images/BoardBrad.png',
-                        fit: BoxFit.cover,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 340),
+                        child: Container(
+                          width: 280,
+                          height: 290,
+                          child: Image.asset(
+                            'assets/images/BoardBrad.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ])),
+                ),
                 Center(
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 470),
+                        padding: const EdgeInsets.only(top: 570),
                         child: Container(
                           width: MediaQuery.of(context).size.width * 0.8,
                           child: Form(
@@ -281,9 +316,12 @@ class _SignUpPageState extends State<sign_up_page> {
   }
 
   void _showPinDialog() {
-    final _elderEmailController = TextEditingController();
-    final _relationController = TextEditingController();
-    final _dialogFormKey = GlobalKey<FormState>();
+    if (widget.selectedRole == 'Elderly') {
+      _registerUser();
+      return; // Exit early without showing the dialog
+    }
+    // Create a new GlobalKey<FormState> for the dialog form
+    final GlobalKey<FormState> _dialogFormKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -291,15 +329,16 @@ class _SignUpPageState extends State<sign_up_page> {
         return AlertDialog(
           contentPadding: EdgeInsets.all(40),
           content: Form(
-            key: _dialogFormKey,
+            key: _dialogFormKey, // Use the new GlobalKey here
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5.0),
                   child: SvgPicture.asset(
                     'assets/images/partner.svg',
-                    color: Color(0xFF00916E),
+                    color: Color(
+                        0xFF00916E), // Use the asset path directly from pubspec.yaml
                     width: 80,
                     height: 80,
                   ),
@@ -311,7 +350,7 @@ class _SignUpPageState extends State<sign_up_page> {
                     fontSize: 24,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _elderEmailController,
                   decoration: InputDecoration(
@@ -322,14 +361,10 @@ class _SignUpPageState extends State<sign_up_page> {
                       fontFamily: 'Poppins',
                     ),
                     focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color(0xFF00916E),
-                      ),
+                      borderSide: BorderSide(color: Color(0xFF00916E)),
                     ),
                     enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color(0xFF00916E),
-                      ),
+                      borderSide: BorderSide(color: Color(0xFF00916E)),
                     ),
                   ),
                   validator: (value) {
@@ -339,62 +374,64 @@ class _SignUpPageState extends State<sign_up_page> {
                       return 'Please enter a valid email address';
                     }
                   },
+                  onChanged: (value) {
+                    setState(() {
+                      _elderEmail = value;
+                    });
+                  },
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: _relationController,
                   decoration: InputDecoration(
-                    labelText: 'Relation*',
+                    labelText: "Relationship*",
                     labelStyle: TextStyle(
                       color: Color(0xFF00916E),
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Poppins',
                     ),
                     focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color(0xFF00916E),
-                      ),
+                      borderSide: BorderSide(color: Color(0xFF00916E)),
                     ),
                     enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color(0xFF00916E),
-                      ),
+                      borderSide: BorderSide(color: Color(0xFF00916E)),
                     ),
                   ),
                   validator: (value) {
                     if (value != null && value.isNotEmpty) {
                       return null;
                     } else {
-                      return 'Please enter relation';
+                      return 'Please enter the relationship';
                     }
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      _relation = value;
+                    });
                   },
                 ),
               ],
             ),
           ),
-          actions: [
+          actions: <Widget>[
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  if (_dialogFormKey.currentState != null &&
-                      _dialogFormKey.currentState!.validate()) {
-                    String elderEmail = _elderEmailController.text;
-                    String relation = _relationController.text;
-                    print('Elder Email: $elderEmail');
-                    print('Relation: $relation');
-                    Navigator.of(context).pop();
-                  }
-                },
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(
-                    const Color(0xFF00916E),
-                  ),
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(const Color(0xFF00916E)),
                   padding: MaterialStateProperty.all<EdgeInsets>(
                     EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                   minimumSize: MaterialStateProperty.all<Size>(Size.zero),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
+                onPressed: () {
+                  if (_dialogFormKey.currentState != null &&
+                      _dialogFormKey.currentState!.validate()) {
+                    _registerUser();
+                    Navigator.pop(context); // Close the dialog
+                  }
+                },
                 child: Text(
                   'Submit',
                   style: TextStyle(
@@ -402,6 +439,37 @@ class _SignUpPageState extends State<sign_up_page> {
                     fontSize: 16,
                     fontFamily: 'Poppins',
                   ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ButtonStyle(
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(const Color(0xFF00916E)),
+              ),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontFamily: 'Poppins',
                 ),
               ),
             ),

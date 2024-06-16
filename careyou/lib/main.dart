@@ -3,6 +3,7 @@ import 'package:careyou/pages/log_in_page.dart';
 import 'package:careyou/pages/sign_up_page.dart';
 import 'package:careyou/pages/elder_profile.dart';
 import 'package:careyou/pages/caregiver_profile.dart';
+import 'package:careyou/pages/test_home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -20,8 +21,9 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const user_onboard_page(),
-        '/login': (context) => const log_in_page(),
-        '/signup': (context) => const sign_up_page(),
+        '/login': (context) => const log_in_page(selectedRole: ''),
+        '/signup': (context) => const SignUpPage(selectedRole: ''),
+        '/home': (context) => const test_home(),
       },
     );
   }
