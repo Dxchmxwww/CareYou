@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:careyou/widgets/navbar.dart';
 import 'package:careyou/widgets/med_card.dart';
 
@@ -22,7 +21,8 @@ class PillBox extends StatelessWidget {
               children: [
                 Text(
                   'Pills Box',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 20,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -41,10 +41,12 @@ class PillBox extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
+                padding:
+                    const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
                 child: Text(
                   'Your pills timetable',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 32,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF00916E),
@@ -56,7 +58,8 @@ class PillBox extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                 child: Text(
                   'Today is Wed 24, 2024',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF00916E),
@@ -80,7 +83,7 @@ class PillBox extends StatelessWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            child: NavBar(), 
+            child: NavBar(),
           ),
         ],
       ),

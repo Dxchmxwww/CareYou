@@ -8,7 +8,7 @@ class NavBar extends StatelessWidget {
     return Column(
       children: [
         Container(
-          height: 120,  
+          height: 120,
         ),
         Container(
           height: 87,
@@ -16,10 +16,10 @@ class NavBar extends StatelessWidget {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black87.withOpacity(0.1), 
-                offset: const Offset(0, -4), 
-                blurRadius: 6, 
-                spreadRadius: 0, 
+                color: Colors.black87.withOpacity(0.1),
+                offset: const Offset(0, -4),
+                blurRadius: 6,
+                spreadRadius: 0,
               ),
             ],
           ),
@@ -41,7 +41,7 @@ class NavBar extends StatelessWidget {
                 iconSize: 35,
               ),
               Transform.translate(
-                offset: const Offset(0, -30), 
+                offset: const Offset(0, -30),
                 child: Container(
                   width: 90,
                   height: 90,
