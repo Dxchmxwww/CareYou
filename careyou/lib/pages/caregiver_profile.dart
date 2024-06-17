@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:careyou/components/logOutButton.dart';
 
 class caregiver_profile_page extends StatefulWidget {
   final String token;
-  
-  const caregiver_profile_page({required this.token});
 
+  const caregiver_profile_page({required this.token});
 
   @override
   State<caregiver_profile_page> createState() => _HomepageState();
@@ -517,7 +517,6 @@ class _HomepageState extends State<caregiver_profile_page> {
   //   );
   // }
 
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -534,6 +533,11 @@ class _HomepageState extends State<caregiver_profile_page> {
           child: SingleChildScrollView(
             child: Stack(
               children: [
+                Positioned(
+                  top: 60,
+                  right: 20,
+                  child: LogoutButton(),
+                ),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -835,7 +839,8 @@ class _HomepageState extends State<caregiver_profile_page> {
                                                         style: TextStyle(
                                                           fontFamily: 'Poppins',
                                                           fontSize: 18,
-                                                          fontWeight: FontWeight.w700,
+                                                          fontWeight:
+                                                              FontWeight.w700,
                                                           color:
                                                               Colors.grey[700],
                                                         ),
@@ -847,9 +852,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                                       Icons.delete,
                                                       color: Colors.red,
                                                     ),
-                                                    onPressed: () {
-                                                      
-                                                    },
+                                                    onPressed: () {},
                                                   ),
                                                 ],
                                               ),
@@ -981,7 +984,6 @@ class _HomepageState extends State<caregiver_profile_page> {
                                   ],
                                 ),
                               ),
-
                             ],
                           ),
                         ),
@@ -1017,4 +1019,3 @@ class ElderModel {
 }
 
 List<ElderModel> elders = [];
-
