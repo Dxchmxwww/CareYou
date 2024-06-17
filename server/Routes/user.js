@@ -13,13 +13,17 @@ router.get('/Showusername', verifyToken, async (req, res) => {
         const pool = await sql.connect(config);
         const UsernameCheck = await pool.request()
             .input('id', sql.Int, id)
-            .query('SELECT username FROM CareYou.[user] WHERE id = @id');
+            .query(`
+                SELECT username FROM CareYou.[Caregiver] WHERE id = @id
+                UNION
+                SELECT username FROM CareYou.[Elderly] WHERE id = @id
+            `);
 
         if (UsernameCheck.recordset.length === 0) {
             return res.status(404).json({ error: 'Username not found' });
         }
 
-        res.json(UsernameCheck.recordset[0]);
+        res.status(200).json(UsernameCheck.recordset[0]);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal Server Error' });

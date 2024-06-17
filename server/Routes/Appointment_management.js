@@ -37,7 +37,7 @@ router.post('/CreateAppointmentReminder',
             // Check if the user is a caregiver
             const roleCheck = await pool.request()
                 .input('id', sql.Int, caregiver_id)
-                .query('SELECT role FROM CareYou.[user] WHERE id = @id');
+                .query('SELECT role FROM CareYou.[Caregiver] WHERE id = @id');
 
             if (roleCheck.recordset.length === 0 || roleCheck.recordset[0].role !== 'Caregiver') {
                 return res.status(403).send('User is not authorized as a caregiver');
@@ -45,7 +45,7 @@ router.post('/CreateAppointmentReminder',
 
             const GetCaregiveremail = await pool.request()
             .input('caregiver_id', sql.Int, caregiver_id)
-            .query('SELECT email FROM CareYou.[user] WHERE id = @caregiver_id AND role = \'Caregiver\'');
+            .query('SELECT email FROM CareYou.[Caregiver] WHERE id = @caregiver_id AND role = \'Caregiver\'');
 
             if (GetCaregiveremail.recordset.length === 0) {
                 return res.status(400).send('Caregiver not found');
@@ -56,7 +56,7 @@ router.post('/CreateAppointmentReminder',
             console.log(Caregiver_email);
             const Getelderly_id = await pool.request()
                 .input('yourcaregiver_email', sql.VarChar, Caregiver_email)
-                .query('SELECT id FROM CareYou.[user] WHERE yourcaregiver_email = @yourcaregiver_email AND role = \'Elderly\'');
+                .query('SELECT id FROM CareYou.[Elderly] WHERE yourcaregiver_email = @yourcaregiver_email AND role = \'Elderly\'');
 
             if (Getelderly_id.recordset.length === 0) {
                 return res.status(400).send('Elderly user not found with provided email');
@@ -96,7 +96,7 @@ router.post('/CreateAppointmentReminder',
 
             const RoleCheck = await pool.request()
                 .input('id', sql.Int,id)
-                .query('SELECT * FROM CareYou.[user] WHERE id = @id AND role = \'Caregiver\'');
+                .query('SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = \'Caregiver\'');
 
             if (RoleCheck.recordset.length > 0) {
                 console.log("This account is Caregiver");
@@ -121,6 +121,7 @@ router.post('/CreateAppointmentReminder',
             }
             res.status(201).send('Appointments reminder already show');
         } catch (err) {
+            console.error(err);
             res.status(500).send(err.message);
         }
     });
@@ -134,7 +135,7 @@ router.post('/CreateAppointmentReminder',
             // Check if the user is a caregiver
             const roleCheck = await pool.request()
                 .input('id', sql.Int, id)
-                .query('SELECT * FROM CareYou.[user] WHERE id = @id AND role = \'Elderly\'');
+                .query('SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = \'Elderly\'');
     
             if (roleCheck.recordset.length === 0) {
                 return res.status(403).send('User is not authorized as a elderly');
@@ -219,7 +220,7 @@ router.post('/CreateAppointmentReminder',
             // Check if the user is a caregiver
             const roleCheck = await pool.request()
                 .input('id', sql.Int, caregiver_id)
-                .query('SELECT role FROM CareYou.[user] WHERE id = @id');
+                .query('SELECT role FROM CareYou.[Caregiver] WHERE id = @id');
 
             if (roleCheck.recordset.length === 0 || roleCheck.recordset[0].role !== 'Caregiver') {
                 return res.status(403).send('User is not authorized as a caregiver');
@@ -312,7 +313,7 @@ router.post('/CreateAppointmentReminder',
 
             const RoleCheck = await pool.request()
                 .input('id', sql.Int,id)
-                .query('SELECT * FROM CareYou.[user] WHERE id = @id AND role = \'Caregiver\'');
+                .query('SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = \'Caregiver\'');
 
             if (RoleCheck.recordset.length === 0) {
                 return res.status(403).send('User is not authorized as a Caregiver');
@@ -327,7 +328,7 @@ router.post('/CreateAppointmentReminder',
                 WHERE Appointment_id = @Appointment_id
                   AND caregiver_id = (
                       SELECT id
-                      FROM CareYou.[user]
+                      FROM CareYou.[Caregiver]
                       WHERE id = @id
                   )
             `;

@@ -13,7 +13,7 @@ router.get('/Caregiver', verifyToken, async (req, res) => {
         // Check if the user is a caregiver
         const roleCheck = await pool.request()
             .input('id', sql.Int, caregiverId)
-            .query('SELECT * FROM CareYou.[user] WHERE id = @id AND role = \'Caregiver\'');
+            .query('SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = \'Caregiver\'');
 
             
         if (roleCheck.recordset.length === 0) {
@@ -24,7 +24,7 @@ router.get('/Caregiver', verifyToken, async (req, res) => {
         // Fetch caregiver information (username, email, yourelderly_email)
         const caregiverInfoQuery = `
             SELECT username, email, password, yourelderly_email ,yourelderly_relation
-            FROM CareYou.[user] 
+            FROM CareYou.[Caregiver] 
             WHERE id = @id
         `;
         const caregiverInfoResult = await pool.request()
@@ -47,7 +47,7 @@ router.get('/Caregiver', verifyToken, async (req, res) => {
         //     year: 'numeric',
         // });
 
-        res.json({
+        res.status(200).json({
             username: caregiverInfo.username,
             email: caregiverInfo.email,
             yourelderly_email: caregiverInfo.yourelderly_email,
@@ -71,7 +71,7 @@ router.get('/Elderly', verifyToken, async (req, res) => {
         // Check if the user is a caregiver
         const roleCheck = await pool.request()
             .input('id', sql.Int, elderlyId)
-            .query('SELECT * FROM CareYou.[user] WHERE id = @id AND role = \'Elderly\'');
+            .query('SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = \'Elderly\'');
 
             
         if (roleCheck.recordset.length === 0) {
@@ -117,7 +117,7 @@ router.get('/Elderly', verifyToken, async (req, res) => {
             year: 'numeric',
         });
 
-        res.json({
+        res.status(200).json({
             username: elderlyInfo.username,
             email: elderlyInfo.email,
             your_caregiver: CaregiverUsername.username,
