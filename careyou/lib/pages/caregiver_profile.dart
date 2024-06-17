@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class caregiver_profile_page extends StatefulWidget {
-  const caregiver_profile_page();
+  final String token;
+  
+  const caregiver_profile_page({required this.token});
+
 
   @override
   State<caregiver_profile_page> createState() => _HomepageState();
@@ -10,104 +15,60 @@ class caregiver_profile_page extends StatefulWidget {
 class _HomepageState extends State<caregiver_profile_page> {
   bool isEditingUsername = false;
   bool isEditingPassword = false;
-  TextEditingController usernameController =
-      TextEditingController(text: 'Ebbabo');
+  TextEditingController usernameController = TextEditingController();
   TextEditingController oldPasswordController = TextEditingController();
   TextEditingController newPasswordController = TextEditingController();
 
-  List<ElderModel> elders = [
-    ElderModel(name: 'Ebbabo', relation: 'Grandmother'),
-  ];
+  String elderlyUsername = '';
+  String elderlyRelation = '';
+  String email = '';
+  String username = '';
+  String currentDate = '';
 
   TextEditingController _elderEmailController = TextEditingController();
   TextEditingController _relationController = TextEditingController();
 
-  void toggleEditMode(String field) {
-    setState(() {
-      isEditingUsername = false;
-      isEditingPassword = false;
-      if (field == 'username') {
-        isEditingUsername = true;
-      } else if (field == 'password') {
-        isEditingPassword = true;
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    fetchCaregiverData();
   }
 
-  void saveData() {
-    if (isEditingPassword) {
-      // Simulate checking old password
-      String storedPassword = 'password'; // Replace with your stored password
-      String enteredOldPassword = oldPasswordController.text;
+  Future<void> fetchCaregiverData() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8000/profiles/Caregiver'),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
 
-      if (enteredOldPassword == storedPassword) {
-        // Password matches, proceed with saving
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
         setState(() {
-          isEditingUsername = false;
-          isEditingPassword = false;
+          username = data['caregiver']['username'];
+          email = data['caregiver']['email'];
+          currentDate = data['currentDate'];
+          // Check if 'yourelderly_relation' exists
+          if (data['caregiver'].containsKey('yourelderly_relation')) {
+            elderlyRelation = data['caregiver']['yourelderly_relation'];
+          } else {
+            elderlyRelation = ''; // Set to empty if not found
+          }
         });
-        // Show success dialog or perform save operation
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              title: Text(
-                'Success',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              content: Text('Password updated successfully.'),
-              actions: [
-                TextButton(
-                  child: Text('OK'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
       } else {
-        // Password does not match, show error dialog
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              title: Text(
-                'Error',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              content: Text('Old password does not match.'),
-              actions: [
-                TextButton(
-                  child: Text('OK'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
+        // Handle error
+        print('Failed to load data: ${response.statusCode}');
       }
-    } else {
-      // Save username logic can go here if needed
-      setState(() {
-        isEditingUsername = false;
-      });
-      // Show success message or perform save operation for username
+    } catch (e) {
+      // Handle exceptions
+      print('Exception: $e');
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            backgroundColor: Colors.white,
-            title: Text(
-              'Success',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: Text('Username updated successfully.'),
+            title: Text('Error'),
+            content: Text('Failed to fetch data. Please try again later.'),
             actions: [
               TextButton(
                 child: Text('OK'),
@@ -122,21 +83,314 @@ class _HomepageState extends State<caregiver_profile_page> {
     }
   }
 
-  void addElder() {
+  void toggleEditMode(String field) {
+    setState(() {
+      if (field == 'username') {
+        if (!isEditingUsername) {
+          // When entering edit mode, set the controller text to the current username
+          usernameController.text = username;
+        }
+        isEditingUsername = !isEditingUsername;
+      } else if (field == 'password') {
+        isEditingPassword = !isEditingPassword;
+      }
+    });
+  }
+
+  void saveData() {
+    if (isEditingUsername) {
+      String newUsername = usernameController.text.trim();
+      if (newUsername.isNotEmpty) {
+        updateUsername(newUsername);
+      } else {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('Username cannot be empty.'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } else if (isEditingPassword) {
+      String oldPassword = oldPasswordController.text.trim();
+      String newPassword = newPasswordController.text.trim();
+      if (oldPassword.isNotEmpty && newPassword.isNotEmpty) {
+        updatePassword(oldPassword, newPassword);
+      } else {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('Both old password and new password are required.'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
+  Future<void> updateUsername(String newUsername) async {
+    try {
+      final response = await http.put(
+        Uri.parse('http://localhost:8000/profiles/EditUsername'),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'newUsername': newUsername}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          username = newUsername;
+          isEditingUsername = false;
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              title: Text(
+                'Success',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: Text('Username updated successfully.'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else if (response.statusCode == 400) {
+        final errorResponse = json.decode(response.body);
+        final errorMessage = errorResponse['error'] ?? 'Unknown error';
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('Failed to update username: $errorMessage'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        print('Failed to update username: ${response.statusCode}');
+        throw Exception('Failed to update username');
+      }
+    } catch (e) {
+      print('Exception: $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to update username. Please try again later.'),
+            actions: [
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> updatePassword(String oldPassword, String newPassword) async {
+    try {
+      final response = await http.put(
+        Uri.parse('http://localhost:8000/profiles/EditPassword'),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isEditingPassword = false;
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Success'),
+              content: Text('Password updated successfully.'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else if (response.statusCode == 400) {
+        final errorResponse = json.decode(response.body);
+        final errorMessage = errorResponse['error'] ?? 'Unknown error';
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('Failed to update password: $errorMessage'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        print('Failed to update password: ${response.statusCode}');
+        throw Exception('Failed to update password');
+      }
+    } catch (e) {
+      print('Exception: $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to update password. Please try again later.'),
+            actions: [
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void addElder() async {
     String elderEmail = _elderEmailController.text.trim();
     String relation = _relationController.text.trim();
 
     if (elderEmail.isNotEmpty && relation.isNotEmpty) {
-      // Add new elder to the list
-      ElderModel newElder =
-          ElderModel(name: elderEmail.split('@').first, relation: relation);
-      elders.add(newElder);
+      try {
+        // Make POST request to backend API to add elderly
+        var response = await http.post(
+          Uri.parse('http://localhost:8000/profiles/AddElderly'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization':
+                'Bearer ${widget.token}', // Replace with actual token
+          },
+          body: jsonEncode(<String, String>{
+            'elderEmail': elderEmail,
+            'relation': relation,
+          }),
+        );
 
-      // Clear the input fields
-      _elderEmailController.clear();
-      _relationController.clear();
+        // if (response.statusCode == 200) {
+        //   // Elderly added successfully
+        //   ElderModel newElder = ElderModel(relation: relation);
 
-      setState(() {});
+        //   // Update UI
+        //   setState(() {
+        //     elders.add(newElder.toMap()); // Adjusted to use toMap()
+        //     _elderEmailController.clear();
+        //     _relationController.clear();
+        //   });
+        // } else {
+        //   // Show error message if request failed
+        //   showDialog(
+        //     context: context,
+        //     builder: (BuildContext context) {
+        //       return AlertDialog(
+        //         backgroundColor: Colors.white,
+        //         title: Text(
+        //           'Error',
+        //           style: TextStyle(fontWeight: FontWeight.bold),
+        //         ),
+        //         content: Text('Failed to add elderly. Please try again later.'),
+        //         actions: [
+        //           TextButton(
+        //             child: Text('OK'),
+        //             onPressed: () {
+        //               Navigator.of(context).pop();
+        //             },
+        //           ),
+        //         ],
+        //       );
+        //     },
+        //   );
+        // }
+      } catch (e) {
+        print('Exception during adding elderly: $e');
+        // Handle exception if any
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              title: Text(
+                'Error',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: Text('An error occurred. Please try again later.'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
     } else {
       // Show validation error
       showDialog(
@@ -163,38 +417,106 @@ class _HomepageState extends State<caregiver_profile_page> {
     }
   }
 
-  void deleteElder(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(
-            'Confirm Deletion',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Text('Are you sure you want to delete this elder?'),
-          actions: [
-            TextButton(
-              child: Text('CANCEL'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('DELETE'),
-              onPressed: () {
-                // Delete elder and close dialog
-                elders.removeAt(index);
-                Navigator.of(context).pop();
-                setState(() {});
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void deleteElder(int index) async {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         backgroundColor: Colors.white,
+  //         title: Text(
+  //           'Confirm Deletion',
+  //           style: TextStyle(fontWeight: FontWeight.bold),
+  //         ),
+  //         content: Text(
+  //             'Are you sure you want to delete this elder\'s email and relationship?'),
+  //         actions: [
+  //           TextButton(
+  //             child: Text('CANCEL'),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //           TextButton(
+  //             child: Text('DELETE'),
+  //             onPressed: () async {
+  //               Navigator.of(context).pop(); // Close the confirmation dialog
+
+  //               try {
+  //                 // Make DELETE request to backend API to delete specific fields of the elderly
+  //                 var response = await http.delete(
+  //                   Uri.parse(
+  //                       'http://localhost:8000/DeleteElderly/${elders[index]['id']}'),
+  //                   headers: <String, String>{
+  //                     'Authorization':
+  //                         'Bearer ${widget.token}', // Replace with actual token
+  //                   },
+  //                 );
+
+  //                 if (response.statusCode == 200) {
+  //                   // Fields deleted successfully
+  //                   setState(() {
+  //                     elders[index]['email'] = null;
+  //                     elders[index]['relationship'] = null;
+  //                   });
+  //                 } else {
+  //                   // Show error message if request failed
+  //                   showDialog(
+  //                     context: context,
+  //                     builder: (BuildContext context) {
+  //                       return AlertDialog(
+  //                         backgroundColor: Colors.white,
+  //                         title: Text(
+  //                           'Error',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         content: Text(
+  //                             'Failed to delete elderly details. Please try again later.'),
+  //                         actions: [
+  //                           TextButton(
+  //                             child: Text('OK'),
+  //                             onPressed: () {
+  //                               Navigator.of(context).pop();
+  //                             },
+  //                           ),
+  //                         ],
+  //                       );
+  //                     },
+  //                   );
+  //                 }
+  //               } catch (e) {
+  //                 print('Exception during deleting elderly details: $e');
+  //                 // Handle exception if any
+  //                 showDialog(
+  //                   context: context,
+  //                   builder: (BuildContext context) {
+  //                     return AlertDialog(
+  //                       backgroundColor: Colors.white,
+  //                       title: Text(
+  //                         'Error',
+  //                         style: TextStyle(fontWeight: FontWeight.bold),
+  //                       ),
+  //                       content:
+  //                           Text('An error occurred. Please try again later.'),
+  //                       actions: [
+  //                         TextButton(
+  //                           child: Text('OK'),
+  //                           onPressed: () {
+  //                             Navigator.of(context).pop();
+  //                           },
+  //                         ),
+  //                       ],
+  //                     );
+  //                   },
+  //                 );
+  //               }
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
 
   @override
   Widget build(BuildContext context) {
@@ -215,12 +537,12 @@ class _HomepageState extends State<caregiver_profile_page> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 130.0, left: 50.0),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Hello, Ebbabo',
+                          'Hello, ${username.length > 10 ? username.substring(0, 10) : username}',
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.w800,
@@ -230,12 +552,12 @@ class _HomepageState extends State<caregiver_profile_page> {
                         ),
                       ),
                     ),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 2.0, left: 50.0),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Today is Wed 24, 20204',
+                          'Today is $currentDate',
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.w800,
@@ -276,7 +598,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                               SizedBox(height: 5.0),
                               Center(
                                 child: Text(
-                                  'abcd_123@gmail.com',
+                                  email,
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontWeight: FontWeight.w900,
@@ -316,7 +638,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                     else
                                       Expanded(
                                         child: Text(
-                                          '${usernameController.text}',
+                                          username, // Display the username directly
                                           style: TextStyle(
                                             fontFamily: 'Poppins',
                                             fontWeight: FontWeight.w600,
@@ -335,12 +657,12 @@ class _HomepageState extends State<caregiver_profile_page> {
                                   ],
                                 ),
                               ),
+                              SizedBox(height: 15.0),
                               if (isEditingUsername)
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 40.0),
+                                  padding: EdgeInsets.fromLTRB(40.0, 20.0, 40.0,
+                                      0.0), // Adjust the top padding here
                                   child: Center(
-                                    // Center widget added here
                                     child: ElevatedButton(
                                       onPressed: saveData,
                                       style: ButtonStyle(
@@ -360,6 +682,44 @@ class _HomepageState extends State<caregiver_profile_page> {
                                   ),
                                 ),
                               SizedBox(height: 15.0),
+                              if (!isEditingPassword)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 40.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Password: ',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          color: Color(0xFF00916E),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          '${'*' * 8}',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 18,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.edit,
+                                            color: Color(0xFFF54900)),
+                                        onPressed: () =>
+                                            toggleEditMode('password'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              SizedBox(height: 10.0),
                               if (isEditingPassword)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -406,45 +766,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                     ],
                                   ),
                                 ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 40.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (!isEditingPassword)
-                                      Text(
-                                        'Password: ', // Show label when not editing password
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                          color: Color(0xFF00916E),
-                                        ),
-                                      ),
-                                    if (!isEditingPassword)
-                                      Expanded(
-                                        child: Text(
-                                          '${'*' * 8}', // Show 8 hidden digits
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 18,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    if (!isEditingPassword)
-                                      IconButton(
-                                        icon: Icon(Icons.edit,
-                                            color: Color(0xFFF54900)),
-                                        onPressed: () =>
-                                            toggleEditMode('password'),
-                                      ),
-                                  ],
-                                ),
-                              ),
+                              SizedBox(height: 40.0),
                               if (isEditingPassword)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -478,13 +800,68 @@ class _HomepageState extends State<caregiver_profile_page> {
                                       'Under Your Care:',
                                       style: TextStyle(
                                         fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 22,
                                         color: Color(0xFF00916E),
                                       ),
                                     ),
                                     SizedBox(height: 30),
-                                    if (elders.isEmpty)
+                                    // Display `yourelderly_relation` if it exists
+                                    if (elderlyRelation.isNotEmpty)
+                                      Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 10.0),
+                                            child: Container(
+                                              padding: EdgeInsets.all(15),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Colors.grey[200],
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        elderlyRelation,
+                                                        style: TextStyle(
+                                                          fontFamily: 'Poppins',
+                                                          fontSize: 18,
+                                                          fontWeight: FontWeight.w700,
+                                                          color:
+                                                              Colors.grey[700],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: Colors.red,
+                                                    ),
+                                                    onPressed: () {
+                                                      
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                              height:
+                                                  20), // Adjust spacing as needed
+                                        ],
+                                      ),
+                                    // Show message when `yourelderly_relation` is empty
+                                    if (elderlyRelation.isEmpty)
                                       Center(
                                         child: Text(
                                           'No elders under your care.',
@@ -495,74 +872,10 @@ class _HomepageState extends State<caregiver_profile_page> {
                                             color: Colors.black,
                                           ),
                                         ),
-                                      )
-                                    else
-                                      Column(
-                                        children: elders
-                                            .map((elder) => Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          bottom: 10.0),
-                                                  child: Container(
-                                                    padding: EdgeInsets.all(15),
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                      color: Colors.grey[200],
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Text(
-                                                              elder.name,
-                                                              style: TextStyle(
-                                                                fontFamily:
-                                                                    'Poppins',
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 18,
-                                                              ),
-                                                            ),
-                                                            SizedBox(height: 5),
-                                                            Text(
-                                                              elder.relation,
-                                                              style: TextStyle(
-                                                                fontFamily:
-                                                                    'Poppins',
-                                                                fontSize: 16,
-                                                                color: Colors
-                                                                    .grey[600],
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        IconButton(
-                                                          icon: Icon(
-                                                            Icons.delete,
-                                                            color: Colors.red,
-                                                          ),
-                                                          onPressed: () =>
-                                                              deleteElder(elders
-                                                                  .indexOf(
-                                                                      elder)),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ))
-                                            .toList(),
                                       ),
-                                    if (elders
-                                        .isEmpty) // Show add elder UI only when elders list is empty
+                                    // Add elder UI when both `elders` list and `yourelderly_relation` are empty
+                                    if (elders.isEmpty &&
+                                        elderlyRelation.isEmpty)
                                       Column(
                                         children: [
                                           SizedBox(height: 30),
@@ -668,6 +981,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                   ],
                                 ),
                               ),
+
                             ],
                           ),
                         ),
@@ -684,13 +998,23 @@ class _HomepageState extends State<caregiver_profile_page> {
   }
 }
 
+void main() {
+  runApp(const caregiver_profile_page(token: 'your-token'));
+}
+
 class ElderModel {
-  final String name;
   final String relation;
 
-  ElderModel({required this.name, required this.relation});
+  ElderModel({
+    required this.relation,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'relation': relation,
+    };
+  }
 }
 
-void main() {
-  runApp(const caregiver_profile_page());
-}
+List<ElderModel> elders = [];
+

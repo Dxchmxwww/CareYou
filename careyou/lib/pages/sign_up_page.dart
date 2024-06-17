@@ -1,3 +1,4 @@
+import 'package:careyou/pages/log_in_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -292,8 +293,15 @@ class _SignUpPageState extends State<SignUpPage> {
                                         ),
                                         recognizer: TapGestureRecognizer()
                                           ..onTap = () {
-                                            Navigator.pushNamed(
-                                                context, '/login');
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    log_in_page(
+                                                        selectedRole: widget
+                                                            .selectedRole),
+                                              ),
+                                            );
                                           },
                                       ),
                                     ],

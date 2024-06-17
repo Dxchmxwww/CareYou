@@ -1,4 +1,4 @@
-import 'package:careyou/pages/sign_up_page.dart';
+
 import 'package:careyou/pages/log_in_page.dart';
 import 'package:flutter/material.dart';
 

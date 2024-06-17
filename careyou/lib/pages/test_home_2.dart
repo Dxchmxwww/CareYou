@@ -1,8 +1,10 @@
-import 'package:careyou/pages/sign_up_page.dart';
+import 'package:careyou/pages/caregiver_profile.dart';
 import 'package:flutter/material.dart';
 
 class test_home_2 extends StatefulWidget {
-  const test_home_2();
+  final String token;
+
+  const test_home_2({required this.token});
 
   @override
   State<test_home_2> createState() => _HomepageState();
@@ -37,15 +39,26 @@ class _HomepageState extends State<test_home_2> {
                           height: 122,
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 5.0),
-                        child: Text(
-                          'FUCK YOU (CAREGIVER)',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 68,
-                            color: Colors.white,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  caregiver_profile_page(token: widget.token),
+                            ),
+                          );
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.only(top: 5.0),
+                          child: Text(
+                            'FUCK YOU (CAREGIVER)',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 68,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
