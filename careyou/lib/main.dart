@@ -5,6 +5,8 @@ import 'package:careyou/pages/elder_profile.dart';
 import 'package:careyou/pages/caregiver_profile.dart';
 import 'package:careyou/pages/test_home.dart';
 import 'package:flutter/material.dart';
+import 'package:careyou/pages/homePageElder.dart';
+import 'package:careyou/pages/homePageCareGiver.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,7 +25,9 @@ class MyApp extends StatelessWidget {
         '/': (context) => const user_onboard_page(),
         '/login': (context) => const log_in_page(selectedRole: ''),
         '/signup': (context) => const SignUpPage(selectedRole: ''),
-        '/home': (context) => const test_home(),
+        '/home': (context) => const test_home(token: ''),
+        '/profileElderly': (context) => const HomePageElder(token: ''),
+        '/profileCaregiver': (context) => const HomePageCareGiver(token: ''),
       },
     );
   }

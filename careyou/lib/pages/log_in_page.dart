@@ -1,3 +1,5 @@
+import 'package:careyou/pages/homePageCareGiver.dart';
+import 'package:careyou/pages/homePageElder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
@@ -20,12 +22,13 @@ class _HomepageState extends State<log_in_page> {
   String _email = '';
   String _password = '';
   bool _isLoading = false;
+  String token = '';
 
   void initState() {
     super.initState();
     print('Role passed to log_in_page: ${widget.selectedRole}');
   }
-  
+
   Future<void> _login() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       setState(() {
@@ -42,7 +45,6 @@ class _HomepageState extends State<log_in_page> {
 
       // Print the encoded JSON data for debugging
       print('JSON data sent: $jsonData');
-      
 
       try {
         var response = await http.post(
@@ -57,6 +59,7 @@ class _HomepageState extends State<log_in_page> {
         if (response.statusCode == 200) {
           var jsonResponse = json.decode(response.body);
           print('JSON Response Body: $jsonResponse');
+          token = jsonResponse['token'];
           String roleFromDatabase = jsonResponse['role'];
 
           print('JSON Response Body: $jsonResponse');
@@ -85,14 +88,14 @@ class _HomepageState extends State<log_in_page> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => test_home(),
+          builder: (context) => HomePageElder(token: token),
         ),
       );
     } else if (widget.selectedRole == 'Caregiver') {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => test_home_2(),
+          builder: (context) => HomePageCareGiver(token: token),
         ),
       );
     }
@@ -235,6 +238,7 @@ class _HomepageState extends State<log_in_page> {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -457,7 +461,8 @@ class _HomepageState extends State<log_in_page> {
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     SignUpPage(
-                                                        selectedRole: widget.selectedRole),
+                                                        selectedRole: widget
+                                                            .selectedRole),
                                               ),
                                             );
                                           },

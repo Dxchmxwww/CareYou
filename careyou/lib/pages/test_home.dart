@@ -1,15 +1,17 @@
-import 'package:careyou/pages/sign_up_page.dart';
+
 import 'package:flutter/material.dart';
+import 'package:careyou/pages/elder_profile.dart';
 
 class test_home extends StatefulWidget {
-  const test_home();
+  final String token;
+
+  const test_home({required this.token});
 
   @override
   State<test_home> createState() => _HomepageState();
 }
 
 class _HomepageState extends State<test_home> {
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -38,15 +40,26 @@ class _HomepageState extends State<test_home> {
                           height: 122,
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 5.0),
-                        child: Text(
-                          'FUCK YOU (ELDER)',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 68,
-                            color: Colors.white,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  elder_profile_page(token: widget.token),
+                            ),
+                          );
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.only(top: 5.0),
+                          child: Text(
+                            'FUCK YOU (ELDER)',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 68,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -67,7 +80,6 @@ class _HomepageState extends State<test_home> {
                     ],
                   ),
                 ),
-                
               ],
             ),
           ),
