@@ -417,106 +417,6 @@ class _HomepageState extends State<caregiver_profile_page> {
     }
   }
 
-  // void deleteElder(int index) async {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         backgroundColor: Colors.white,
-  //         title: Text(
-  //           'Confirm Deletion',
-  //           style: TextStyle(fontWeight: FontWeight.bold),
-  //         ),
-  //         content: Text(
-  //             'Are you sure you want to delete this elder\'s email and relationship?'),
-  //         actions: [
-  //           TextButton(
-  //             child: Text('CANCEL'),
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //           TextButton(
-  //             child: Text('DELETE'),
-  //             onPressed: () async {
-  //               Navigator.of(context).pop(); // Close the confirmation dialog
-
-  //               try {
-  //                 // Make DELETE request to backend API to delete specific fields of the elderly
-  //                 var response = await http.delete(
-  //                   Uri.parse(
-  //                       'http://localhost:8000/DeleteElderly/${elders[index]['id']}'),
-  //                   headers: <String, String>{
-  //                     'Authorization':
-  //                         'Bearer ${widget.token}', // Replace with actual token
-  //                   },
-  //                 );
-
-  //                 if (response.statusCode == 200) {
-  //                   // Fields deleted successfully
-  //                   setState(() {
-  //                     elders[index]['email'] = null;
-  //                     elders[index]['relationship'] = null;
-  //                   });
-  //                 } else {
-  //                   // Show error message if request failed
-  //                   showDialog(
-  //                     context: context,
-  //                     builder: (BuildContext context) {
-  //                       return AlertDialog(
-  //                         backgroundColor: Colors.white,
-  //                         title: Text(
-  //                           'Error',
-  //                           style: TextStyle(fontWeight: FontWeight.bold),
-  //                         ),
-  //                         content: Text(
-  //                             'Failed to delete elderly details. Please try again later.'),
-  //                         actions: [
-  //                           TextButton(
-  //                             child: Text('OK'),
-  //                             onPressed: () {
-  //                               Navigator.of(context).pop();
-  //                             },
-  //                           ),
-  //                         ],
-  //                       );
-  //                     },
-  //                   );
-  //                 }
-  //               } catch (e) {
-  //                 print('Exception during deleting elderly details: $e');
-  //                 // Handle exception if any
-  //                 showDialog(
-  //                   context: context,
-  //                   builder: (BuildContext context) {
-  //                     return AlertDialog(
-  //                       backgroundColor: Colors.white,
-  //                       title: Text(
-  //                         'Error',
-  //                         style: TextStyle(fontWeight: FontWeight.bold),
-  //                       ),
-  //                       content:
-  //                           Text('An error occurred. Please try again later.'),
-  //                       actions: [
-  //                         TextButton(
-  //                           child: Text('OK'),
-  //                           onPressed: () {
-  //                             Navigator.of(context).pop();
-  //                           },
-  //                         ),
-  //                       ],
-  //                     );
-  //                   },
-  //                 );
-  //               }
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -661,7 +561,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 15.0),
+                              SizedBox(height: 10.0),
                               if (isEditingUsername)
                                 Padding(
                                   padding: EdgeInsets.fromLTRB(40.0, 20.0, 40.0,
@@ -685,7 +585,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                     ),
                                   ),
                                 ),
-                              SizedBox(height: 15.0),
+                              SizedBox(height: 10.0),
                               if (!isEditingPassword)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -723,7 +623,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                     ],
                                   ),
                                 ),
-                              SizedBox(height: 10.0),
+                              SizedBox(height: 0.0),
                               if (isEditingPassword)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -793,7 +693,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                     ),
                                   ),
                                 ),
-                              SizedBox(height: 30.0),
+                              SizedBox(height: 10.0),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 40.0),
@@ -809,7 +709,7 @@ class _HomepageState extends State<caregiver_profile_page> {
                                         color: Color(0xFF00916E),
                                       ),
                                     ),
-                                    SizedBox(height: 30),
+                                    SizedBox(height: 20),
                                     // Display `yourelderly_relation` if it exists
                                     if (elderlyRelation.isNotEmpty)
                                       Column(
@@ -846,13 +746,6 @@ class _HomepageState extends State<caregiver_profile_page> {
                                                         ),
                                                       ),
                                                     ],
-                                                  ),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: Colors.red,
-                                                    ),
-                                                    onPressed: () {},
                                                   ),
                                                 ],
                                               ),

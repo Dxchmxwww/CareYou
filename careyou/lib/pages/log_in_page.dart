@@ -1,3 +1,5 @@
+import 'package:careyou/pages/caregiver_profile.dart';
+import 'package:careyou/pages/elder_profile.dart';
 import 'package:careyou/pages/homePageCareGiver.dart';
 import 'package:careyou/pages/homePageElder.dart';
 import 'package:flutter/material.dart';

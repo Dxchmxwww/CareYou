@@ -4,213 +4,190 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const sql = require("mssql");
 const config = require("../config");
-
+const verifyToken = require("../middleware/verifyToken");
 const JWT_SECRET = config.JWT_SECRET;
-
-//-----------------------------------Authentication------------------------------------
-async function registerUser(
-	username,
-	password,
-	email,
-	role,
-	yourelderly_email,
-	yourelderly_relation
-) {
-	try {
-		const pool = await sql.connect(config.database);
-
-		// Check if username already exists
-		const usernameCheck = await pool
-			.request()
-			.input("username", sql.VarChar, username)
-			.query("SELECT * FROM CareYou.[user] WHERE username = @username");
-
-		if (usernameCheck.recordset.length > 0) {
-			throw new Error("Username already exists");
-		}
-
-		// Check if email already exists
-		const emailCheck = await pool
-			.request()
-			.input("email", sql.VarChar, email)
-			.query("SELECT * FROM CareYou.[user] WHERE email = @email");
-
-		if (emailCheck.recordset.length > 0) {
-			throw new Error("Email already exists");
-		}
-
-		// Hash the password
-		const hashedPassword = await bcrypt.hash(password, 10);
-
-		// Insert new user into database
-		await pool
-			.request()
-			.input("username", sql.VarChar, username)
-			.input("password", sql.VarChar, hashedPassword)
-			.input("email", sql.VarChar, email)
-			.input("role", sql.NVarChar, role)
-			.input("yourelderly_email", sql.VarChar, yourelderly_email)
-			.input("yourelderly_relation", sql.VarChar, yourelderly_relation)
-			.query(
-				"INSERT INTO CareYou.[user] (username, password, email, role, yourelderly_email,yourelderly_relation) VALUES (@username, @password, @email, @role, @yourelderly_email,@yourelderly_relation)"
-			);
-	} catch (error) {
-		res.status(400).send(error.message);
-	}
-}
-
-async function authenticateUser(email, password) {
-	try {
-		const pool = await sql.connect(config.database);
-		const userCheck = await pool
-			.request()
-			.input("email", sql.VarChar, email)
-			.query(
-				"SELECT id, role, password FROM CareYou.[user] WHERE email = @email"
-			);
-
-		if (userCheck.recordset.length === 0) {
-			throw new Error("User not found");
-		}
-
-		const user = userCheck.recordset[0];
-
-		const isPasswordValid = await bcrypt.compare(password, user.password);
-		if (!isPasswordValid) {
-			throw new Error("Invalid credentials");
-		}
-
-		const token = generateToken(user.id);
-		const role = user.role;
-
-		return { token, role };
-	} catch (error) {
-		throw new Error(`Error authenticating user: ${error.message}`);
-	}
-}
-
-function generateToken(id) {
-	return jwt.sign({ id }, JWT_SECRET, { expiresIn: "1h" });
-}
 
 //-----------------------------------Register------------------------------------
 
 //http://localhost:8000/auth/register
-
 router.post("/register", async (req, res) => {
-	try {
-		const {
-			username,
-			password,
-			email,
-			role,
-			yourelderly_email,
-			yourelderly_relation,
-		} = req.body;
+	const {
+		username,
+		password,
+		email,
+		role,
+		yourelderly_email,
+		yourelderly_relation,
+	} = req.body;
 
-		if (!role || (role !== "Caregiver" && role !== "Elderly")) {
-			throw new Error("Invalid role");
+	if (!role || (role !== "Caregiver" && role !== "Elderly")) {
+		return res.status(400).send("Invalid role");
+	}
+
+	try {
+		const pool = await sql.connect(config.database);
+
+		// Check if username or email already exists in both tables
+		const userCheck = await pool
+			.request()
+			.input("username", sql.VarChar, username)
+			.input("email", sql.VarChar, email).query(`
+              SELECT username, email FROM CareYou.[Caregiver] WHERE username = @username OR email = @email
+              UNION
+              SELECT username, email FROM CareYou.[Elderly] WHERE username = @username OR email = @email
+          `);
+
+		if (userCheck.recordset.length > 0) {
+			return res.status(400).send("Username or Email already exists");
 		}
+
+		const hashedPassword = await bcrypt.hash(password, 10);
 
 		if (role === "Caregiver") {
 			if (!username || !password || !email) {
-				throw new Error(
-					"Username, password, and email are required for Caregiver role"
-				);
+				return res
+					.status(400)
+					.send(
+						"Username, password, and email are required for Caregiver role"
+					);
 			}
 
 			if (yourelderly_email) {
-				const pool = await sql.connect(config.database);
 				const checkelderlyemail = await pool
 					.request()
 					.input("yourelderly_email", sql.VarChar, yourelderly_email)
 					.query(
-						"SELECT * FROM CareYou.[user] WHERE email = @yourelderly_email AND role = 'Elderly'"
+						"SELECT * FROM CareYou.[Elderly] WHERE email = @yourelderly_email"
 					);
 
-				console.log(checkelderlyemail);
+				if (checkelderlyemail.recordset.length === 0) {
+					return res
+						.status(400)
+						.send("Elderly user not found with provided email");
+				}
+
 				const checkRepeatemail = await pool
 					.request()
 					.input("yourelderly_email", sql.VarChar, yourelderly_email)
 					.query(
-						"SELECT * FROM CareYou.[user] WHERE yourelderly_email = @yourelderly_email AND role = 'Caregiver'"
+						"SELECT * FROM CareYou.[Caregiver] WHERE yourelderly_email = @yourelderly_email"
 					);
-
-				console.log(checkRepeatemail);
-				if (checkelderlyemail.recordset.length === 0) {
-					throw new Error(
-						"Elderly user not found with provided email"
-					);
-				}
 
 				if (checkRepeatemail.recordset.length > 0) {
-					throw new Error("Elderly user already has caregiver");
+					return res
+						.status(400)
+						.send("Elderly user already has caregiver");
 				}
 			}
 
-			await registerUser(
-				username,
-				password,
-				email,
-				role,
-				yourelderly_email,
-				yourelderly_relation
-			);
-			const pool = await sql.connect(config.database);
 			await pool
 				.request()
-				.input("yourcaregiver_email", sql.VarChar, email)
+				.input("username", sql.VarChar, username)
+				.input("password", sql.VarChar, hashedPassword)
+				.input("email", sql.VarChar, email)
+				.input("role", sql.VarChar, role)
 				.input("yourelderly_email", sql.VarChar, yourelderly_email)
+				.input(
+					"yourelderly_relation",
+					sql.VarChar,
+					yourelderly_relation
+				)
 				.query(
-					"UPDATE CareYou.[user] SET yourcaregiver_email = @yourcaregiver_email WHERE email = @yourelderly_email AND role = 'Elderly'"
+					"INSERT INTO CareYou.[Caregiver] (username, password, email, role, yourelderly_email, yourelderly_relation) VALUES (@username, @password, @email, @role, @yourelderly_email, @yourelderly_relation)"
 				);
 
-			res.status(201).send("User registered successfully");
+			if (yourelderly_email) {
+				await pool
+					.request()
+					.input("yourcaregiver_email", sql.VarChar, email)
+					.input("yourelderly_email", sql.VarChar, yourelderly_email)
+					.query(
+						"UPDATE CareYou.[Elderly] SET yourcaregiver_email = @yourcaregiver_email WHERE email = @yourelderly_email"
+					);
+			}
+
+			res.status(201).send("Caregiver registered successfully");
 		} else if (role === "Elderly") {
 			if (!username || !password || !email) {
-				throw new Error(
-					"Username, password, and email are required for Elderly role"
-				);
+				return res
+					.status(400)
+					.send(
+						"Username, password, and email are required for Elderly role"
+					);
 			}
-			const register = await registerUser(
-				username,
-				password,
-				email,
-				role
-			);
-			res.status(201).send("User registered successfully");
+
+			await pool
+				.request()
+				.input("username", sql.VarChar, username)
+				.input("password", sql.VarChar, hashedPassword)
+				.input("email", sql.VarChar, email)
+				.input("role", sql.NVarChar, role)
+				.query(
+					"INSERT INTO CareYou.[Elderly] (username, password, email, role) VALUES (@username, @password, @email, @role)"
+				);
+
+			res.status(201).send("Elderly registered successfully");
 		}
 	} catch (error) {
-		let statusCode = 400;
-		if (error.message === "Elderly user already has caregiver") {
-			statusCode = 409; // Conflict status code for resource conflict
-		} else if (
-			error.message === "Elderly user not found with provided email"
-		) {
-			statusCode = 404; // Not Found status code for resource not found
-		}
-		console.log(error);
-		res.status(statusCode).send(error.message);
+		console.error(error);
+		res.status(500).send("Server error");
 	}
 });
 
 //-----------------------------------Login------------------------------------------
 
 //http://localhost:8000/auth/login
+//-----------------------------------Authentication------------------------------------
+async function authenticateUser(email, password, selectedRole) {
+	try {
+		const pool = await sql.connect(config.database);
+		const userCheck = await pool
+			.request()
+			.input("email", sql.VarChar, email).query(`
+              SELECT id, email, password, role FROM CareYou.[Caregiver] WHERE email = @email
+              UNION
+              SELECT id, email, password, role FROM CareYou.[Elderly] WHERE email = @email 
+          `);
+
+		if (userCheck.recordset.length === 0) {
+			throw new Error("User not found");
+		}
+
+		const user = userCheck.recordset[0];
+		console.log(user);
+		if (user.role === selectedRole) {
+		} else {
+			throw new Error("Invalid role");
+		}
+
+		const isPasswordValid = await bcrypt.compare(password, user.password);
+		if (!isPasswordValid) {
+			throw new Error("Invalid credentials");
+		}
+		console.log(user.id);
+
+		const token = generateToken(user.id);
+		const role = user.role; // Generate token with user's email and role
+
+		return { token, role }; // Return token and user's role
+	} catch (error) {
+		throw new Error(`Authentication failed: ${error.message}`);
+	}
+}
+
+function generateToken(id) {
+	return jwt.sign({ id: id }, JWT_SECRET, { expiresIn: "1h" });
+}
 
 router.post("/login", async (req, res) => {
 	const { email, password, selectedRole } = req.body;
 	console.log(`Login attempt: email=${email}, role=${selectedRole}`);
 	try {
-		const { token, role } = await authenticateUser(email, password); // Assuming authenticateUser returns both token and role
-
-		// Fetch user details from database
-		const user = await getUserByEmail(email);
-		console.log(`User data from database: ${JSON.stringify(user)}`);
-		// Check if user's role matches selectedRole
-		if (!user || user.role !== selectedRole) {
-			return res.status(401).json({ error: "Role mismatch" });
-		}
+		const { token, role } = await authenticateUser(
+			email,
+			password,
+			selectedRole
+		); // Assuming authenticateUser returns both token and role
 
 		// Set cookie with JWT token
 		res.cookie("authToken", token, {
@@ -227,6 +204,7 @@ router.post("/login", async (req, res) => {
 				error: "Server is currently unavailable, please try again later.",
 			});
 		}
+		console.log(error);
 		res.status(401).json({
 			error: "Please check your email and password and try again",
 		});
@@ -253,22 +231,3 @@ router.get("/logout", (req, res) => {
 });
 
 module.exports = router;
-
-//------ test na mew -----
-async function getUserByEmail(email) {
-	try {
-		const pool = await sql.connect(config.database);
-		const userCheck = await pool
-			.request()
-			.input("email", sql.VarChar, email)
-			.query("SELECT * FROM CareYou.[user] WHERE email = @email");
-
-		if (userCheck.recordset.length === 0) {
-			return null; // Return null if user not found
-		}
-
-		return userCheck.recordset[0]; // Return the first user found
-	} catch (error) {
-		throw new Error(`Error retrieving user by email: ${error.message}`);
-	}
-}
