@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:careyou/widgets/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
 class AddApp extends StatefulWidget {
   const AddApp({Key? key}) : super(key: key);
@@ -13,8 +15,51 @@ class _AddAppState extends State<AddApp> {
   final _reminderController = TextEditingController();
   final _locationController = TextEditingController();
   String _selectedDate = 'DD/MM/YYYY';
-  String _startTime = 'HH/MM/SS';
-  String _endTime = 'HH/MM/SS';
+  String _startTime = 'HH:MM:SS';
+  String _endTime = 'HH:MM:SS';
+
+  Future<void> _submitAppointment() async {
+    final appointmentName = _reminderController.text;
+    final location = _locationController.text;
+    final date = _selectedDate;
+    final startTime = _startTime;
+    final endTime = _endTime;
+
+    if (appointmentName.isEmpty || location.isEmpty || date == 'DD/MM/YYYY' || startTime == 'HH:MM:SS' || endTime == 'HH:MM:SS') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    final url = Uri.parse('http://your-backend-url/CreateAppointmentReminder');
+    final headers = {'Content-Type': 'application/json'};
+    final body = json.encode({
+      'Appointment_name': appointmentName,
+      'Date': date,
+      'StartTime': startTime,
+      'EndTime': endTime,
+      'Location': location,
+    });
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Appointment added successfully')),
+        );
+        Navigator.of(context).pop(); // Navigate back or show confirmation
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add appointment: ${response.reasonPhrase}')),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +270,7 @@ class _AddAppState extends State<AddApp> {
                                   color: Colors.black,
                                 ),
                                 items: <String>[
-                                  'HH/MM/SS',
+                                  'HH:MM:SS',
                                   '08:00:00',
                                   '09:00:00',
                                   '10:00:00'
@@ -273,7 +318,7 @@ class _AddAppState extends State<AddApp> {
                                   color: Colors.black,
                                 ),
                                 items: <String>[
-                                  'HH/MM/SS',
+                                  'HH:MM:SS',
                                   '12:00:00',
                                   '13:00:00',
                                   '14:00:00'
@@ -357,12 +402,7 @@ class _AddAppState extends State<AddApp> {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        onPressed: () {
-                          // Handle save button pressed
-                          print('Appointment added');
-                          // Navigate back or show confirmation
-                          Navigator.of(context).pop();
-                        },
+                        onPressed: _submitAppointment,
                         icon: const Icon(
                           Icons.save_outlined,
                           color: Colors.white,
@@ -387,4 +427,3 @@ class _AddAppState extends State<AddApp> {
     );
   }
 }
-

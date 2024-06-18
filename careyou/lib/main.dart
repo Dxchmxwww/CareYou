@@ -1,3 +1,4 @@
+import 'package:careyou/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:careyou/pages/pill_box.dart';
 import 'package:careyou/pages/doctor_app.dart';
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: AddApp(),
+      home: AppManage(),
     );
   }
 }
