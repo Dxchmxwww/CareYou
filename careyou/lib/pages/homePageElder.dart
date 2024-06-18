@@ -23,7 +23,6 @@ class _HomePageElderState extends State<HomePageElder> {
   @override
   void initState() {
     super.initState();
-    fetchElderlyData();
   }
 
   Future<void> fetchElderlyData() async {
