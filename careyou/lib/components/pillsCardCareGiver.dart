@@ -38,7 +38,7 @@ class PillsCardCareGiver extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   image: const DecorationImage(
-                    image: AssetImage('assets/captopril.jpeg'),
+                    image: AssetImage('assets/images/crycat.jpeg'),
                     fit: BoxFit.cover,
                   ),
                 ),

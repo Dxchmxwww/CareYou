@@ -8,52 +8,6 @@ const verifyToken = require('../middleware/verifyToken');
 const JWT_SECRET = config.JWT_SECRET;
 
 
-//-----------------------------------Authentication------------------------------------
-
-async function authenticateUser(email, password, selectedRole) {
-  try {
-      const pool = await sql.connect(config.database);
-      const userCheck = await pool.request()
-          .input('email', sql.VarChar, email)
-          .query(`
-              SELECT id, email, password, role FROM CareYou.[Caregiver] WHERE email = @email
-              UNION
-              SELECT id, email, password, role FROM CareYou.[Elderly] WHERE email = @email 
-          `);
-
-      if (userCheck.recordset.length === 0) {
-          throw new Error('User not found');
-      }
-
-      const user = userCheck.recordset[0];
-      console.log(user)
-      if (user.role === selectedRole) {
-
-      }
-      else{
-        throw new Error('Invalid role');
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-          throw new Error('Invalid credentials');
-      }
-      console.log(user.id)
-
-      const token = generateToken(user.id);  // Generate token with user's email and role
-
-      return { token }; // Return token and user's role
-  } catch (error) {
-    throw new Error(`Authentication failed: ${error.message}`);
-  }
-}
-
-function generateToken(id) {
-  const payload = { id};
-  const options = { expiresIn: '1h' };
-  return jwt.sign(payload, config.JWT_SECRET, options);
-}
-
 
 
 //-----------------------------------Register------------------------------------
@@ -149,60 +103,96 @@ router.post('/register', async (req, res) => {
 //-----------------------------------Login------------------------------------------
 
 //http://localhost:8000/auth/login
+//-----------------------------------Authentication------------------------------------
+async function authenticateUser(email, password, selectedRole) {
+  try {
+      const pool = await sql.connect(config.database);
+      const userCheck = await pool.request()
+          .input('email', sql.VarChar, email)
+          .query(`
+              SELECT id, email, password, role FROM CareYou.[Caregiver] WHERE email = @email
+              UNION
+              SELECT id, email, password, role FROM CareYou.[Elderly] WHERE email = @email 
+          `);
+
+      if (userCheck.recordset.length === 0) {
+          throw new Error('User not found');
+      }
+
+      const user = userCheck.recordset[0];
+      console.log(user)
+      if (user.role === selectedRole) {
+
+      }
+      else{
+        throw new Error('Invalid role');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+          throw new Error('Invalid credentials');
+      }
+      console.log(user.id)
+
+      const token = generateToken(user.id);
+      const role = user.role;  // Generate token with user's email and role
+
+      return { token, role }; // Return token and user's role
+  } catch (error) {
+    throw new Error(`Authentication failed: ${error.message}`);
+  }
+}
+
+function generateToken(id) {
+	return jwt.sign({ id: id }, JWT_SECRET, { expiresIn: "1h" });
+}
+
 
 router.post("/login", async (req, res) => {
-  const { email, password, selectedRole } = req.body;
-  console.log(`Login attempt: email=${email}, role=${selectedRole}`);
-  
-  try {
-    const { token } = await authenticateUser(email, password, selectedRole);
+	const { email, password, selectedRole } = req.body;
+	console.log(`Login attempt: email=${email}, role=${selectedRole}`);
+	try {
+		const { token, role } = await authenticateUser(email, password,selectedRole); // Assuming authenticateUser returns both token and role
 
-    // Set cookie with JWT token
-    res.cookie("authToken", token, {
-        httpOnly: true,
-        maxAge: 3600000, // 1 hour in milliseconds
-        secure: process.env.NODE_ENV === "production", // Set to true in production
-    });
+		// Set cookie with JWT token
+		res.cookie("authToken", token, {
+			httpOnly: true,
+			maxAge: 3600000, // 1 hour in milliseconds
+			secure: process.env.NODE_ENV === "production", // Set to true in production
+		});
 
-    // Respond with token, role, and message
-    res.status(200).json({ message: "Login successful", token});
-  } catch (error) {
-      console.log(error);
-      res.status(401).json({
-          error: "Please check your email and password and try again",
-      }); 
-  }
+		// Respond with token, role, and message
+		res.status(200).json({ message: "Login successful", token, role });
+	} catch (error) {
+		if (error.code === "ECONNREFUSED") {
+			return res.status(503).json({
+				error: "Server is currently unavailable, please try again later.",
+			});
+		}
+        console.log(error)
+		res.status(401).json({
+			error: "Please check your email and password and try again",
+		});
+	}
 });
-
 
 //-----------------------------------Logout------------------------------------
 
-//http://localhost:8000/auth/logout
-
 const blacklist = new Set();
 
-router.get('/logout', (req, res) => {
-    const bearerHeader = req.headers["authorization"] || req.cookies.authToken;
-    if (!bearerHeader) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
+const checkBlacklist = (req, res, next) => {
+	const token = req.headers["authorization"]?.split(" ")[1];
+	if (blacklist.has(token)) {
+		return res.status(401).send("Token has been invalidated");
+	}
+	next();
+};
 
-    const bearerToken = bearerHeader.split(" ")[1];
-    
-    blacklist.add(bearerToken);
+//http://localhost:8000/auth/logout
 
-    try {
-        // Clear cookie
-        res.clearCookie('authToken');
-        console.log(bearerToken + " has been clear" )
-        res.status(200).json({ message: 'Logged out successfully'});
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Internal server error" });
-    }
+router.get("/logout", (req, res) => {
+	res.clearCookie("authToken");
+	res.status(200).json({ message: "Logged out successfully" });
 });
 
-
-
 module.exports = router;
-

@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'dart:convert'; // For jsonDecode
 import 'package:http/http.dart' as http; // For making HTTP requests
 
-class AppointmentCard extends StatefulWidget {
+class AppointmentCardForCaregiver extends StatefulWidget {
   final String token;
-  const AppointmentCard({required this.token});
+  const AppointmentCardForCaregiver({required this.token});
 
   @override
-  _AppointmentCardState createState() => _AppointmentCardState();
+  _AppointmentCardForCaregiverState createState() => _AppointmentCardForCaregiverState();
 }
 
-class _AppointmentCardState extends State<AppointmentCard> {
+class _AppointmentCardForCaregiverState extends State<AppointmentCardForCaregiver> {
   String appointmentName = "";
   String startTime = "";
   String endTime = "";
@@ -115,12 +115,11 @@ class _AppointmentCardState extends State<AppointmentCard> {
                                   ), // Clock icon
                                 ),
                                 const SizedBox(width: 10),
-                                Text(
-                                  "$startTime - $endTime",
-                                  style: const TextStyle(
-                                      fontSize: 14, fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w400)
-                                ),
+                                Text("$startTime - $endTime",
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w400)),
                                 const Padding(
                                   padding: EdgeInsets.only(left: 55.0),
                                   child: Icon(
@@ -130,13 +129,11 @@ class _AppointmentCardState extends State<AppointmentCard> {
                                   ), // Location icon
                                 ),
                                 const SizedBox(width: 10),
-                                Text(
-                                  location,
-                                  style: const TextStyle(
-                                     fontSize: 14,
+                                Text(location,
+                                    style: const TextStyle(
+                                        fontSize: 14,
                                         fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w400)
-                                ),
+                                        fontWeight: FontWeight.w400)),
                               ],
                             ),
                             const SizedBox(height: 7),
@@ -151,13 +148,11 @@ class _AppointmentCardState extends State<AppointmentCard> {
                                   ), // Info icon
                                 ),
                                 const SizedBox(width: 10),
-                                Text(
-                                  appointmentName,
-                                  style: const TextStyle(
-                                      fontSize: 14,
+                                Text(appointmentName,
+                                    style: const TextStyle(
+                                        fontSize: 14,
                                         fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w400)
-                                ),
+                                        fontWeight: FontWeight.w400)),
                               ],
                             ),
                           ],

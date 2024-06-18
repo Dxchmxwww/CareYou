@@ -5,7 +5,7 @@ const UserRoutes = require('./Routes/user');
 const pillRoutes = require('./routes/Pill_management');
 const authRoutes = require('./Routes/auth');
 const AppointmentRoutes = require('./routes/Appointment_management');
-const profileRoutes = require('./routes/profile');
+const profileRoutes = require('./Routes/profile');
 const verifyToken = require('./middleware/verifyToken');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser'); 
@@ -15,10 +15,10 @@ app.use(corsMiddleware);
 
 // Route middlewares
 app.use(bodyParser.json());
-app.use(cookieParser());
 
 app.use('/auth', authRoutes);
 
+app.use(cookieParser());
 app.use(verifyToken);
 
 app.use('/pills', pillRoutes);

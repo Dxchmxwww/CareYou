@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:careyou/widgets/navbar.dart';
-import 'package:careyou/widgets/app_card.dart';
+
 
 class DocApp extends StatelessWidget {
   const DocApp({super.key});

@@ -1,22 +1,34 @@
+import 'package:careyou/pages/user_onboard_page.dart';
+import 'package:careyou/pages/log_in_page.dart';
+import 'package:careyou/pages/sign_up_page.dart';
+import 'package:careyou/pages/elder_profile.dart';
+import 'package:careyou/pages/caregiver_profile.dart';
+import 'package:careyou/pages/test_home.dart';
 import 'package:flutter/material.dart';
-import 'package:careyou/pages/pill_box.dart';
-import 'package:careyou/pages/doctor_app.dart';
-import 'package:careyou/pages/doctor_app.dart';
-import 'pages/app_manage.dart';
-import 'pages/add_app.dart';
+import 'package:careyou/pages/homePageElder.dart';
+import 'package:careyou/pages/homePageCareGiver.dart';
+
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: AddApp(),
+    return MaterialApp(
+      title: 'UserBoarding',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const user_onboard_page(),
+        '/login': (context) => const log_in_page(selectedRole: ''),
+        '/signup': (context) => const SignUpPage(selectedRole: ''),
+        '/home': (context) => const test_home(token: ''),
+        '/profileElderly': (context) => const HomePageElder(token: ''),
+        '/profileCaregiver': (context) => const HomePageCareGiver(token: ''),
+      },
     );
   }
 }
-

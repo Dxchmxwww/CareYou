@@ -199,7 +199,114 @@ router.post('/CreatePillReminder',
         }
     });
 
+    router.get('/ShowPillRemindersListForElderlyPillBoxs', verifyToken, async (req, res) => {
+        try {
+            const pool = await sql.connect(config);
+            const id = req.user.id;
+    
+            // Check if the user is an elderly
+            const roleCheck = await pool.request()
+                .input('id', sql.Int, id)
+                .query('SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = \'Elderly\'');
+    
+            if (roleCheck.recordset.length === 0) {
+                return res.status(403).send('Unauthorized access');
+            }
+    
+            // Get today's date in 'YYYY-MM-DD' format
+            const today = new Date().toISOString().split('T')[0];
+    
+            // Fetch today's pill reminders for the elderly
+            const elderlyPillList = await pool.request()
+                .input('elderly_id', sql.Int, id)
+                .input('today', sql.Date, today)
+                .query(`
+                    SELECT 
+                        pill_name, 
+                        pill_type, 
+                        pill_note,  
+                        pill_Time,
+                        Frequency
+                    FROM 
+                        CareYou.[Pill_Reminder] 
+                    WHERE 
+                        elderly_id = @elderly_id
+                        AND start_date <= @today 
+                        AND end_date >= @today
+                `);
+    
+            if (elderlyPillList.recordset.length > 0) {
+                const pillList = elderlyPillList.recordset.map(row => ({
+                    pill_name: row.pill_name,
+                    pill_type: row.pill_type,
+                    pill_note: row.pill_note,
+                    pill_Time: row.pill_Time,
+                    frequency: row.Frequency
+                }));
+                res.status(200).json(pillList);
+            } else {
+                res.status(404).send('No pill reminders found for today');
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+    
 
+    router.get('/ShowTodayPillRemindersOfElderForCaregiverHome', verifyToken, async (req, res) => {
+        try {
+            const pool = await sql.connect(config);
+            const id = req.user.id;
+    
+            const RoleCheck = await pool.request()
+                .input('id', sql.Int, id)
+                .query('SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = \'Caregiver\'');
+    
+            if (RoleCheck.recordset.length === 0) {
+                return res.status(403).send('Unauthorized access');
+            }
+    
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+    
+            const CaregiverPillList = await pool.request()
+                .input('caregiver_id', sql.Int, id)
+                .input('today', sql.Date, today)
+                .query(`
+                    SELECT 
+                        pr.pill_name, 
+                        pr.pill_type, 
+                        pr.pill_note,  
+                        pr.pill_Time,
+                        prt.reminder_times
+                    FROM 
+                        CareYou.[Pill_Reminder] as pr
+                    JOIN 
+                        CareYou.[PillReminder_Time] as prt 
+                    ON 
+                        pr.PillReminder_id = prt.PillReminder_id
+                    WHERE 
+                        pr.caregiver_id = @caregiver_id
+                        AND pr.start_date <= @today 
+                        AND pr.end_date >= @today
+                `);
+    
+            if (CaregiverPillList.recordset.length > 0) {
+                const PillList = CaregiverPillList.recordset.map(row => ({
+                    pill_name: row.pill_name,
+                    pill_type: row.pill_type,
+                    pill_note: row.pill_note,
+                    pill_Time: row.pill_Time,
+                    reminder_times: new Date(row.reminder_times).toISOString().split('T')[1].substring(0, 5)
+                }));
+                res.status(200).json(PillList);
+            } 
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+    
     router.get('/ShowTodayPillRemailderListForElderly', verifyToken , async (req, res) => {
         try {
             const pool = await sql.connect(config);
@@ -246,9 +353,8 @@ router.post('/CreatePillReminder',
                     reminder_times: new Date(row.reminder_times).toISOString().split('T')[1].substring(0, 5)
                 }));
                 res.status(200).json(PillList);
-            } else {
-                res.status(200).json([]);
-            }
+            } 
+
         } catch (err) {
             console.error(err);
             res.status(500).send(err.message);
@@ -470,6 +576,8 @@ router.post('/CreatePillReminder',
             res.status(500).send('Internal Server Error');
         }
     });
+
+    
 
     router.delete('/DeletePillReminder/:id', verifyToken, async (req, res) => {
         try {
