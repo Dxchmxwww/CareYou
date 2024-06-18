@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 const corsMiddleware = require('./middleware/Middleware');
-const UserRoutes = require('./Routes/user');
 const pillRoutes = require('./routes/Pill_management');
 const authRoutes = require('./Routes/auth');
 const AppointmentRoutes = require('./routes/Appointment_management');
@@ -24,7 +23,6 @@ app.use(verifyToken);
 app.use('/pills', pillRoutes);
 app.use('/appointments', AppointmentRoutes);
 app.use('/profiles', profileRoutes);
-app.use('/users', UserRoutes);
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

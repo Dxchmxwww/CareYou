@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const sql = require('mssql');
-const config = require('../config'); 
+const config = require('../config');
 const bcrypt = require('bcryptjs');
 const verifyToken = require('../middleware/verifyToken');
 
@@ -13,10 +13,13 @@ router.get('/Caregiver', verifyToken, async (req, res) => {
         // Check if the user is a caregiver
         const roleCheck = await pool.request()
             .input('id', sql.Int, caregiverId)
-            .query('SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = \'Caregiver\'');
+            .query(`
+                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
+                UNION
+                SELECT role FROM CareYou.[Elderly] WHERE id = @id
+            `);
 
-            
-        if (roleCheck.recordset.length === 0) {
+        if (roleCheck.recordset[0].role !== "Caregiver") {
             // If user is not a caregiver, send appropriate response
             return res.status(403).send('User is not authorized as a caregiver');
         }
@@ -36,50 +39,41 @@ router.get('/Caregiver', verifyToken, async (req, res) => {
         }
 
         const caregiverInfo = caregiverInfoResult.recordset[0];
-        // console.log(caregiverInfo.password);
-        // const isPassword = await bcrypt.caregiverInfo.password;
-        // const passwordLength = isPassword.length;
-        // console.log(isPassword);
 
         const elderInfoQuery = `
-            SELECT username, yourelderly_relation
-            FROM CareYou.[user]
-            WHERE yourelderly_email = @yourelderly_email
+            SELECT username
+            FROM CareYou.[Elderly]
+            WHERE email = @yourelderly_email
         `;
-		const elderInfoResult = await pool
-			.request()
-			.input(
-				"yourelderly_email",
-				sql.VarChar,
-				caregiverInfo.yourelderly_email
-			)
-			.query(elderInfoQuery);
+        const elderInfoResult = await pool.request()
+            .input('yourelderly_email', sql.VarChar, caregiverInfo.yourelderly_email)
+            .query(elderInfoQuery);
 
-		if (elderInfoResult.recordset.length === 0) {
-		return res.status(404).send("Elder information not found");
-		}
+        if (elderInfoResult.recordset.length === 0) {
+            return res.status(404).send('Elder information not found');
+        }
 
-		const elders = elderInfoResult.recordset;
+        const elders = elderInfoResult.recordset;
 
         const currentDate = new Date().toLocaleString('en-us', {
             weekday: 'short',
             day: 'numeric',
             year: 'numeric',
         });
-        
+
         res.json({
-			caregiver: {
-				username: caregiverInfo.username,
-				email: caregiverInfo.email,
-				yourelderly_email: caregiverInfo.yourelderly_email,
-				yourelderly_relation: caregiverInfo.yourelderly_relation,
-			},
-			elders: elders.map((elder) => ({
-				username: elder.username,
-				relation: elder.relation,
-			})),
-			currentDate: currentDate,
-		});
+            caregiver: {
+                username: caregiverInfo.username,
+                email: caregiverInfo.email,
+                yourelderly_email: caregiverInfo.yourelderly_email,
+                yourelderly_relation: caregiverInfo.yourelderly_relation,
+            },
+            elders: elders.map(elder => ({
+                username: elder.username,
+                // relation: elder.yourelary_relation,
+            })),
+            currentDate: currentDate,
+        });
 
     } catch (err) {
         console.error(err);
@@ -87,26 +81,29 @@ router.get('/Caregiver', verifyToken, async (req, res) => {
     }
 });
 
-
 router.get('/Elderly', verifyToken, async (req, res) => {
     try {
         const elderlyId = req.user.id;
         const pool = await sql.connect(config);
 
-        // Check if the user is a caregiver
-        const roleCheck = await pool.request()
+        // Check if the user is an elderly
+         const roleCheck = await pool.request()
             .input('id', sql.Int, elderlyId)
-            .query('SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = \'Elderly\'');
+            .query(`
+                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
+                UNION
+                SELECT role FROM CareYou.[Elderly] WHERE id = @id
+            `);
 
-            
-        if (roleCheck.recordset.length === 0) {
+        if (roleCheck.recordset[0] == 'Elderly') {
+            console.log(roleCheck.recordset[0])
             // If user is not a caregiver, send appropriate response
-            return res.status(403).send('User is not authorized as a elderlyr');
+            return res.status(403).send('User is not authorized as a Elderly');
         }
 
         const elderlyInfoQuery = `
             SELECT username, email, yourcaregiver_email
-            FROM CareYou.[user] 
+            FROM CareYou.[Elderly] 
             WHERE id = @id
         `;
         const elderlyInfoResult = await pool.request()
@@ -118,23 +115,22 @@ router.get('/Elderly', verifyToken, async (req, res) => {
         }
 
         const elderlyInfo = elderlyInfoResult.recordset[0];
+        const caregiverEmail = elderlyInfo.yourcaregiver_email;
 
-        const CaregiverEmail = elderlyInfo.yourcaregiver_email;
-
-        const CaregiverUsernameQuery = `
+        const caregiverUsernameQuery = `
             SELECT username
-            FROM CareYou.[user] 
+            FROM CareYou.[Caregiver] 
             WHERE email = @yourcaregiver_email
         `;
-        const CaregiverUsernameResult = await pool.request()
-            .input('yourcaregiver_email', sql.VarChar, CaregiverEmail)
-            .query(CaregiverUsernameQuery);
+        const caregiverUsernameResult = await pool.request()
+            .input('yourcaregiver_email', sql.VarChar, caregiverEmail)
+            .query(caregiverUsernameQuery);
 
-        if (CaregiverUsernameResult.recordset.length === 0) {
-            return res.status(404).send('Caregiver Username information not found');
+        if (caregiverUsernameResult.recordset.length === 0) {
+            return res.status(404).send('Caregiver username information not found');
         }
 
-        const CaregiverUsername = CaregiverUsernameResult.recordset[0];
+        const caregiverUsername = caregiverUsernameResult.recordset[0];
 
         const currentDate = new Date().toLocaleString('en-us', {
             weekday: 'short',
@@ -145,11 +141,10 @@ router.get('/Elderly', verifyToken, async (req, res) => {
         res.json({
             username: elderlyInfo.username,
             email: elderlyInfo.email,
-            your_caregiver: CaregiverUsername.username,
-            currentDate: currentDate
-            
+            your_caregiver: caregiverUsername.username,
+            currentDate: currentDate,
         });
-        
+
     } catch (err) {
         console.error(err);
         res.status(500).send('Internal Server Error');
@@ -157,25 +152,52 @@ router.get('/Elderly', verifyToken, async (req, res) => {
 });
 
 router.put("/EditPassword", verifyToken, async (req, res) => {
-	const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
 
-	if (!oldPassword || !newPassword) {
-		return res
-			.status(400)
-			.json({ error: "Both old password and new password are required" });
-	}
+    if (!oldPassword || !newPassword) {
+        return res.status(400).json({ error: "Both old password and new password are required" });
+    }
 
-	try {
-		const pool = await sql.connect(config);
+    try {
+        const id = req.user.id;
+        const pool = await sql.connect(config);
 
-		// Fetch user's current hashed password from the database
-		const fetchPasswordQuery = `
-            SELECT password
-            FROM CareYou.[user]
-            WHERE id = @id
+        // Check if the user is a caregiver or elderly
+        const roleCheckQuery = `
+            SELECT 'Caregiver' AS role FROM CareYou.[Caregiver] WHERE id = @id
+            UNION
+            SELECT 'Elderly' AS role FROM CareYou.[Elderly] WHERE id = @id
         `;
+        const roleCheckResult = await pool.request()
+            .input('id', sql.Int, id)
+            .query(roleCheckQuery);
+
+        if (roleCheckResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userRole = roleCheckResult.recordset[0].role;
+
+        // Fetch user's current hashed password from the appropriate table
+        let fetchPasswordQuery, tableName;
+        if (userRole === 'Caregiver') {
+            fetchPasswordQuery = `
+                SELECT password
+                FROM CareYou.[Caregiver]
+                WHERE id = @id
+            `;
+            tableName = 'Caregiver';
+        } else if (userRole === 'Elderly') {
+            fetchPasswordQuery = `
+                SELECT password
+                FROM CareYou.[Elderly]
+                WHERE id = @id
+            `;
+            tableName = 'Elderly';
+        }
+
         const fetchPasswordResult = await pool.request()
-            .input('id', sql.Int, req.user.id)
+            .input('id', sql.Int, id)
             .query(fetchPasswordQuery);
 
         if (fetchPasswordResult.recordset.length === 0) {
@@ -195,177 +217,134 @@ router.put("/EditPassword", verifyToken, async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedNewPassword = await bcrypt.hash(newPassword, salt);
 
-        // Update the password in the database
+        // Update the password in the appropriate table
         const updatePasswordQuery = `
-            UPDATE CareYou.[user]
+            UPDATE CareYou.[${tableName}]
             SET password = @hashedNewPassword
-            WHERE id = @idd
+            WHERE id = @id
         `;
-		await pool
-			.request()
-			.input("hashedNewPassword", sql.VarChar, hashedNewPassword)
-			.input("idd", sql.Int, req.user.id)
-			.query(updatePasswordQuery);
+        await pool.request()
+            .input('hashedNewPassword', sql.VarChar, hashedNewPassword)
+            .input('id', sql.Int, id)
+            .query(updatePasswordQuery);
 
-		res.status(200).json({ message: "Password updated successfully" });
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Internal Server Error" });
-	}
+        res.status(200).json({ message: "Password updated successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
 // Endpoint to fetch username
 router.get("/Showusername", verifyToken, async (req, res) => {
-	try {
-		const id = req.user.id;
-		const pool = await sql.connect(config);
-		const UsernameCheck = await pool
-			.request()
-			.input("id", sql.Int, id)
-			.query("SELECT username FROM CareYou.[user] WHERE id = @id");
+    try {
+        const id = req.user.id;
+        const pool = await sql.connect(config);
 
-		if (UsernameCheck.recordset.length === 0) {
-			return res.status(404).json({ error: "Username not found" });
-		}
+        // Check if the user is a caregiver or elderly
+        const roleCheckQuery = `
+            SELECT 'Caregiver' AS role FROM CareYou.[Caregiver] WHERE id = @id
+            UNION
+            SELECT 'Elderly' AS role FROM CareYou.[Elderly] WHERE id = @id
+        `;
+        const roleCheckResult = await pool.request()
+            .input('id', sql.Int, id)
+            .query(roleCheckQuery);
 
-		res.json(UsernameCheck.recordset[0]);
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Internal Server Error" });
-	}
+        if (roleCheckResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userRole = roleCheckResult.recordset[0].role;
+        let usernameQuery, tableName;
+
+        // Determine query and table based on user role
+        if (userRole === 'Caregiver') {
+            usernameQuery = `
+                SELECT username FROM CareYou.[Caregiver] WHERE id = @id
+            `;
+            tableName = 'Caregiver';
+        } else if (userRole === 'Elderly') {
+            usernameQuery = `
+                SELECT username FROM CareYou.[Elderly] WHERE id = @id
+            `;
+            tableName = 'Elderly';
+        }
+
+        // Fetch username from the appropriate table
+        const usernameResult = await pool.request()
+            .input('id', sql.Int, id)
+            .query(usernameQuery);
+
+        if (usernameResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'Username not found' });
+        }
+
+        res.json(usernameResult.recordset[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
+
 
 router.put("/EditUsername", verifyToken, async (req, res) => {
-	const { newUsername } = req.body;
+    const { newUsername } = req.body;
 
-	if (!newUsername) {
-		return res.status(400).json({ error: "New username is required" });
-	}
+    if (!newUsername) {
+        return res.status(400).json({ error: "New username is required" });
+    }
 
-	try {
-		const pool = await sql.connect(config);
+    try {
+        const id = req.user.id;
+        const pool = await sql.connect(config);
 
-		// Update username in the database
-		const updateUsernameQuery = `
-            UPDATE CareYou.[user]
-            SET username = @newUsername
-            WHERE id = @id
+        // Check if the user is a caregiver or elderly
+        const roleCheckQuery = `
+            SELECT 'Caregiver' AS role FROM CareYou.[Caregiver] WHERE id = @id
+            UNION
+            SELECT 'Elderly' AS role FROM CareYou.[Elderly] WHERE id = @id
         `;
-		await pool
-			.request()
-			.input("newUsername", sql.NVarChar, newUsername)
-			.input("id", sql.Int, req.user.id)
-			.query(updateUsernameQuery);
+        const roleCheckResult = await pool.request()
+            .input('id', sql.Int, id)
+            .query(roleCheckQuery);
 
-		res.status(200).json({ message: "Username updated successfully" });
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Internal Server Error" });
-	}
+        if (roleCheckResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userRole = roleCheckResult.recordset[0].role;
+        let updateUsernameQuery, tableName;
+
+        // Determine query and table based on user role
+        if (userRole === 'Caregiver') {
+            updateUsernameQuery = `
+                UPDATE CareYou.[Caregiver]
+                SET username = @newUsername
+                WHERE id = @id
+            `;
+            tableName = 'Caregiver';
+        } else if (userRole === 'Elderly') {
+            updateUsernameQuery = `
+                UPDATE CareYou.[Elderly]
+                SET username = @newUsername
+                WHERE id = @id
+            `;
+            tableName = 'Elderly';
+        }
+
+        // Update username in the appropriate table
+        await pool.request()
+            .input('newUsername', sql.NVarChar, newUsername)
+            .input('id', sql.Int, id)
+            .query(updateUsernameQuery);
+
+        res.status(200).json({ message: "Username updated successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
-
-router.post("/AddElderly", verifyToken, async (req, res) => {
-	const { elderEmail, relation } = req.body;
-
-	if (!elderEmail || !relation) {
-		return res
-			.status(400)
-			.json({ error: "Both elderEmail and relation are required" });
-	}
-
-	try {
-		const pool = await sql.connect(config);
-
-		// Check if elderEmail already exists
-		const emailCheckQuery = `
-            SELECT COUNT(*) AS count
-            FROM CareYou.[user]
-            WHERE yourelderly_email = @yourelderly_email
-        `;
-		const emailCheckResult = await pool
-			.request()
-			.input("yourelderly_email", sql.VarChar, elderEmail)
-			.query(emailCheckQuery);
-
-		if (emailCheckResult.recordset[0].count > 0) {
-			return res
-				.status(400)
-				.json({ error: "Elderly with this email already exists" });
-		}
-
-		// Insert new elderly user
-		const insertElderQuery = `
-            INSERT INTO CareYou.[user] (email, role, yourcaregiver_email, yourelderly_relation)
-            VALUES (@yourelderly_email, 'Elderly', @yourcaregiver_email, @yourelderly_relation)
-        `;
-		await pool
-			.request()
-			.input("yourelderly_email", sql.VarChar, elderEmail)
-			.input("yourcaregiver_email", sql.VarChar, req.user.email) // Assuming req.user.email is caregiver's email
-			.input("yourelderly_relation", sql.NVarChar, relation)
-			.query(insertElderQuery);
-
-		res.status(200).json({ message: "Elderly added successfully" });
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Internal Server Error" });
-	}
-});
-
-// router.delete("/DeleteElderly/:elderId", verifyToken, async (req, res) => {
-// 	const elderId = req.params.elderId;
-
-// 	try {
-// 		const pool = await sql.connect(config);
-
-// 		// Check if the user making the request is a caregiver and has permission
-// 		// Assuming you have a middleware function verifyToken to check and decode the JWT token
-// 		const { email } = req.user; // Assuming verifyToken adds `user` object to req
-// 		const userRoleQuery = `
-//             SELECT role
-//             FROM CareYou.[user]
-//             WHERE email = @email
-//         `;
-// 		const roleResult = await pool
-// 			.request()
-// 			.input("email", sql.VarChar, email)
-// 			.query(userRoleQuery);
-
-// 		if (roleResult.recordset.length === 0) {
-// 			return res.status(404).json({ error: "User not found" });
-// 		}
-
-// 		const userRole = roleResult.recordset[0].role;
-
-// 		// Only caregivers can perform this action
-// 		if (userRole !== "caregiver") {
-// 			return res.status(403).json({ error: "Unauthorized" });
-// 		}
-
-// 		// Update elderly user's yourelderly_email and yourelderly_relationship to NULL
-// 		const updateElderQuery = `
-//             UPDATE CareYou.[user]
-//             SET yourelderly_email = NULL,
-//                 yourelderly_relation = NULL
-//             WHERE id = @elderId AND role = 'elderly'
-//         `;
-// 		const updateResult = await pool
-// 			.request()
-// 			.input("elderId", sql.Int, elderId)
-// 			.query(updateElderQuery);
-
-// 		if (updateResult.rowsAffected[0] === 0) {
-// 			return res.status(404).json({ error: "Elderly not found" });
-// 		}
-
-// 		res.status(200).json({
-// 			message: "Elderly details deleted successfully",
-// 		});
-// 	} catch (err) {
-// 		console.error(err);
-// 		res.status(500).json({ error: "Internal Server Error" });
-// 	}
-// });
 
 
 
