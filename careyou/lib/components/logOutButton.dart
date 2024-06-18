@@ -1,5 +1,6 @@
-// ignore_for_file: use_build_context_synchronously, avoid_print, file_names
+import 'package:careyou/pages/user_onboard_page.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class LogoutButton extends StatelessWidget {
   const LogoutButton({super.key});
@@ -80,20 +81,9 @@ class LogoutButton extends StatelessWidget {
                     width: 8), // Adjust spacing between buttons if needed
                 TextButton(
                   onPressed: () async {
-                    // try {
-                    //   await FirebaseAuth.instance.signOut();
-                    //   await _handleGoogleSignOut(context);
-
-                    //   // After signing out, navigate back to the login screen or any other desired screen
-                    //   // For example, you can navigate back to the home screen
-                    //   Navigator.pushAndRemoveUntil(
-                    //     context,
-                    //     MaterialPageRoute(builder: (context) => const Homepage()),
-                    //     (Route<dynamic> route) => false,
-                    //   );
-                    // } catch (e) {
-                    //   print('Error signing out: $e');
-                    // }
+                    Navigator.of(context)
+                        .pop(); // Close the dialog before making the network request
+                    await _handleLogout(context);
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
@@ -117,13 +107,22 @@ class LogoutButton extends StatelessWidget {
     );
   }
 
-  Future<void> _handleGoogleSignOut(BuildContext context) async {
-    // try {
-    //   final GoogleSignIn googleSignIn = GoogleSignIn();
-    //   await googleSignIn.signOut();
-    //   // Perform any other sign-out related operations here
-    // } catch (e) {
-    //   print(e);
-    // }
+  Future<void> _handleLogout(BuildContext context) async {
+    final url = 'http://localhost:8000/auth/logout';
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      // Navigate back to the login screen or home screen
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                const user_onboard_page()), // Change this to your login screen
+        (Route<dynamic> route) => false,
+      );
+    } else {
+      // Handle error
+      print('Error logging out: ${response.statusCode}');
+    }
   }
 }
