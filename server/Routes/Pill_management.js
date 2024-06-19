@@ -743,6 +743,39 @@ router.put(
 		}
 	}
 );
+router.put('/UpdatePillStatus', verifyToken, async (req, res) => {
+    const { PillReminder_id, reminder_times } = req.body;
+
+    // Validate request body
+    if (!PillReminder_id || !reminder_times) {
+        return res.status(400).send('PillReminder_id and reminder_time are required');
+    }
+
+    try {
+        const pool = await sql.connect(config);
+
+        // Update the status in the PillReminder_Time table
+        const updateResult = await pool.request()
+            .input('PillReminder_id', sql.Int, PillReminder_id)
+            .input('reminder_times', sql.NVarChar, reminder_times)
+            .input('status', sql.Int, 1) // status = 1 indicates taken
+            .query(`
+                UPDATE CareYou.PillReminder_Time 
+                SET status = @status 
+                WHERE PillReminder_id = @PillReminder_id 
+                  AND reminder_times = @reminder_times
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            return res.status(404).send('Pill reminder time not found');
+        }
+
+        res.status(200).send('Pill status updated successfully');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 	try {
