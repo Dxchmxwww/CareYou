@@ -69,7 +69,7 @@ router.get('/Caregiver', verifyToken, async (req, res) => {
                 yourelderly_relation: caregiverInfo.yourelderly_relation,
             },
             elders: elders.map(elder => ({
-                username: elder.username,
+                username: elder.username
                 // relation: elder.yourelary_relation,
             })),
             currentDate: currentDate,
