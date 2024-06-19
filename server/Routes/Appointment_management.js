@@ -554,14 +554,7 @@ router.put(
 		const { Appointment_name, Date, StartTime, EndTime, Location } =
 			req.body;
 
-<<<<<<< HEAD
-            // Check if the user is a caregiver
-            const roleCheck = await pool.request()
-                .input('id', sql.Int, caregiver_id)
-                .query('SELECT role FROM CareYou.[Caregiver] WHERE id = @id');
-=======
 		const caregiver_id = req.user.id;
->>>>>>> babegonz
 
 		try {
 			const pool = await sql.connect(config.database);
@@ -718,13 +711,7 @@ router.delete(
 		try {
 			const pool = await sql.connect(config);
 
-<<<<<<< HEAD
-            const RoleCheck = await pool.request()
-                .input('id', sql.Int,id)
-                .query('SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = \'Caregiver\'');
-=======
 			const id = req.user.id;
->>>>>>> babegonz
 
 			const RoleCheck = await pool
 				.request()

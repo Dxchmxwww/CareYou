@@ -15,12 +15,14 @@ app.use(corsMiddleware);
 // Route middlewares
 app.use(bodyParser.json());
 
-app.use(express.json());
-app.use("/auth", authRoutes);
+app.use('/auth', authRoutes);
+
+app.use(cookieParser());
 app.use(verifyToken);
-app.use("/pills", pillRoutes);
-app.use("/appointments", AppointmentRoutes);
-app.use("/profiles", profileRoutes);
+
+app.use('/pills', pillRoutes);
+app.use('/appointments', AppointmentRoutes);
+app.use('/profiles', profileRoutes);
 
 app.listen(port, () => {
 	console.log(`Server is running on http://localhost:${port}`);

@@ -47,15 +47,20 @@ router.get("/Caregiver", verifyToken, async (req, res) => {
             FROM CareYou.[Elderly]
             WHERE email = @yourelderly_email
         `;
-        const elderInfoResult = await pool.request()
-            .input('yourelderly_email', sql.VarChar, caregiverInfo.yourelderly_email)
-            .query(elderInfoQuery);
+		const elderInfoResult = await pool
+			.request()
+			.input(
+				"yourelderly_email",
+				sql.VarChar,
+				caregiverInfo.yourelderly_email
+			)
+			.query(elderInfoQuery);
 
 		if (elderInfoResult.recordset.length === 0) {
 			return res.status(404).send("Elder information not found");
 		}
 
-        const elders = elderInfoResult.recordset;
+		const elders = elderInfoResult.recordset;
 
 		const currentDate = new Date().toLocaleString("en-us", {
 			weekday: "short",
@@ -155,11 +160,13 @@ router.get("/Elderly", verifyToken, async (req, res) => {
 });
 
 router.put("/EditPassword", verifyToken, async (req, res) => {
-    const { oldPassword, newPassword } = req.body;
+	const { oldPassword, newPassword } = req.body;
 
-    if (!oldPassword || !newPassword) {
-        return res.status(400).json({ error: "Both old password and new password are required" });
-    }
+	if (!oldPassword || !newPassword) {
+		return res
+			.status(400)
+			.json({ error: "Both old password and new password are required" });
+	}
 
 	try {
 		const id = req.user.id;
@@ -304,13 +311,12 @@ router.get("/Showusername", verifyToken, async (req, res) => {
 	}
 });
 
-
 router.put("/EditUsername", verifyToken, async (req, res) => {
-    const { newUsername } = req.body;
+	const { newUsername } = req.body;
 
-    if (!newUsername) {
-        return res.status(400).json({ error: "New username is required" });
-    }
+	if (!newUsername) {
+		return res.status(400).json({ error: "New username is required" });
+	}
 
 	try {
 		const id = req.user.id;
@@ -357,36 +363,6 @@ router.put("/EditUsername", verifyToken, async (req, res) => {
 			.input("newUsername", sql.NVarChar, newUsername)
 			.input("id", sql.Int, id)
 			.query(updateUsernameQuery);
-
-        if (roleCheckResult.recordset.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        const userRole = roleCheckResult.recordset[0].role;
-        let updateUsernameQuery, tableName;
-
-		// Determine query and table based on user role
-		if (userRole === "Caregiver") {
-			updateUsernameQuery = `
-                UPDATE CareYou.[Caregiver]
-                SET username = @newUsername
-                WHERE id = @id
-            `;
-			tableName = "Caregiver";
-		} else if (userRole === "Elderly") {
-			updateUsernameQuery = `
-                UPDATE CareYou.[Elderly]
-                SET username = @newUsername
-                WHERE id = @id
-            `;
-			tableName = "Elderly";
-		}
-
-        // Update username in the appropriate table
-        await pool.request()
-            .input('newUsername', sql.NVarChar, newUsername)
-            .input('id', sql.Int, id)
-            .query(updateUsernameQuery);
 
 		res.status(200).json({ message: "Username updated successfully" });
 	} catch (err) {
