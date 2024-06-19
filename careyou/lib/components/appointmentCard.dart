@@ -61,7 +61,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Your Appointments",
+                      "Today Doctor Appointments",
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 18,
@@ -107,7 +107,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                                         style: const TextStyle(
                                             fontSize: 14,
                                             fontFamily: 'Poppins',
-                                            fontWeight: FontWeight.w400)),
+                                            fontWeight: FontWeight.w500)),
                                     const Padding(
                                       padding: EdgeInsets.only(left: 55.0),
                                       child: Icon(
@@ -121,7 +121,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                                         style: const TextStyle(
                                             fontSize: 14,
                                             fontFamily: 'Poppins',
-                                            fontWeight: FontWeight.w400)),
+                                            fontWeight: FontWeight.w500)),
                                   ],
                                 ),
                                 const SizedBox(height: 7),
@@ -140,7 +140,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                                         style: const TextStyle(
                                             fontSize: 14,
                                             fontFamily: 'Poppins',
-                                            fontWeight: FontWeight.w400)),
+                                            fontWeight: FontWeight.w500)),
                                   ],
                                 ),
                               ],

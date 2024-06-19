@@ -9,7 +9,7 @@ class Pill {
   final String pillNote;
   final String pillTime;
   final String reminderTimes;
-  final int? status; // New field for status
+  final int status; // New field for status
 
   Pill({
     required this.pillName,
@@ -17,7 +17,7 @@ class Pill {
     required this.pillNote,
     required this.pillTime,
     required this.reminderTimes,
-    required this.status, // Initialize with s
+    required this.status, // Initialize with status
   });
 
   factory Pill.fromJson(Map<String, dynamic> json) {
@@ -27,28 +27,15 @@ class Pill {
       pillNote: json['pill_note'],
       pillTime: json['pill_Time'],
       reminderTimes: json['reminder_times'],
-      status: json['status'],
+      status: json['status'], // Assign status from JSON
     );
   }
 }
 
-class PillsCardCareGiver extends StatefulWidget {
+class PillsCardCareGiver extends StatelessWidget {
   final String token;
 
   const PillsCardCareGiver({required this.token});
-
-  @override
-  _PillsCardCareGiverState createState() => _PillsCardCareGiverState();
-}
-
-class _PillsCardCareGiverState extends State<PillsCardCareGiver> {
-  late Future<List<Pill>> _pillsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _pillsFuture = fetchPills();
-  }
 
   Future<List<Pill>> fetchPills() async {
     try {
@@ -56,7 +43,7 @@ class _PillsCardCareGiverState extends State<PillsCardCareGiver> {
         Uri.parse(
             'http://localhost:8000/pills/ShowTodayPillRemindersOfElderForCaregiverHome'),
         headers: {
-          'Authorization': 'Bearer ${widget.token}',
+          'Authorization': 'Bearer $token', // Replace with your actual token
         },
       );
 
@@ -64,17 +51,7 @@ class _PillsCardCareGiverState extends State<PillsCardCareGiver> {
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
-        print('Data from Backend: $data');
-
-        // Filter pills scheduled for today
-        DateTime now = DateTime.now();
-        List<Pill> todayPills = data
-            .map((json) => Pill.fromJson(json))
-            .where((pill) => isSameDay(pill.reminderTimes,
-                now)) // Custom function to check if pill is scheduled for today
-            .toList();
-
-        return todayPills;
+        return data.map((json) => Pill.fromJson(json)).toList();
       } else if (response.statusCode == 204) {
         print('You have no pills for Today');
         return [];
@@ -89,33 +66,10 @@ class _PillsCardCareGiverState extends State<PillsCardCareGiver> {
     }
   }
 
-  bool isSameDay(String reminderTimes, DateTime date) {
-    try {
-      if (reminderTimes.contains('T')) {
-        // For pillTime in full date-time format (e.g., yyyy-MM-dd'T'HH:mm:ss)
-        DateTime pillDateTime =
-            DateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(reminderTimes);
-        return pillDateTime.year == date.year &&
-            pillDateTime.month == date.month &&
-            pillDateTime.day == date.day;
-      } else {
-        // For reminderTimes in time format (e.g., HH:mm)
-        List<String> timeParts = reminderTimes.split(':');
-        DateTime pillDateTime = DateTime(date.year, date.month, date.day,
-            int.parse(timeParts[0]), int.parse(timeParts[1]));
-        return true; // Assuming the time format implies today
-      }
-    } catch (e) {
-      // Handle invalid date format here, e.g., show an error message or log it
-      print('Invalid date format for pill time: $reminderTimes');
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Pill>>(
-      future: _pillsFuture,
+      future: fetchPills(),
       builder: (context, AsyncSnapshot<List<Pill>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -124,9 +78,6 @@ class _PillsCardCareGiverState extends State<PillsCardCareGiver> {
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(child: Text('You don\'t have pills today'));
         } else {
-          snapshot.data!
-              .sort((a, b) => a.reminderTimes.compareTo(b.reminderTimes));
-
           return ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
@@ -174,50 +125,8 @@ class PillCard extends StatelessWidget {
       print('Invalid date format for pill time: ${pill.reminderTimes}');
     }
 
+    // Check if the pill status is 'TAKEN' (status == 1)
     bool isTaken = pill.status == 1;
-
-    String imagePath = 'assets/images/';
-    if (isTaken) {
-      switch (pill.pillType.toLowerCase()) {
-        case 'capsule':
-          imagePath += 'g_capsule.png';
-          break;
-        case 'gel':
-          imagePath += 'g_gel.png';
-          break;
-        case 'tablet':
-          imagePath += 'g_tablets.png';
-          break;
-        case 'injection':
-          imagePath += 'g_capsule.png';
-          break;
-        case 'lotion':
-          imagePath += 'g_lotion.png';
-          break;
-        default:
-          imagePath += 'default.png'; // Handle default case
-      }
-    } else {
-      switch (pill.pillType.toLowerCase()) {
-        case 'capsule':
-          imagePath += 'capsule.png';
-          break;
-        case 'gel':
-          imagePath += 'gel.png';
-          break;
-        case 'tablet':
-          imagePath += 'tablets.png';
-          break;
-        case 'injection':
-          imagePath += 'capsule.png';
-          break;
-        case 'lotion':
-          imagePath += 'lotion.png';
-          break;
-        default:
-          imagePath += 'default.png'; // Handle default case
-      }
-    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -235,9 +144,7 @@ class PillCard extends StatelessWidget {
       ),
       child: Card(
         elevation: 0,
-        color: isTaken
-            ? const Color.fromARGB(206, 240, 240, 240)
-            : Color.fromARGB(255, 255, 255, 255),
+        color: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -256,8 +163,8 @@ class PillCard extends StatelessWidget {
                     height: 70,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                        image: AssetImage(imagePath),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/crycat.jpeg'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -273,9 +180,7 @@ class PillCard extends StatelessWidget {
                             fontFamily: 'Poppins',
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isTaken
-                                ? const Color.fromARGB(255, 0, 0, 0)
-                                : Color(0xFFee6123),
+                            color: isTaken ? Colors.grey : Color(0xFFee6123),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -285,41 +190,38 @@ class PillCard extends StatelessWidget {
                             fontFamily: 'Poppins',
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: Colors.black54,
+                            color: isTaken ? Colors.grey : Colors.black54,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Row(
                           children: [
                             Icon(Icons.access_time,
-                                color: isTaken
-                                    ? const Color.fromARGB(255, 0, 0, 0)
-                                    : Color(0xFF00916E),
+                                color:
+                                    isTaken ? Colors.grey : Color(0xFF00916E),
                                 size: 19.0),
                             const SizedBox(width: 4),
                             Text(
                               parsedTime != null
                                   ? DateFormat('HH:mm').format(parsedTime)
-                                  : pill
-                                      .reminderTimes, // Format the time or display original text
+                                  : pill.reminderTimes,
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 14,
-                                color: Colors.black,
+                                color: isTaken ? Colors.grey : Colors.black,
                               ),
                             ),
                             const SizedBox(width: 16),
                             Icon(Icons.pending_actions_outlined,
-                                color: isTaken
-                                    ? const Color.fromARGB(255, 0, 0, 0)
-                                    : Color(0xFF00916E)),
+                                color:
+                                    isTaken ? Colors.grey : Color(0xFF00916E)),
                             const SizedBox(width: 4),
                             Text(
-                              isTaken ? 'TAKED' : pill.pillTime,
+                              pill.pillTime,
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 14,
-                                color: Colors.black,
+                                color: isTaken ? Colors.grey : Colors.black,
                               ),
                             ),
                           ],
