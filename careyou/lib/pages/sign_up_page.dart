@@ -6,9 +6,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class SignUpPage extends StatefulWidget {
-  final String selectedRole; // Add role parameter
+  final String selectedRole;
 
-  const SignUpPage({required this.selectedRole}); // Require role parameter
+  const SignUpPage({required this.selectedRole});
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -28,34 +28,38 @@ class _SignUpPageState extends State<SignUpPage> {
     if (_formKey.currentState?.validate() == true) {
       _formKey.currentState?.save();
 
-      final response = await http.post(
-        Uri.parse('http://localhost:8000/auth/register'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'username': _username,
-          'password': _password,
-          'email': _email,
-          'role': widget.selectedRole,
-          'yourelderly_email': _elderEmail,
-          'yourelderly_relation': _relation,
-        }),
-      );
+      try {
+        final response = await http.post(
+          Uri.parse('http://localhost:8000/auth/register'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'username': _username,
+            'password': _password,
+            'email': _email,
+            'role': widget.selectedRole,
+            'yourelderly_email': _elderEmail,
+            'yourelderly_relation': _relation,
+          }),
+        );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
+        print('Response status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
 
-      if (response.statusCode == 201) {
-        print('User registered successfully');
-        Navigator.pushNamed(context, '/login');
-      } else if (response.statusCode == 409) {
-        _showErrorDialog('The elderly user already has a caregiver assigned.');
-      } else if (response.statusCode == 404) {
-        _showErrorDialog('Elderly user not found with provided email.');
-      } else {
-        // Handle other status codes if needed
-        _showErrorDialog('Error: ${response.statusCode}');
+        if (response.statusCode == 201) {
+          print('User registered successfully');
+          _showSuccessDialog(widget.selectedRole);
+        } else if (response.statusCode == 409) {
+          _showErrorDialog(
+              'The elderly user already has a caregiver assigned.');
+        } else if (response.statusCode == 404) {
+          _showErrorDialog('Elderly user not found with provided email.');
+        } else {
+          _showErrorDialog('Error: ${response.statusCode}');
+        }
+      } catch (e) {
+        _showErrorDialog('An error occurred: $e');
       }
     }
   }
@@ -298,8 +302,9 @@ class _SignUpPageState extends State<SignUpPage> {
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     log_in_page(
-                                                        selectedRole: widget
-                                                            .selectedRole),
+                                                  selectedRole:
+                                                      widget.selectedRole,
+                                                ), // Pass empty token for now
                                               ),
                                             );
                                           },
@@ -326,9 +331,8 @@ class _SignUpPageState extends State<SignUpPage> {
   void _showPinDialog() {
     if (widget.selectedRole == 'Elderly') {
       _registerUser();
-      return; // Exit early without showing the dialog
+      return;
     }
-    // Create a new GlobalKey<FormState> for the dialog form
     final GlobalKey<FormState> _dialogFormKey = GlobalKey<FormState>();
 
     showDialog(
@@ -337,7 +341,7 @@ class _SignUpPageState extends State<SignUpPage> {
         return AlertDialog(
           contentPadding: EdgeInsets.all(40),
           content: Form(
-            key: _dialogFormKey, // Use the new GlobalKey here
+            key: _dialogFormKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
@@ -345,8 +349,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   padding: const EdgeInsets.only(bottom: 5.0),
                   child: SvgPicture.asset(
                     'assets/images/partner.svg',
-                    color: Color(
-                        0xFF00916E), // Use the asset path directly from pubspec.yaml
+                    color: Color(0xFF00916E),
                     width: 80,
                     height: 80,
                   ),
@@ -437,7 +440,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   if (_dialogFormKey.currentState != null &&
                       _dialogFormKey.currentState!.validate()) {
                     _registerUser();
-                    Navigator.pop(context); // Close the dialog
+                    Navigator.pop(context);
                   }
                 },
                 child: Text(
@@ -467,6 +470,44 @@ class _SignUpPageState extends State<SignUpPage> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
+              },
+              style: ButtonStyle(
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(const Color(0xFF00916E)),
+              ),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(String selectedRole) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Success'),
+          content: Text('User registered successfully'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        log_in_page(selectedRole: widget.selectedRole),
+                  ),
+                );
               },
               style: ButtonStyle(
                 backgroundColor:

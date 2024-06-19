@@ -409,6 +409,11 @@ router.get(
 						.substring(0, 5),
 				}));
 				res.status(200).json(PillList);
+			} else {
+				// Return a JSON response with the message
+				res.status(204).json({
+					message: "You have no pills for Today nakab",
+				});
 			}
 		} catch (err) {
 			console.error(err);

@@ -294,8 +294,17 @@ router.get("/Showusername", verifyToken, async (req, res) => {
 		if (usernameResult.recordset.length === 0) {
 			return res.status(404).json({ error: "Username not found" });
 		}
+		const currentDate = new Date().toLocaleString("en-us", {
+			weekday: "short",
+			day: "numeric",
+			year: "numeric",
+		});
+		const username = usernameResult.recordset[0].username;
 
-		res.json(usernameResult.recordset[0]);
+		res.status(200).json({
+			username,
+			currentDate,
+		});
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: "Internal Server Error" });

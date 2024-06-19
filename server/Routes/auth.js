@@ -62,7 +62,7 @@ router.post("/register", async (req, res) => {
 
 				if (checkelderlyemail.recordset.length === 0) {
 					return res
-						.status(400)
+						.status(402)
 						.send("Elderly user not found with provided email");
 				}
 
@@ -75,7 +75,7 @@ router.post("/register", async (req, res) => {
 
 				if (checkRepeatemail.recordset.length > 0) {
 					return res
-						.status(400)
+						.status(401)
 						.send("Elderly user already has caregiver");
 				}
 			}

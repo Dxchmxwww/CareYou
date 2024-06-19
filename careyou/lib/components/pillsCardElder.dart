@@ -37,6 +37,7 @@ class PillsCardElder extends StatelessWidget {
 
   const PillsCardElder({required this.token});
 
+  
   Future<List<Pill>> fetchPills() async {
     try {
       final response = await http.get(
@@ -48,6 +49,9 @@ class PillsCardElder extends StatelessWidget {
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         return data.map((json) => Pill.fromJson(json)).toList();
+      } else if (response.statusCode == 204) {
+        print('You have no pills for Today nakab');
+        return [];
       } else {
         print(
             'Failed to load pills - Server responded with status code ${response.statusCode}');
@@ -58,6 +62,7 @@ class PillsCardElder extends StatelessWidget {
       throw Exception('Failed to load pills: $e');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
