@@ -437,7 +437,7 @@ router.get(
 						.split("T")[1]
 						.substring(0, 5),
 				}));
-				res.status(200).json(PillList, {currentDate: today});
+				res.status(200).json(PillList);
 			} else {
 				// Return a JSON response with the message
 				res.status(204).json({
