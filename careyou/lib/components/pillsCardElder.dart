@@ -37,7 +37,6 @@ class PillsCardElder extends StatelessWidget {
 
   const PillsCardElder({required this.token});
 
-  
   Future<List<Pill>> fetchPills() async {
     try {
       final response = await http.get(
@@ -63,6 +62,23 @@ class PillsCardElder extends StatelessWidget {
     }
   }
 
+  // Function to get image path based on medication type
+  String getImageForMedicationType(String pillType) {
+    switch (pillType.toLowerCase()) {
+      case 'capsule':
+        return 'assets/images/capsule.png';
+      case 'gel':
+        return 'assets/images/gel.png';
+      case 'injection':
+        return 'assets/images/injection.png';
+      case 'lotion':
+        return 'assets/images/lotion.png';
+      case 'tablet':
+        return 'assets/images/tablets.png';
+      default:
+        return 'none';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +102,7 @@ class PillsCardElder extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: PillCard(
                   pill: pill,
+                  getImageForMedicationType: getImageForMedicationType,
                   onTake: (Pill pill) {
                     // Define the action to take when the 'Take' button is pressed
                     print('Pill taken: ${pill.pillName}');
@@ -104,10 +121,13 @@ class PillsCardElder extends StatelessWidget {
 class PillCard extends StatelessWidget {
   final Pill pill;
   final Function(Pill) onTake; // Callback function when pill is taken
+  final String Function(String)
+      getImageForMedicationType; // Pass the function as a parameter
 
   const PillCard({
     required this.pill,
     required this.onTake,
+    required this.getImageForMedicationType,
   });
 
   @override
@@ -192,8 +212,9 @@ class PillCard extends StatelessWidget {
                       height: 70,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/crycat.jpeg'),
+                        image: DecorationImage(
+                          image: AssetImage(
+                              getImageForMedicationType(pill.pillType)),
                           fit: BoxFit.cover,
                         ),
                       ),
