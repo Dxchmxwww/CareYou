@@ -1,4 +1,4 @@
-import 'package:careyou/components/appointmentCard.dart';
+//import 'package:careyou/components/appointmentCard.dart';
 import 'package:careyou/components/logOutButton.dart';
 import 'package:careyou/components/pillsCardCareGiver.dart';
 
@@ -189,10 +189,10 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Today Appointment Card
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 0),
-                      child: AppointmentCard(token: widget.token),
-                    ),
+                    // Padding(
+                    //   padding: EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 0),
+                    //   child: AppointmentCard(token: widget.token),
+                    // ),
 
                     // Line between AppointmentCard and PillsCard
                     Padding(

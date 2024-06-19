@@ -29,7 +29,7 @@ class _HomePageElderState extends State<HomePageElder> {
   Future<void> fetchElderlyData() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8000/profiles/Elderly'),
+        Uri.parse('http://localhost:8000/profiles/Showusername'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
         },
