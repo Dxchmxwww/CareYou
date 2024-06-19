@@ -5,6 +5,7 @@ const { body, validationResult } = require("express-validator");
 const sql = require("mssql");
 const config = require("../config");
 const verifyToken = require("../middleware/verifyToken");
+const moment = require("moment");
 
 //-----------------------------------CreatePill------------------------------------
 router.post(
@@ -114,9 +115,9 @@ router.post(
 			const createPillReminderRequest = pool.request();
 			const createPillReminderQuery = `
                 INSERT INTO CareYou.Pill_Reminder 
-                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_image, pill_Time, caregiver_id, elderly_id, status) 
+                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_image, pill_Time, caregiver_id, elderly_id) 
                 VALUES 
-                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_image, @pill_Time, @caregiver_id, @elderly_id, 0);
+                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_image, @pill_Time, @caregiver_id, @elderly_id);
                 SELECT SCOPE_IDENTITY() AS PillReminder_id;
             `;
 
@@ -132,51 +133,37 @@ router.post(
 				.input("pill_Time", sql.NVarChar, pill_Time)
 				.input("caregiver_id", sql.Int, caregiver_id)
 				.input("elderly_id", sql.Int, elderly_id)
-				.input("status", sql.Int, 0)
 				.query(createPillReminderQuery);
 
 			const PillReminder_id =
 				createPillReminderResult.recordset[0].PillReminder_id;
 			console.log(reminder_times);
+            const startDate = moment(start_date);
+            const endDate = moment(end_date);
+            let currentDate = startDate.clone();
 
-			if (reminder_times && reminder_times.length > 0) {
-				const insertReminderTimesPromises = reminder_times.map(
-					async (time) => {
-						const formattedTime = `${time}:00`;
-						const insertReminderTimeRequest = pool.request();
-						const insertReminderTimeQuery = `
-                            INSERT INTO CareYou.PillReminder_Time (PillReminder_id, reminder_times) 
-                            VALUES (@PillReminder_id, @reminder_times);
-                        `;
-						try {
-							const result = await insertReminderTimeRequest
-								.input(
-									"PillReminder_id",
-									sql.Int,
-									PillReminder_id
-								)
-								.input(
-									"reminder_times",
-									sql.NVarChar,
-									formattedTime
-								)
-								.query(insertReminderTimeQuery);
-							console.log(
-								`Inserted reminder time ${formattedTime}`
-							);
-							return result;
-						} catch (err) {
-							console.error(
-								`Failed to insert reminder time ${formattedTime}:`,
-								err
-							);
-							throw err; // Propagate error to handle it at the top level
-						}
-					}
-				);
+            const insertReminderTimesPromises = [];
 
-				await Promise.all(insertReminderTimesPromises);
-			}
+            while (currentDate <= endDate) {
+                reminder_times.forEach((time) => {
+                    const insertReminderTimeRequest = pool.request();
+                    const insertReminderTimeQuery = `
+                        INSERT INTO CareYou.PillReminder_Time (PillReminder_id, reminderDates, reminder_times) 
+                        VALUES (@PillReminder_id, @reminderDates, @reminder_times);
+                    `;
+                    insertReminderTimesPromises.push(
+                        insertReminderTimeRequest
+                            .input("PillReminder_id", sql.Int, PillReminder_id)
+                            .input("reminderDates", sql.Date, currentDate.format("YYYY-MM-DD"))
+                            .input("reminder_times", sql.NVarChar, time)
+                            .query(insertReminderTimeQuery)
+                    );
+                });
+                currentDate.add(1, 'days'); // Move to the next day
+            }
+
+            await Promise.all(insertReminderTimesPromises);
+
 			res.status(201).send("Pill reminder created successfully");
 		} catch (error) {
 			console.error(error);
@@ -291,37 +278,104 @@ router.get(
 	}
 );
 
+// router.get(
+// 	"/ShowTodayPillRemindersOfElderForCaregiverHome",
+// 	verifyToken,
+// 	async (req, res) => {
+// 		try {
+// 			const pool = await sql.connect(config);
+// 			const id = req.user.id;
+
+// 			const RoleCheck = await pool
+// 				.request()
+// 				.input("id", sql.Int, id)
+// 				.query(
+// 					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+// 				);
+
+// 			if (RoleCheck.recordset.length === 0) {
+// 				return res.status(403).send("Unauthorized access");
+// 			}
+
+// 			const today = new Date().toISOString().split("T")[0]; // Get today's date in 'YYYY-MM-DD' format
+
+// 			const CaregiverPillList = await pool
+// 				.request()
+// 				.input("caregiver_id", sql.Int, id)
+// 				.input("today", sql.Date, today).query(`
+//                     SELECT 
+//                         pr.pill_name, 
+//                         pr.pill_type, 
+//                         pr.pill_note,  
+//                         pr.pill_Time,
+//                         prt.reminder_times
+//                     FROM 
+//                         CareYou.[Pill_Reminder] as pr
+//                     JOIN 
+//                         CareYou.[PillReminder_Time] as prt 
+//                     ON 
+//                         pr.PillReminder_id = prt.PillReminder_id
+//                     WHERE 
+//                         pr.caregiver_id = @caregiver_id
+//                         AND pr.start_date <= @today 
+//                         AND pr.end_date >= @today
+//                 `);
+
+// 			if (CaregiverPillList.recordset.length > 0) {
+// 				const PillList = CaregiverPillList.recordset.map((row) => ({
+// 					pill_name: row.pill_name,
+// 					pill_type: row.pill_type,
+// 					pill_note: row.pill_note,
+// 					pill_Time: row.pill_Time,
+// 					reminder_times: new Date(row.reminder_times)
+// 						.toISOString()
+// 						.split("T")[1]
+// 						.substring(0, 5),
+// 				}));
+// 				res.status(200).json(PillList);
+// 			}
+// 		} catch (err) {
+// 			console.error(err);
+// 			res.status(500).send("Internal Server Error");
+// 		}
+// 	}
+// );
+
 router.get(
-	"/ShowTodayPillRemindersOfElderForCaregiverHome",
-	verifyToken,
-	async (req, res) => {
-		try {
-			const pool = await sql.connect(config);
-			const id = req.user.id;
+    "/ShowTodayPillRemindersOfElderForCaregiverHome",
+    verifyToken,
+    async (req, res) => {
+        try {
+            const pool = await sql.connect(config);
+            const id = req.user.id;
 
-			const RoleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-				);
+            // Verify the user role
+            const RoleCheck = await pool
+                .request()
+                .input("id", sql.Int, id)
+                .query(
+                    "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+                );
 
-			if (RoleCheck.recordset.length === 0) {
-				return res.status(403).send("Unauthorized access");
-			}
+            if (RoleCheck.recordset.length === 0) {
+                return res.status(403).send("Unauthorized access");
+            }
 
-			const today = new Date().toISOString().split("T")[0]; // Get today's date in 'YYYY-MM-DD' format
+            const today = new Date().toISOString().split("T")[0]; // Get today's date in 'YYYY-MM-DD' format
 
-			const CaregiverPillList = await pool
-				.request()
-				.input("caregiver_id", sql.Int, id)
-				.input("today", sql.Date, today).query(`
+            // Query to get pill reminders
+            const CaregiverPillList = await pool
+                .request()
+                .input("caregiver_id", sql.Int, id)
+                .input("today", sql.Date, today)
+                .query(`
                     SELECT 
                         pr.pill_name, 
                         pr.pill_type, 
                         pr.pill_note,  
                         pr.pill_Time,
-                        prt.reminder_times
+                        prt.reminder_times,
+                        0 AS status
                     FROM 
                         CareYou.[Pill_Reminder] as pr
                     JOIN 
@@ -332,27 +386,54 @@ router.get(
                         pr.caregiver_id = @caregiver_id
                         AND pr.start_date <= @today 
                         AND pr.end_date >= @today
+
+                    UNION ALL
+
+                    SELECT 
+                        pr.pill_name, 
+                        pr.pill_type, 
+                        pr.pill_note,  
+                        pr.pill_Time,
+                        tp.reminderTimes,
+                        1 AS status
+                    FROM 
+                        CareYou.[Pill_Reminder] as pr
+                    JOIN 
+                        CareYou.[TakenPill] as tp 
+                    ON 
+                        pr.PillReminder_id = tp.PillReminder_id
+                    WHERE 
+                        pr.caregiver_id = @caregiver_id
+                        AND pr.start_date <= @today 
+                        AND pr.end_date >= @today
                 `);
 
-			if (CaregiverPillList.recordset.length > 0) {
-				const PillList = CaregiverPillList.recordset.map((row) => ({
-					pill_name: row.pill_name,
-					pill_type: row.pill_type,
-					pill_note: row.pill_note,
-					pill_Time: row.pill_Time,
-					reminder_times: new Date(row.reminder_times)
-						.toISOString()
-						.split("T")[1]
-						.substring(0, 5),
-				}));
-				res.status(200).json(PillList);
-			}
-		} catch (err) {
-			console.error(err);
-			res.status(500).send("Internal Server Error");
-		}
-	}
+            if (CaregiverPillList.recordset.length > 0) {
+                const PillList = CaregiverPillList.recordset.map((row) => ({
+                    pill_name: row.pill_name,
+                    pill_type: row.pill_type,
+                    pill_note: row.pill_note,
+                    pill_Time: row.pill_Time,
+                    reminder_times: new Date(row.reminder_times)
+                        .toISOString()
+                        .split("T")[1]
+                        .substring(0, 5),
+                    // status: row.status === 1 ? "Taken" : "Not Taken"
+                    status: row.status 
+                }));
+                res.status(200).json(PillList);
+            } else {
+                res.status(200).json([]);
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Internal Server Error");
+        }
+    }
 );
+
+module.exports = router;
+
 
 router.get(
 	"/ShowTodayPillRemailderListForElderly",
@@ -746,10 +827,10 @@ router.put(
 
 
 router.put('/UpdatePillStatus', verifyToken, async (req, res) => {
-    const { PillReminder_id, reminder_times } = req.body;
+    const { PillReminder_id, reminder_times, reminderDates} = req.body;
 
     // Validate request body
-    if (!PillReminder_id || !reminder_times) {
+    if (!PillReminder_id || !reminder_times || !reminderDates) {
         return res.status(400).send('PillReminder_id and reminder_times are required');
     }
 
@@ -765,9 +846,25 @@ router.put('/UpdatePillStatus', verifyToken, async (req, res) => {
                 SELECT * FROM CareYou.Pill_Reminder 
                 WHERE PillReminder_id = @PillReminder_id AND elderly_id = @elderly_id
             `);
-
+        console.log(verifyPillReminder)
         if (verifyPillReminder.recordset.length === 0) {
             return res.status(403).send('Unauthorized access or PillReminder not found');
+        }
+        
+        // Verify that the reminder times and dates match the data in PillReminder_Time
+        const verifyReminderTimes = await pool.request()
+            .input('PillReminder_id', sql.Int, PillReminder_id)
+            .input('reminder_times', sql.NVarChar, reminder_times)
+            .input('reminderDates', sql.Date, reminderDates)
+            .query(`
+                SELECT * FROM CareYou.PillReminder_Time 
+                WHERE PillReminder_id = @PillReminder_id 
+                  AND reminder_times = @reminder_times 
+                  AND reminderDates = @reminderDates
+            `);
+
+        if (verifyReminderTimes.recordset.length === 0) {
+            return res.status(404).send('Reminder time and date not found');
         }
 
         // Start a transaction
@@ -778,12 +875,13 @@ router.put('/UpdatePillStatus', verifyToken, async (req, res) => {
 
             // Insert into the TakenPill table
             const insertQuery = `
-                INSERT INTO CareYou.TakenPill (PillReminder_id, reminderTimes, status)
-                VALUES (@PillReminder_id, @reminderTimes, 1)
+                INSERT INTO CareYou.TakenPill (PillReminder_id, reminderTimes, reminderDates, status)
+                VALUES (@PillReminder_id, @reminderTimes, @reminderDates, 1)
             `;
             await transaction.request()
                 .input('PillReminder_id', sql.Int, PillReminder_id)
                 .input('reminderTimes', sql.NVarChar, reminder_times)
+                .input('reminderDates', sql.Date, reminderDates)
                 .query(insertQuery);
 
             // Delete from the PillReminder_Time table
