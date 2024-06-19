@@ -191,12 +191,22 @@ router.get(
 				console.log("This account is Caregiver");
 			}
 
+            const today = new Date().toISOString().split("T")[0];
+            const currentDate = new Date().toLocaleString("en-us", {
+                weekday: "short",
+                day: "numeric",
+                year: "numeric",
+            });
+
 			const CaregiverPillList = await pool
 				.request()
 				.input("caregiver_id", sql.Int, id)
+                .input("today", sql.Date, today)
 				.query(
-					"SELECT pill_name, pill_type, pill_note, frequency, pill_Time FROM CareYou.[Pill_Reminder] WHERE caregiver_id = @caregiver_id"
+					"SELECT pill_name, pill_type, pill_note, frequency, pill_Time FROM CareYou.[Pill_Reminder] WHERE caregiver_id = @caregiver_id  AND start_date <= @today AND end_date > @today OR end_date = @today"
 				);
+
+                
 
 			if (CaregiverPillList.recordset.length > 0) {
 				const PillList = CaregiverPillList.recordset.map((row) => ({
@@ -205,13 +215,13 @@ router.get(
 					pill_note: row.pill_note,
 					frequency: row.frequency,
 					pill_Time: row.pill_Time,
+                    
 				}));
-				res.json(PillList);
-			} else {
-				res.json([]);
+                res.json(PillList);
 			}
 			res.status(201).send("Pill reminder already show");
 		} catch (err) {
+            
 			res.status(500).send(err.message);
 		}
 	}
@@ -257,6 +267,7 @@ router.get(
                         elderly_id = @elderly_id
                         AND start_date <= @today 
                         AND end_date >= @today
+                        
                 `);
 
 			if (elderlyPillList.recordset.length > 0) {
@@ -426,7 +437,7 @@ router.get(
 						.split("T")[1]
 						.substring(0, 5),
 				}));
-				res.status(200).json(PillList);
+				res.status(200).json(PillList, {currentDate: today});
 			} else {
 				// Return a JSON response with the message
 				res.status(204).json({

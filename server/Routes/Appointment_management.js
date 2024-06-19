@@ -342,6 +342,61 @@ router.get(
 		}
 	}
 );
+router.get(
+	"/ShowAppointmentReminderListforCaregiver",
+	verifyToken,
+	async (req, res) => {
+		try {
+			const pool = await sql.connect(config);
+			const id = req.user.id;
+
+			const RoleCheck = await pool
+				.request()
+				.input("id", sql.Int, id)
+				.query(
+					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+				);
+
+			if (RoleCheck.recordset.length > 0) {
+				console.log("User is authorized as a caregiver");
+			}
+            const today = new Date();
+			const year = today.getFullYear();
+			const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+			const day = String(today.getDate()).padStart(2, "0");
+
+			const todayDate = `${year}-${month}-${day}`;
+			console.log(todayDate); 
+
+			const CaregiverAppointmentList = await pool
+				.request()
+				.input("caregiver_id", sql.Int, id)
+                .input("today", sql.Date, todayDate)
+				.query(
+					"SELECT Appointment_name, Date, StartTime, EndTime,Location FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
+				);
+
+			if (CaregiverAppointmentList.recordset.length > 0) {
+				const AppointmentList = CaregiverAppointmentList.recordset.map(
+					(row) => ({
+						Appointment_name: row.Appointment_name,
+						Date: row.Date,
+						StartTime: row.StartTime,
+						EndTime: row.EndTime,
+						Location: row.Location,
+					})
+				);
+				res.json(AppointmentList);
+			} else {
+				res.json([]);
+			}
+			res.status(200).send("Appointments reminder already show");
+		} catch (err) {
+			console.error(err);
+			res.status(500).send(err.message);
+		}
+	}
+);
 
 router.get(
 	"/ShowTodayAppointmentRemailderListForElderly",
