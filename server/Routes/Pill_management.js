@@ -1,3 +1,4 @@
+const e = require('express');
 const { Router } = require('express');
 const express = require('express');
 const router = express.Router();
@@ -354,6 +355,9 @@ router.post('/CreatePillReminder',
                 }));
                 res.status(200).json(PillList);
             } 
+            else{
+                res.json("You have no pill for today");
+            }
 
         } catch (err) {
             console.error(err);
