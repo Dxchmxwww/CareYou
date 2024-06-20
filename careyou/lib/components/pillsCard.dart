@@ -44,7 +44,7 @@ class PillsCard extends StatelessWidget {
         headers: {'Authorization': 'Bearer $token'},
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         List<dynamic> data = json.decode(response.body);
         return data.map((json) => Pill.fromJson(json)).toList();
       } else if (response.statusCode == 204) {

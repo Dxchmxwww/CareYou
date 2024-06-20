@@ -210,9 +210,8 @@ router.get(
           frequency: row.frequency,
           pill_Time: row.pill_Time,
         }));
-        res.json(PillList);
+        res.status(201).json(PillList);
       }
-      res.status(201).send("Pill reminder already show");
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -407,17 +406,25 @@ router.get(
         return res.status(403).send("Unauthorized access");
       }
 
-      const today = new Date().toISOString().split("T")[0]; // Get today's date in 'YYYY-MM-DD' format
+      const todays = new Date();
+      const year = todays.getFullYear();
+      const month = String(todays.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+      const day = String(todays.getDate()).padStart(2, "0");
+      const today = `${year}-${month}-${day}`;
+
+      console.log(today);
 
       const CaregiverPillList = await pool
         .request()
         .input("elderly_id", sql.Int, id)
         .input("today", sql.Date, today).query(`
                     SELECT 
+                        pr.PillReminder_id,
                         pr.pill_name, 
                         pr.pill_type, 
                         pr.pill_note,  
                         pr.pill_Time,
+                        prt.reminderDates,
                         prt.reminder_times
                     FROM 
                         CareYou.[Pill_Reminder] as pr
@@ -427,16 +434,19 @@ router.get(
                         pr.PillReminder_id = prt.PillReminder_id
                     WHERE 
                         pr.elderly_id = @elderly_id
-                        AND pr.start_date <= @today 
-                        AND pr.end_date >= @today
+                        AND CAST(pr.start_date AS DATE) <= @today
+                        AND CAST(pr.end_date AS DATE) >= @today
+                        AND CAST(prt.reminderDates AS DATE) = @today
                 `);
 
       if (CaregiverPillList.recordset.length > 0) {
         const PillList = CaregiverPillList.recordset.map((row) => ({
+          PillReminder_id: row.PillReminder_id,
           pill_name: row.pill_name,
           pill_type: row.pill_type,
           pill_note: row.pill_note,
           pill_Time: row.pill_Time,
+          reminderDates: row.reminderDates,
           reminder_times: new Date(row.reminder_times)
             .toISOString()
             .split("T")[1]
