@@ -50,12 +50,6 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
                                   builder: (context) => PillsmanageCreatePage(),
                                 ),
                               );
-                              // Navigator.push(
-                              //   context,
-                              //   // MaterialPageRoute(
-                              //   //   builder: (context) => PillsmanageCreatePage(),
-                              //   // ),
-                              // );
                             }
                             isEditMode = !isEditMode;
                           });
