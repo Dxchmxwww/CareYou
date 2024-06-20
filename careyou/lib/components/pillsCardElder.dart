@@ -4,24 +4,28 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class Pill {
+  final int pillReminderId; // Added field
   final String pillName;
   final String pillType;
   final String pillNote;
   final String pillTime;
   final String reminderTimes;
-  bool taken; // Track whether pill has been taken
+  bool taken;
 
   Pill({
+    required this.pillReminderId,
     required this.pillName,
     required this.pillType,
     required this.pillNote,
     required this.pillTime,
     required this.reminderTimes,
-    this.taken = false, // Default to not taken
+    this.taken = false,
   });
 
   factory Pill.fromJson(Map<String, dynamic> json) {
     return Pill(
+      pillReminderId:
+          json['pillReminderId'], // Adjust according to your API response
       pillName: json['pill_name'],
       pillType: json['pill_type'],
       pillNote: json['pill_note'],
@@ -129,6 +133,41 @@ class PillCard extends StatelessWidget {
     required this.onTake,
     required this.getImageForMedicationType,
   });
+
+  void updateStatusInDatabase(int pillReminderId, String reminderTimes) async {
+    String url = 'http://localhost:8000/pills/UpdatePillStatus';
+
+    // Replace with your authentication token if needed
+    String token = 'YOUR_AUTH_TOKEN';
+
+    // JSON body to send to the server
+    Map<String, dynamic> body = {
+      'PillReminder_id': pillReminderId,
+      'reminder_times': reminderTimes,
+    };
+
+    try {
+      final response = await http.put(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        print('Pill status updated successfully');
+        // Optionally, update the local UI state to reflect the pill as taken
+      } else {
+        print('Failed to update pill status. Error: ${response.statusCode}');
+        // Handle failure based on response
+      }
+    } catch (e) {
+      print('Error updating pill status: $e');
+      // Handle network or other errors
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -285,7 +324,90 @@ class PillCard extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     // Call the onTake callback function when 'Take' is pressed
-                    onTake(pill);
+                    // onTake(pill);
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text(
+                            "Confirm Medication",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          content: const Text(
+                            "Have you taken your medicine?",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          actions: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.black,
+                                    backgroundColor: const Color.fromARGB(
+                                        255, 218, 218, 218), // background color
+                                    textStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12, // text size
+                                      fontWeight:
+                                          FontWeight.bold, // text weight
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 15), // button padding
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          10), // button border radius
+                                    ),
+                                  ),
+                                  child: const Text("Cancel"),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: const Color.fromARGB(
+                                        255, 66, 169, 144), // background color
+                                    textStyle: const TextStyle(
+                                      fontSize: 12, // text size
+                                      fontWeight:
+                                          FontWeight.bold, // text weight
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 15), // button padding
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          10), // button border radius
+                                    ),
+                                  ),
+                                  child: const Text("Yes, I took it"),
+                                  onPressed: () {
+                                    updateStatusInDatabase(pill.pillReminderId,
+                                        pill.reminderTimes);
+                                    Navigator.of(context)
+                                        .pop(); // Close the dialog
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
