@@ -203,13 +203,14 @@ router.get(
 				.input("caregiver_id", sql.Int, id)
                 .input("today", sql.Date, today)
 				.query(
-					"SELECT pill_name, pill_type, pill_note, frequency, pill_Time FROM CareYou.[Pill_Reminder] WHERE caregiver_id = @caregiver_id  AND start_date <= @today AND end_date > @today OR end_date = @today"
+					"SELECT PillReminder_id, pill_name, pill_type, pill_note, frequency, pill_Time FROM CareYou.[Pill_Reminder] WHERE caregiver_id = @caregiver_id  AND start_date <= @today AND end_date > @today OR end_date = @today"
 				);
 
                 
 
 			if (CaregiverPillList.recordset.length > 0) {
 				const PillList = CaregiverPillList.recordset.map((row) => ({
+                    PillReminder_id: row.PillReminder_id,
 					pill_name: row.pill_name,
 					pill_type: row.pill_type,
 					pill_note: row.pill_note,
@@ -217,9 +218,9 @@ router.get(
 					pill_Time: row.pill_Time,
                     
 				}));
-                res.json(PillList);
+                res.status(201).json(PillList);
 			}
-			res.status(201).send("Pill reminder already show");
+			
 		} catch (err) {
             
 			res.status(500).send(err.message);
