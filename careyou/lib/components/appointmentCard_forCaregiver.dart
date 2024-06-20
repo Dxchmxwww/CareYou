@@ -1,54 +1,65 @@
-// ignore: file_names
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For jsonDecode
 import 'package:http/http.dart' as http; // For making HTTP requests
 
-class AppointmentCardForCaregiver extends StatefulWidget {
+class AppointmentCard_caregiver extends StatefulWidget {
   final String token;
-  const AppointmentCardForCaregiver({required this.token});
+  const AppointmentCard_caregiver({required this.token});
 
   @override
-  _AppointmentCardForCaregiverState createState() => _AppointmentCardForCaregiverState();
+  _AppointmentCardState createState() => _AppointmentCardState();
 }
 
-class _AppointmentCardForCaregiverState extends State<AppointmentCardForCaregiver> {
-  String appointmentName = "";
-  String startTime = "";
-  String endTime = "";
-  String location = "";
-  bool hasAppointment = false;
+class _AppointmentCardState extends State<AppointmentCard_caregiver> {
+  List<Map<String, dynamic>> appointments = []; // List to store appointments
+  bool isLoading = false;
+  String errorMessage = '';
 
   Future<void> fetchAppointmentData() async {
+    setState(() {
+      isLoading = true;
+      appointments.clear(); // Clear appointments while loading
+      errorMessage = '';
+    });
+
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/appointments/ShowTodayAppointmentRemailderListForElderly'),
+            'http://localhost:8000/appointments/ShowTodayAppointmentOfElderForCaregiverHome'),
         headers: {
-          'Authorization':
-              'Bearer ${widget.token}', // Replace with your actual token
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.token}',
         },
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('Response data: $data'); // Print the JSON data for debugging
+        final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          if (data.isNotEmpty) {
-            appointmentName = data[0]['Appointment_name'];
-            startTime = _formatTime(data[0]['StartTime']);
-            endTime = _formatTime(data[0]['EndTime']);
-            location = data[0]['Location'];
-            hasAppointment = true; // Appointment found
-          } else {
-            hasAppointment = false; // No appointment found
-          }
+          appointments = List<Map<String, dynamic>>.from(data);
+          isLoading = false;
+        });
+
+        print('Fetched appointments: $appointments');
+      } else if (response.statusCode == 404) {
+        setState(() {
+          errorMessage = 'No appointments found for today';
+          isLoading = false;
         });
       } else {
-        throw Exception('Failed to load appointment data');
+        setState(() {
+          errorMessage = 'Failed to load appointments: ${response.statusCode}';
+          isLoading = false;
+        });
       }
     } catch (e) {
-      print('Failed to load appointment data: $e');
-      throw Exception('Failed to load appointment data: $e');
+      print('Error fetching appointments: $e');
+      setState(() {
+        errorMessage = 'Failed to load appointments. Please try again later.';
+        isLoading = false;
+      });
     }
   }
 
@@ -58,14 +69,8 @@ class _AppointmentCardForCaregiverState extends State<AppointmentCardForCaregive
     fetchAppointmentData(); // Fetch data when the widget is initialized
   }
 
-  String _formatTime(String time) {
-    // Assuming time format is "HH:mm:ss"
-    return time.substring(11, 16); // Extracts "HH:mm"
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Calculate device screen width
     double screenWidth = MediaQuery.of(context).size.width;
 
     return SizedBox(
@@ -77,13 +82,12 @@ class _AppointmentCardForCaregiverState extends State<AppointmentCardForCaregive
         ),
         child: Padding(
           padding: const EdgeInsets.all(15.0),
-          child: hasAppointment
+          child: appointments.isNotEmpty
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "Today's Appointment",
+                      "Elder's Today Doctor Appointments",
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 18,
@@ -92,78 +96,90 @@ class _AppointmentCardForCaregiverState extends State<AppointmentCardForCaregive
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Center(
-                      child: Container(
-                        width: screenWidth * 0.9,
-                        height: 73,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.white,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                    Column(
+                      children: appointments.map((appointment) {
+                        return Center(
+                          child: Container(
+                            width: screenWidth * 0.9,
+                            height: 100,
+                            margin: const EdgeInsets.symmetric(vertical: 6.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 20.0),
-                                  child: Icon(
-                                    Icons.access_time,
-                                    color: Color(0xFF42A0A9),
-                                    size: 19.0,
-                                  ), // Clock icon
-                                ),
-                                const SizedBox(width: 10),
-                                Text("$startTime - $endTime",
-                                    style: const TextStyle(
+                                Row(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 20.0),
+                                      child: Icon(
+                                        Icons.access_time,
+                                        color: Color(0xFF42A990),
+                                        size: 22.0,
+                                      ), // Clock icon
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      '${_formatTime(appointment['StartTime'])} - ${_formatTime(appointment['EndTime'])}',
+                                      style: const TextStyle(
                                         fontSize: 14,
                                         fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w400)),
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 55.0),
-                                  child: Icon(
-                                    Icons.location_on_outlined,
-                                    color: Color(0xFF42A0A9),
-                                    size: 19.0,
-                                  ), // Location icon
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 55.0),
+                                      child: Icon(
+                                        Icons.location_on_outlined,
+                                        color: Color(0xFF42A990),
+                                        size: 22.0,
+                                      ), // Location icon
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      appointment['Location'],
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.w400),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 10),
-                                Text(location,
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w400)),
+                                const SizedBox(height: 7),
+                                Row(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 20.0),
+                                      child: Icon(
+                                        Icons.info_outline_rounded,
+                                        color: Color(0xFF42A990),
+                                        size: 22.0,
+                                      ), // Info icon
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      appointment['Appointment_name'],
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.w400),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 7),
-                            Row(
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 20.0),
-                                  child: Icon(
-                                    Icons.info_outline_rounded,
-                                    color: Color(0xFF42A0A9),
-                                    size: 19.0,
-                                  ), // Info icon
-                                ),
-                                const SizedBox(width: 10),
-                                Text(appointmentName,
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w400)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 )
               : const Center(
                   child: Text(
-                    "You don't have any appointments today",
+                    "Your elder has no appointments for today",
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 15,
@@ -175,5 +191,18 @@ class _AppointmentCardForCaregiverState extends State<AppointmentCardForCaregive
         ),
       ),
     );
+  }
+
+  String _formatTime(String time) {
+    try {
+      if (time.length >= 5) {
+        return time.substring(0, 5); // Extracts "HH:mm" from "HH:mm:ss"
+      } else {
+        return time; // Return the time string as is if it's already in "HH:mm" format or another unexpected format
+      }
+    } catch (e) {
+      print('Error formatting time: $e');
+      return time; // Return the original time string if an error occurs
+    }
   }
 }

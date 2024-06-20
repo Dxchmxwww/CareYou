@@ -50,11 +50,11 @@ class _SignUpPageState extends State<SignUpPage> {
         if (response.statusCode == 201) {
           print('User registered successfully');
           _showSuccessDialog(widget.selectedRole);
-        } else if (response.statusCode == 409) {
+        } else if (response.statusCode == 401) {
           _showErrorDialog(
-              'The elderly user already has a caregiver assigned.');
-        } else if (response.statusCode == 404) {
-          _showErrorDialog('Elderly user not found with provided email.');
+              'The elder user already has a caregiver assigned.');
+        } else if (response.statusCode == 402) {
+          _showErrorDialog('Elder user not found with provided email.');
         } else {
           _showErrorDialog('Error: ${response.statusCode}');
         }
