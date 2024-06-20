@@ -107,7 +107,7 @@ router.post(
 
 router.get(
 	"/ShowTodayAppointmentOfElderForCaregiverHome",
-	verifyToken,
+	verifyToken, // Middleware to verify token
 	async (req, res) => {
 		try {
 			const pool = await sql.connect(config);
@@ -134,13 +134,16 @@ router.get(
 			const day = String(today.getDate()).padStart(2, "0");
 			const todayDate = `${year}-${month}-${day}`;
 
-			console.log(todayDate);
-
 			const getTodayAppointmentsQuery = `
-                SELECT Appointment_name, StartTime, EndTime, Location
-                FROM CareYou.Appointment_reminder 
-                WHERE caregiver_id = @caregiver_id AND date >= @todayDate
-            `;
+        SELECT 
+          Appointment_name, 
+          CONVERT(VARCHAR, StartTime, 108) AS StartTime, -- HH:mm:ss format
+          CONVERT(VARCHAR, EndTime, 108) AS EndTime,     -- HH:mm:ss format
+          Location
+        FROM CareYou.Appointment_reminder 
+        WHERE caregiver_id = @caregiver_id AND CONVERT(DATE, date) = @todayDate
+      `;
+
 			const todayAppointmentsResult = await pool
 				.request()
 				.input("caregiver_id", sql.Int, id)
@@ -151,21 +154,17 @@ router.get(
 				return res.status(404).send("No appointments found for today");
 			}
 
+			// Format the appointments
 			const formattedAppointments = todayAppointmentsResult.recordset.map(
 				(appointment) => ({
 					Appointment_name: appointment.Appointment_name,
-					StartTime: new Date(appointment.StartTime)
-						.toISOString()
-						.split("T")[1]
-						.substring(0, 5),
-					EndTime: new Date(appointment.StartTime)
-						.toISOString()
-						.split("T")[1]
-						.substring(0, 5),
+					StartTime: appointment.StartTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
+					EndTime: appointment.EndTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
 					Location: appointment.Location,
 				})
 			);
 
+			console.log("Formatted appointments:", formattedAppointments);
 			res.status(200).json(formattedAppointments);
 		} catch (err) {
 			console.error(err);
