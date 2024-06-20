@@ -217,9 +217,9 @@ router.get(
 					pill_Time: row.pill_Time,
                     
 				}));
-                res.json(PillList);
+                res.status(201).json(PillList);
 			}
-			res.status(201).send("Pill reminder already show");
+			
 		} catch (err) {
             
 			res.status(500).send(err.message);
