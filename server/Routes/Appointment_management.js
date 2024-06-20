@@ -493,12 +493,13 @@ router.get(
 				.input("caregiver_id", sql.Int, id)
                 .input("today", sql.Date, todayDate)
 				.query(
-					"SELECT Appointment_name, Date, StartTime, EndTime,Location FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
+					"SELECT * FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
 				);
 
 			if (CaregiverAppointmentList.recordset.length > 0) {
 				const AppointmentList = CaregiverAppointmentList.recordset.map(
 					(row) => ({
+                        Appointment_id: row.Appointment_id,
 						Appointment_name: row.Appointment_name,
 						Date: row.Date,
 						StartTime: row.StartTime,
