@@ -33,8 +33,9 @@ class Pill {
 
 class PillsCard extends StatelessWidget {
   final String token;
+  final bool isEditMode; // Add isEditMode to constructor
 
-  const PillsCard({required this.token, required bool isEditMode});
+  const PillsCard({required this.token, required this.isEditMode});
 
   Future<List<Pill>> fetchPills() async {
     try {
@@ -102,8 +103,8 @@ class PillsCard extends StatelessWidget {
                 child: PillsCard2(
                   pill: pill,
                   getImageForMedicationType: getImageForMedicationType,
-                  isEditMode: false,
-                  token: '', // Adjust as per your requirements
+                  isEditMode: isEditMode,
+                  token: token, // Pass the token
                 ),
               );
             },
@@ -117,13 +118,14 @@ class PillsCard extends StatelessWidget {
 class PillsCard2 extends StatefulWidget {
   final Pill pill;
   final bool isEditMode;
+  final String token; // Add token to the constructor
   final String Function(String)
       getImageForMedicationType; // Pass the function as a parameter
 
   const PillsCard2(
       {required this.pill,
       required this.isEditMode,
-      required String token,
+      required this.token,
       required this.getImageForMedicationType});
 
   @override
@@ -143,7 +145,7 @@ class _PillsCard2State extends State<PillsCard2> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return SizedBox(
-      height: screenHeight * 0.12,
+      height: widget.isEditMode ? screenHeight * 0.14 : screenHeight * 0.12,
       child: Card(
         child: Container(
           width: screenWidth * 0.9,
@@ -159,217 +161,215 @@ class _PillsCard2State extends State<PillsCard2> {
               ),
             ],
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Stack(
             children: [
-              Padding(
-                padding: EdgeInsets.all(screenWidth * 0.02),
-                child: Container(
-                  width: screenWidth * 0.18,
-                  height: screenWidth * 0.18,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    image: DecorationImage(
-                      image: AssetImage(widget
-                          .getImageForMedicationType(widget.pill.pillType)),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${widget.pill.pillName} (${widget.pill.pillType})',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF00916E),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(screenWidth * 0.02),
+                    child: Container(
+                      width: screenWidth * 0.18,
+                      height: screenWidth * 0.18,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        image: DecorationImage(
+                          image: AssetImage(widget
+                              .getImageForMedicationType(widget.pill.pillType)),
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      SizedBox(height: screenHeight * 0.005),
-                      Text(
-                        widget.pill.pillNote,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                        ),
-                      ),
-                      if (widget.isEditMode)
-                        Padding(
-                          padding: EdgeInsets.only(top: 21),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.access_time,
-                            color: const Color(0xFF00916E), size: 20),
-                        SizedBox(width: screenWidth * 0.01),
-                        Text(
-                          // widget.pill.frequency != null
-                          //     ? '${widget.pill.frequency} times a day'
-                          //     : 'Frequency not specified', // Display frequency or handle null case
-                          '${widget.pill.frequency} times/day',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.005),
-                    Row(
-                      children: [
-                        Icon(Icons.pending_actions_outlined,
-                            color: const Color(0xFF00916E), size: 20),
-                        SizedBox(width: screenWidth * 0.01),
-                        Text(
-                          '${widget.pill.pillTime}',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (widget.isEditMode)
-                      Padding(
-                        padding:
-                            EdgeInsets.only(top: 10, left: screenWidth * 0.07),
-                        child: Container(
-                          height: 20, // Set desired height here
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Show delete confirmation dialog
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: const Text(
-                                      "Confirm Deletion",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    content: const Text(
-                                      "Are you sure you want to delete this medication?",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    actions: <Widget>[
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          TextButton(
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: Colors.black,
-                                              backgroundColor:
-                                                  const Color.fromARGB(
-                                                      255,
-                                                      218,
-                                                      218,
-                                                      218), // background color
-                                              textStyle: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12, // text size
-                                                fontWeight: FontWeight
-                                                    .bold, // text weight
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical:
-                                                          15), // button padding
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                    30), // button border radius
-                                              ),
-                                            ),
-                                            child: const Text("Cancel"),
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(),
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          TextButton(
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: Colors.white,
-                                              backgroundColor: Colors
-                                                  .red, // background color
-                                              textStyle: const TextStyle(
-                                                fontSize: 12, // text size
-                                                fontWeight: FontWeight
-                                                    .bold, // text weight
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical:
-                                                          15), // button padding
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                    30), // button border radius
-                                              ),
-                                            ),
-                                            child: const Text("Delete"),
-                                            onPressed: () {
-                                              setState(() {
-                                                isDeleted = true;
-                                              });
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              padding: EdgeInsets.symmetric(horizontal: 20),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        screenWidth * 0.04, // left
+                        screenHeight * 0.03, // top padding value
+                        screenWidth * 0.04, // right
+                        0, // bottom
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${widget.pill.pillName} (${widget.pill.pillType})',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF00916E),
                             ),
-                            child: Center(
-                              child: Text(
-                                'Delete',
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.white),
+                          ),
+                          SizedBox(height: screenHeight * 0.005),
+                          Text(
+                            widget.pill.pillNote,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: const Color.fromARGB(255, 0, 0, 0),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      screenWidth * 0.04, // left
+                      screenHeight * 0.03, // top padding value
+                      screenWidth * 0.04, // right
+                      0, // bottom
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.access_time,
+                                color: const Color(0xFF00916E), size: 20),
+                            SizedBox(width: screenWidth * 0.01),
+                            Text(
+                              '${widget.pill.frequency} times/day',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: Colors.black,
                               ),
                             ),
-                          ),
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.005),
+                        Row(
+                          children: [
+                            Icon(Icons.pending_actions_outlined,
+                                color: const Color(0xFF00916E), size: 20),
+                            SizedBox(width: screenWidth * 0.01),
+                            Text(
+                              '${widget.pill.pillTime}',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (widget.isEditMode)
+                Positioned(
+                  bottom: 10,
+                  right: 18,
+                  child: Container(
+                    height: 20, // Set desired height here
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Show delete confirmation dialog
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text(
+                                "Confirm Deletion",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              content: const Text(
+                                "Are you sure you want to delete this medication?",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                ),
+                              ),
+                              actions: <Widget>[
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.black,
+                                        backgroundColor: const Color.fromARGB(
+                                            255,
+                                            218,
+                                            218,
+                                            218), // background color
+                                        textStyle: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12, // text size
+                                          fontWeight:
+                                              FontWeight.bold, // text weight
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 15), // button padding
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              30), // button border radius
+                                        ),
+                                      ),
+                                      child: const Text("Cancel"),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.white,
+                                        backgroundColor:
+                                            Colors.red, // background color
+                                        textStyle: const TextStyle(
+                                          fontSize: 12, // text size
+                                          fontWeight:
+                                              FontWeight.bold, // text weight
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 15), // button padding
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              30), // button border radius
+                                        ),
+                                      ),
+                                      child: const Text("Delete"),
+                                      onPressed: () {
+                                        setState(() {
+                                          isDeleted = true;
+                                        });
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Delete',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
                         ),
                       ),
-                  ],
-                ),
-              ),
+                    ),
+                  ),
+                )
             ],
           ),
         ),
