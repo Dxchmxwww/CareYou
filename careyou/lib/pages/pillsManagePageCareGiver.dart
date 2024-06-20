@@ -1,8 +1,5 @@
 import 'package:careyou/components/pillsCard.dart';
-<<<<<<< Updated upstream
 import 'package:careyou/pages/pillsManageCreatePage.dart';
-=======
->>>>>>> Stashed changes
 import 'package:flutter/material.dart';
 
 class PillsmanagePageCareGiver extends StatefulWidget {
@@ -47,50 +44,36 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
                           setState(() {
                             if (isEditMode) {
                               // Navigate to PillsmanageCreatePage
-<<<<<<< Updated upstream
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PillsmanageCreatePage(),
                                 ),
                               );
-=======
                               // Navigator.push(
                               //   context,
                               //   // MaterialPageRoute(
                               //   //   builder: (context) => PillsmanageCreatePage(),
                               //   // ),
                               // );
->>>>>>> Stashed changes
                             }
                             isEditMode = !isEditMode;
                           });
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF54900),
-<<<<<<< Updated upstream
-                          padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-=======
                           padding: const EdgeInsets.symmetric(horizontal: 14.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           // minimumSize: Size(double.infinity, 0.3),
->>>>>>> Stashed changes
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
                               isEditMode ? Icons.add : Icons.edit,
-<<<<<<< Updated upstream
-                              size: 12,
-=======
                               size: 14,
->>>>>>> Stashed changes
                               color: Colors.white,
                             ),
                             SizedBox(width: 5),
@@ -98,11 +81,7 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
                               isEditMode ? 'Add' : 'Edit',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-<<<<<<< Updated upstream
-                                fontSize: 12,
-=======
                                 fontSize: 15,
->>>>>>> Stashed changes
                                 fontWeight: FontWeight.w400,
                                 color: Colors.white,
                               ),
@@ -131,17 +110,10 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return PreferredSize(
-<<<<<<< Updated upstream
-      preferredSize: const Size.fromHeight(80.0),
-      child: Container(
-        color: const Color(0xFF00916E),
-        padding: const EdgeInsets.only(top: 20),
-=======
       preferredSize: const Size.fromHeight(70.0),
       child: Container(
         color: const Color(0xFF00916E),
         padding: const EdgeInsets.only(top: 10),
->>>>>>> Stashed changes
         child: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -158,13 +130,8 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
             "Pills management",
             style: TextStyle(
               fontFamily: 'Poppins',
-<<<<<<< Updated upstream
-              fontSize: 18.0,
-              fontWeight: FontWeight.w600,
-=======
               fontSize: 22,
               fontWeight: FontWeight.w700,
->>>>>>> Stashed changes
               color: Colors.white,
             ),
           ),
