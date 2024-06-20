@@ -40,11 +40,7 @@ class PillsCard extends StatelessWidget {
     try {
       final response = await http.get(
         Uri.parse(
-<<<<<<< Updated upstream
-            'http://localhost:8000/pills/ShowTodayPillRemailderListForElderly'),
-=======
             'http://localhost:8000/pills/ShowPillRemailderListForCaregiver'),
->>>>>>> Stashed changes
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -102,11 +98,7 @@ class PillsCard extends StatelessWidget {
             itemBuilder: (context, index) {
               final pill = snapshot.data![index];
               return Padding(
-<<<<<<< Updated upstream
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-=======
                 padding: const EdgeInsets.symmetric(vertical: 2.0),
->>>>>>> Stashed changes
                 child: PillsCard2(
                   pill: pill,
                   getImageForMedicationType: getImageForMedicationType,
@@ -196,11 +188,7 @@ class _PillsCard2State extends State<PillsCard2> {
                         '${widget.pill.pillName} (${widget.pill.pillType})',
                         style: TextStyle(
                           fontFamily: 'Poppins',
-<<<<<<< Updated upstream
-                          fontSize: 12,
-=======
                           fontSize: 16,
->>>>>>> Stashed changes
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF00916E),
                         ),
@@ -210,11 +198,7 @@ class _PillsCard2State extends State<PillsCard2> {
                         widget.pill.pillNote,
                         style: TextStyle(
                           fontFamily: 'Poppins',
-<<<<<<< Updated upstream
-                          fontSize: 10,
-=======
                           fontSize: 12,
->>>>>>> Stashed changes
                           fontWeight: FontWeight.w500,
                           color: const Color.fromARGB(255, 0, 0, 0),
                         ),
@@ -245,11 +229,7 @@ class _PillsCard2State extends State<PillsCard2> {
                           '${widget.pill.frequency} times/day',
                           style: TextStyle(
                             fontFamily: 'Poppins',
-<<<<<<< Updated upstream
-                            fontSize: 12,
-=======
                             fontSize: 14,
->>>>>>> Stashed changes
                             color: Colors.black,
                           ),
                         ),
@@ -265,11 +245,7 @@ class _PillsCard2State extends State<PillsCard2> {
                           '${widget.pill.pillTime}',
                           style: TextStyle(
                             fontFamily: 'Poppins',
-<<<<<<< Updated upstream
-                            fontSize: 12,
-=======
                             fontSize: 14,
->>>>>>> Stashed changes
                             color: Colors.black,
                           ),
                         ),
