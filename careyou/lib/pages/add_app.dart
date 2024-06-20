@@ -76,7 +76,8 @@ class _AddAppState extends State<AddApp> {
                 Center(
                   child: Text(
                     'Appointment Management',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
                       fontSize: 20,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -110,7 +111,8 @@ class _AddAppState extends State<AddApp> {
               children: [
                 Text(
                   'Today is Wed 24, 2024',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF00916E),
@@ -137,7 +139,8 @@ class _AddAppState extends State<AddApp> {
                     children: [
                       Text(
                         'Set the Reminder',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF00916E),
@@ -152,7 +155,8 @@ class _AddAppState extends State<AddApp> {
                             children: [
                               Text(
                                 'Appointment Name:',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF000000),
@@ -165,7 +169,8 @@ class _AddAppState extends State<AddApp> {
                           Expanded(
                             child: TextField(
                               controller: _reminderController,
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
                                 fontSize: 12,
                                 color: Colors.black,
                               ),
@@ -194,7 +199,8 @@ class _AddAppState extends State<AddApp> {
                         children: [
                           Text(
                             'Select Date:',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
@@ -212,7 +218,8 @@ class _AddAppState extends State<AddApp> {
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _selectedDate,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
                                   fontSize: 7,
                                   color: Colors.black,
                                 ),
@@ -225,7 +232,8 @@ class _AddAppState extends State<AddApp> {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4),
                                       alignment: Alignment.centerLeft,
                                       child: Text(value),
                                     ),
@@ -247,7 +255,8 @@ class _AddAppState extends State<AddApp> {
                         children: [
                           Text(
                             'Duration:',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
@@ -265,7 +274,8 @@ class _AddAppState extends State<AddApp> {
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _startTime,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
                                   fontSize: 7,
                                   color: Colors.black,
                                 ),
@@ -278,7 +288,8 @@ class _AddAppState extends State<AddApp> {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4),
                                       alignment: Alignment.centerLeft,
                                       child: Text(value),
                                     ),
@@ -295,7 +306,8 @@ class _AddAppState extends State<AddApp> {
                           SizedBox(width: 8),
                           Text(
                             'to',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
@@ -313,7 +325,8 @@ class _AddAppState extends State<AddApp> {
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _endTime,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
                                   fontSize: 7,
                                   color: Colors.black,
                                 ),
@@ -326,7 +339,8 @@ class _AddAppState extends State<AddApp> {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4),
                                       alignment: Alignment.centerLeft,
                                       child: Text(value),
                                     ),
@@ -351,7 +365,8 @@ class _AddAppState extends State<AddApp> {
                             children: [
                               Text(
                                 'Location:',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF000000),
@@ -364,7 +379,8 @@ class _AddAppState extends State<AddApp> {
                           Expanded(
                             child: TextField(
                               controller: _locationController,
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
                                 fontSize: 12,
                                 color: Colors.black,
                               ),

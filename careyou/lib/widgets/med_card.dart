@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MedicineCard extends StatelessWidget {
   const MedicineCard({super.key});
@@ -15,7 +14,7 @@ class MedicineCard extends StatelessWidget {
             color: Colors.grey.shade300,
             spreadRadius: 3,
             blurRadius: 7,
-            offset: Offset(0, 3), 
+            offset: Offset(0, 3),
           ),
         ],
         color: Colors.white,
@@ -31,7 +30,7 @@ class MedicineCard extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(5),
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/crycat.jpeg'), 
+                  image: AssetImage('assets/images/crycat.jpeg'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -45,7 +44,8 @@ class MedicineCard extends StatelessWidget {
                 SizedBox(height: 17),
                 Text(
                   'Captopril (Capoten)',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF00916E),
@@ -54,7 +54,8 @@ class MedicineCard extends StatelessWidget {
                 SizedBox(height: 1),
                 Text(
                   'The red one in black package',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 10,
                     color: Colors.black,
                   ),
@@ -69,28 +70,31 @@ class MedicineCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.access_time, color: Color(0xFF00916E)), 
+                    Icon(Icons.access_time, color: Color(0xFF00916E)),
                     SizedBox(width: 4),
                     Text(
                       '1 times/day',
-                      style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: Colors.black,
-                    ),
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
                 SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.pending_actions_outlined, color:Color(0xFF00916E)), 
+                    Icon(Icons.pending_actions_outlined,
+                        color: Color(0xFF00916E)),
                     SizedBox(width: 4),
                     Text(
                       'After Food   ',
-                    style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: Colors.black,
-                  ),
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
