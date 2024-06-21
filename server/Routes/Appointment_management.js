@@ -259,7 +259,7 @@ router.get(
 				.input("elderly_id", sql.Int, id)
 				.input("today", sql.Date, today).query(`
                     SELECT 
-                        Appointment_name, Date, StartTime, EndTime, Location
+                        *
                     FROM 
                         CareYou.[Appointment_reminder] 
                     WHERE 
@@ -406,7 +406,7 @@ router.get(
 				);
 				res.status(200).json(AppointmentList);
 			} else {
-				throw err;
+				
 			}
 		} catch (err) {
 			console.error(err);
