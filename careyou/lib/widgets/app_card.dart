@@ -3,6 +3,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AppointmentsList extends StatefulWidget {
+  final String token;
+
+  const AppointmentsList({required this.token});
+  
   @override
   _AppointmentsListState createState() => _AppointmentsListState();
 }
@@ -10,6 +14,7 @@ class AppointmentsList extends StatefulWidget {
 class _AppointmentsListState extends State<AppointmentsList> {
   List<Map<String, dynamic>> _appointments = [];
   bool _isLoading = true;
+  
 
   @override
   void initState() {
@@ -24,7 +29,7 @@ class _AppointmentsListState extends State<AppointmentsList> {
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           // Add your authorization token if needed
-          // 'Authorization': 'Bearer yourAccessTokenHere',
+          'Authorization': 'Bearer ${widget.token}',
         },
       );
 
