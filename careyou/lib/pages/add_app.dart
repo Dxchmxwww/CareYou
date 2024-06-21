@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'package:careyou/widgets/navbar.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:careyou/widgets/navbar.dart';
 
 class AddApp extends StatefulWidget {
   const AddApp({Key? key}) : super(key: key);
@@ -18,6 +17,9 @@ class _AddAppState extends State<AddApp> {
   String _startTime = 'HH:MM:SS';
   String _endTime = 'HH:MM:SS';
 
+  // Replace with your actual authentication token
+  final String authToken = 'Bearer YOUR_AUTH_TOKEN_HERE';
+
   Future<void> _submitAppointment() async {
     final appointmentName = _reminderController.text;
     final location = _locationController.text;
@@ -25,15 +27,22 @@ class _AddAppState extends State<AddApp> {
     final startTime = _startTime;
     final endTime = _endTime;
 
-    if (appointmentName.isEmpty || location.isEmpty || date == 'DD/MM/YYYY' || startTime == 'HH:MM:SS' || endTime == 'HH:MM:SS') {
+    if (appointmentName.isEmpty ||
+        location.isEmpty ||
+        date == 'DD/MM/YYYY' ||
+        startTime == 'HH:MM:SS' ||
+        endTime == 'HH:MM:SS') {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please fill in all fields')),
       );
       return;
     }
 
-    final url = Uri.parse('http://your-backend-url/CreateAppointmentReminder');
-    final headers = {'Content-Type': 'application/json'};
+    final url = Uri.parse('http://localhost:8000/CreateAppointmentReminder');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': authToken, // Add authorization header
+    };
     final body = json.encode({
       'Appointment_name': appointmentName,
       'Date': date,
@@ -44,7 +53,7 @@ class _AddAppState extends State<AddApp> {
 
     try {
       final response = await http.post(url, headers: headers, body: body);
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Appointment added successfully')),
         );
@@ -431,12 +440,12 @@ class _AddAppState extends State<AddApp> {
               ],
             ),
           ),
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: NavBar(),
-          ),
+          Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: NavBar(), // Renders the navigation bar at the bottom
+              ),
         ],
       ),
       backgroundColor: const Color(0xFFFFFFFF),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:careyou/widgets/navbar.dart';
+import 'package:careyou/widgets/app_card.dart';
 
 
 class DocApp extends StatelessWidget {
@@ -13,8 +14,8 @@ class DocApp extends StatelessWidget {
         child: AppBar(
           automaticallyImplyLeading: false,
           backgroundColor: const Color(0xFF00916E),
-          flexibleSpace: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          flexibleSpace: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -29,45 +30,45 @@ class DocApp extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
               ],
             ),
           ),
         ),
       ),
-      body: Stack(
+      body: const Stack(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding:
-                    const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
+                    EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
                 child: Text(
                   'Your Appointment',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 32,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF00916E),
+                    color: Color(0xFF00916E),
                   ),
                   textAlign: TextAlign.left,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 20.0, right: 20.0),
+                padding: EdgeInsets.only(left: 20.0, right: 20.0),
                 child: Text(
                   'Today is June 24, 2024',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF00916E),
+                    color: Color(0xFF00916E),
                   ),
                   textAlign: TextAlign.left,
                 ),
               ),
-              const Expanded(
+              Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(top: 30, left: 20, right: 20),
                   child: Column(
@@ -79,7 +80,7 @@ class DocApp extends StatelessWidget {
               ),
             ],
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,

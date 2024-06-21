@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class AppCard extends StatefulWidget {
   final bool showButtons;
@@ -10,90 +11,105 @@ class AppCard extends StatefulWidget {
 }
 
 class _AppCardState extends State<AppCard> {
-  void _showDeleteConfirmationDialog() {
+  void _showDeleteConfirmationDialog(int appointmentId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Center(
-          child: AlertDialog(
-            backgroundColor: const Color(0xFFFFFFFF),
-            surfaceTintColor:
-                const Color(0xFFFFFFFF), // Set background color to white
-            title: Text(
-              "Delete Appointment",
-              textAlign: TextAlign.center, // Center the title text
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w500,
-                fontSize: 20,
-                color: const Color(0xFF000000),
-              ),
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFFFFFF),
+          title: Text(
+            "Delete Appointment",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w500,
+              fontSize: 20,
+              color: const Color(0xFF000000),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment:
-                  CrossAxisAlignment.center, // Center the column contents
-              children: <Widget>[
-                Text(
-                  "Are you sure you want to delete this appointment?",
-                  textAlign: TextAlign.center, // Center the text content
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    color: const Color(0xFF727070),
-                  ),
-                ),
-              ],
-            ),
-            actions: <Widget>[
-              Center(
-                child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center, // Center the buttons
-                  children: <Widget>[
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDADADA),
-                      ),
-                      child: Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                          fontWeight: FontWeight.normal,
-                          color: Colors.black,
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Close the dialog
-                      },
-                    ),
-                    const SizedBox(width: 8), // Add spacing between buttons
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF0000),
-                      ),
-                      child: Text(
-                        "Yes, Delete",
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.normal,
-                          color: Colors.white,
-                        ),
-                      ),
-                      onPressed: () {
-                        // Perform delete operation here
-                        print('Appointment deleted');
-                        Navigator.of(context).pop(); // Close the dialog
-                      },
-                    ),
-                  ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                "Are you sure you want to delete this appointment?",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: const Color(0xFF727070),
                 ),
               ),
             ],
           ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDADADA),
+                  ),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                      color: Colors.black,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF0000),
+                  ),
+                  child: Text(
+                    "Yes, Delete",
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.normal,
+                      color: Colors.white,
+                    ),
+                  ),
+                  onPressed: () {
+                    _deleteAppointment(appointmentId);
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                ),
+              ],
+            ),
+          ],
         );
       },
     );
+  }
+
+  Future<void> _deleteAppointment(int appointmentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://localhost:8000/DeleteAppointmentReminder/$appointmentId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          // Add your authorization token if needed
+          // 'Authorization': 'Bearer yourAccessTokenHere',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("Appointment deleted successfully");
+        // Handle success, e.g., show a snackbar
+      } else {
+        print("Failed to delete appointment: ${response.statusCode}");
+        // Handle error, e.g., show an error message
+      }
+    } catch (e) {
+      print("Exception while deleting appointment: $e");
+      // Handle exception, e.g., show an error message
+    }
   }
 
   @override
@@ -207,7 +223,7 @@ class _AppCardState extends State<AppCard> {
                   ElevatedButton(
                     onPressed: () {
                       // Show delete confirmation dialog
-                      _showDeleteConfirmationDialog();
+                      _showDeleteConfirmationDialog(1); // Replace with actual appointment ID
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,
