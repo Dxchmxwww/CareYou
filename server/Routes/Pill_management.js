@@ -907,10 +907,10 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 
 		// Check if the user is a Caregiver or Elderly
 		const RoleCheck = await pool.request().input("id", sql.Int, id).query(`
-                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
-                UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
-            `);
+            SELECT role FROM CareYou.[Caregiver] WHERE id = @id
+            UNION
+            SELECT role FROM CareYou.[Elderly] WHERE id = @id
+        `);
 
 		if (RoleCheck.recordset.length === 0) {
 			return res.status(403).send("Unauthorized access");
@@ -944,23 +944,42 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 			return res.status(403).send("Unauthorized access");
 		}
 
-		// Delete associated reminder times
-		await pool
-			.request()
-			.input("PillReminder_id", sql.Int, PillReminder_id)
-			.query(
-				"DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
-			);
+		// Begin a transaction to ensure all operations are atomic
+		const transaction = await pool.transaction();
 
-		// Delete the pill reminder
-		await pool
-			.request()
-			.input("PillReminder_id", sql.Int, PillReminder_id)
-			.query(
-				"DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
-			);
+		try {
+			// Delete associated reminder times
+            await transaction.begin();
+            
+			await transaction.request()
+				.input("PillReminder_id", sql.Int, PillReminder_id)
+				.query(
+					"DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
+				);
 
-		res.status(200).send("Pill reminder deleted successfully");
+			// Delete taken pills records
+			await transaction.request()
+				.input("PillReminder_id", sql.Int, PillReminder_id)
+				.query(
+					"DELETE FROM CareYou.[TakenPill] WHERE PillReminder_id = @PillReminder_id"
+				);
+
+			// Delete the pill reminder itself
+			await transaction.request()
+				.input("PillReminder_id", sql.Int, PillReminder_id)
+				.query(
+					"DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
+				);
+
+			// Commit the transaction if all queries succeed
+			await transaction.commit();
+
+			res.status(200).send("Pill reminder deleted successfully");
+		} catch (err) {
+			// Rollback the transaction if any query fails
+			await transaction.rollback();
+			throw err; // Rethrow the error to be caught by the outer catch block
+		}
 	} catch (err) {
 		console.error(err);
 		res.status(500).send("Internal Server Error");
