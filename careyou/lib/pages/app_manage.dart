@@ -149,7 +149,7 @@ class _AppManageState extends State<AppManage> {
                       child: Column(
                         children: [
                           AppCard(
-                            showButtons: !showEditButton,
+                            showButtons: !showEditButton, appointment: {},
                           ),
                           const SizedBox(height: 35),
                           // Additional widgets can be added here
