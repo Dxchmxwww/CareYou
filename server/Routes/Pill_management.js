@@ -38,9 +38,6 @@ router.post(
 		body("NumberofPills")
 			.isInt({ min: 1 })
 			.withMessage("Number of pills must be a positive integer"),
-		body("pill_image")
-			.isURL()
-			.withMessage("Pill image must be a valid URL"),
 		body("pill_Time").notEmpty().withMessage("Pill time is required"),
 	],
 
@@ -58,7 +55,6 @@ router.post(
 			frequency,
 			reminder_times,
 			NumberofPills,
-			pill_image,
 			pill_Time,
 		} = req.body;
 
@@ -115,9 +111,9 @@ router.post(
 			const createPillReminderRequest = pool.request();
 			const createPillReminderQuery = `
                 INSERT INTO CareYou.Pill_Reminder 
-                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_image, pill_Time, caregiver_id, elderly_id) 
+                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_Time, caregiver_id, elderly_id) 
                 VALUES 
-                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_image, @pill_Time, @caregiver_id, @elderly_id);
+                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_Time, @caregiver_id, @elderly_id);
                 SELECT SCOPE_IDENTITY() AS PillReminder_id;
             `;
 
@@ -129,7 +125,6 @@ router.post(
 				.input("end_date", sql.Date, end_date)
 				.input("frequency", sql.Int, frequency)
 				.input("NumberofPills", sql.Int, NumberofPills)
-				.input("pill_image", sql.VarChar, pill_image)
 				.input("pill_Time", sql.NVarChar, pill_Time)
 				.input("caregiver_id", sql.Int, caregiver_id)
 				.input("elderly_id", sql.Int, elderly_id)
@@ -950,7 +945,7 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 		try {
 			// Delete associated reminder times
             await transaction.begin();
-            
+
 			await transaction.request()
 				.input("PillReminder_id", sql.Int, PillReminder_id)
 				.query(
