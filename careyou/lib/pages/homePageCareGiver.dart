@@ -210,7 +210,7 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
                     // Pills Card
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: PillsCardCareGiver(),
+                      child: PillsCardCareGiver(token: widget.token),
                     ),
                   ],
                 ),

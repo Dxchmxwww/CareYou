@@ -6,6 +6,7 @@ import 'package:careyou/components/navbar.dart'; // Import the file that contain
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -205,13 +206,15 @@ class _HomePageElderState extends State<HomePageElder> {
 
     var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
 
-    String notificationMessage = 'Take $NumberofPills $pillName ($pillType) now. Take it at $PillTime';
+    final formattedReminderTime = DateFormat.Hm().format(DateTime.parse('$reminderDate $reminderTime'));
+
+    String notificationMessage = 'Take {$NumberofPills} {$pillName} ({$pillType}) now. Take it at {$PillTime}';
 
     // Schedule the notification if it's in the future
     if (scheduledTZDateTime.isAfter(tz.TZDateTime.now(tz.local))) {
       await flutterLocalNotificationsPlugin.zonedSchedule(
         timeId, // Use timeId as the unique identifier
-        '$reminderTime Pill Reminder',
+        '$formattedReminderTime Pill Reminder',
         notificationMessage,
         scheduledTZDateTime,
         platformChannelSpecifics,
@@ -249,7 +252,7 @@ class _HomePageElderState extends State<HomePageElder> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HomePageElder(token: widget.token), // Replace with your second screen
+                  builder: (context) => HomePageElder(token: widget.token, selectedRole: '',), // Replace with your second screen
                 ),
               );
             },

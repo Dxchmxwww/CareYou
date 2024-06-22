@@ -1,4 +1,3 @@
-// // ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -181,85 +180,127 @@ class PillCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    DateTime? parsedTime;
+    try {
+      if (pill.reminderTimes.contains('T')) {
+        // For pillTime in full date-time format (e.g., yyyy-MM-dd'T'HH:mm:ss)
+        parsedTime =
+            DateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(pill.reminderTimes);
+      } else {
+        // For reminderTimes in time format (e.g., HH:mm)
+        DateTime now = DateTime.now();
+        List<String> timeParts = pill.reminderTimes.split(':');
+        parsedTime = DateTime(now.year, now.month, now.day,
+            int.parse(timeParts[0]), int.parse(timeParts[1]));
+      }
+    } catch (e) {
+      // Handle invalid date format here, e.g., show an error message or log it
+      print('Invalid date format for pill time: ${pill.reminderTimes}');
+    }
 
-    return SizedBox(
-      height: 85,
+    bool isTaken = pill.status == 1;
+
+    String imagePath = 'assets/images/';
+    if (isTaken) {
+      switch (pill.pillType.toLowerCase()) {
+        case 'capsule':
+          imagePath += 'g_capsule.png';
+          break;
+        case 'gel':
+          imagePath += 'g_gel.png';
+          break;
+        case 'tablet':
+          imagePath += 'g_tablets.png';
+          break;
+        case 'injection':
+          imagePath += 'g_capsule.png';
+          break;
+        case 'lotion':
+          imagePath += 'g_lotion.png';
+          break;
+        default:
+          imagePath += 'default.png'; // Handle default case
+      }
+    } else {
+      switch (pill.pillType.toLowerCase()) {
+        case 'capsule':
+          imagePath += 'capsule.png';
+          break;
+        case 'gel':
+          imagePath += 'gel.png';
+          break;
+        case 'tablet':
+          imagePath += 'tablets.png';
+          break;
+        case 'injection':
+          imagePath += 'capsule.png';
+          break;
+        case 'lotion':
+          imagePath += 'lotion.png';
+          break;
+        default:
+          imagePath += 'default.png'; // Handle default case
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      decoration: BoxDecoration(
+        color: isTaken ? Colors.grey.withOpacity(0.5) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            offset: Offset(0, 1),
+            blurRadius: 8,
+            spreadRadius: 0.1,
+          ),
+        ],
+      ),
       child: Card(
-          child: Container(
-        width: screenWidth * 0.9,
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 255, 255, 255),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: const Offset(0, 1),
-              blurRadius: 6.5,
-              spreadRadius: 2,
-            ),
-          ],
+        elevation: 0,
+        color: isTaken
+            ? const Color.fromARGB(206, 240, 240, 240)
+            : Color.fromARGB(255, 255, 255, 255),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        margin: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Container(
-                width: 67,
-                height: 67,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/crycat.jpeg'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: 17),
-                  Text(
-                    'Captopril(Capsule)',
-                    style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFee6123)),
-                  ),
-                  SizedBox(height: 1),
-                  Text(
-                    'The red one in black package',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 9,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromARGB(255, 0, 0, 0),
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      image: DecorationImage(
+                        image: AssetImage(imagePath),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.access_time,
-                          color: Color(0xFF00916E), size: 19.0),
-                      SizedBox(width: 4),
-                      Text(
-                        '08.00',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: Colors.black,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${pill.pillName} (${pill.pillType})',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isTaken
+                                ? const Color.fromARGB(255, 0, 0, 0)
+                                : Color(0xFFee6123),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -305,7 +346,7 @@ class PillCard extends StatelessWidget {
             ),
           ],
         ),
-      )),
+      ),
     );
   }
 }

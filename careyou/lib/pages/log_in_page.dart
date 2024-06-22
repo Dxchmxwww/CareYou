@@ -1,3 +1,4 @@
+import 'package:careyou/pages/app_manage.dart';
 import 'package:careyou/pages/caregiver_profile.dart';
 import 'package:careyou/pages/elder_profile.dart';
 import 'package:careyou/pages/homePageCareGiver.dart';
@@ -96,8 +97,10 @@ class _HomepageState extends State<log_in_page> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => HomePageCareGiver(token: token, selectedRole: widget.selectedRole,),
-        ),
+          // builder: (context) => HomePageCareGiver(token: token, selectedRole: widget.selectedRole,),
+          //
+          builder: (context) => AppManage(token: token),
+         ),
       );
     }
   }
@@ -239,6 +242,7 @@ class _HomepageState extends State<log_in_page> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
