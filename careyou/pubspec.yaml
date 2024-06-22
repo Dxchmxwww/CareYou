@@ -40,6 +40,8 @@ dependencies:
     intl: ^0.17.0
     shared_preferences: ^2.2.3
     onesignal_flutter: ^3.2.7
+    url_launcher: ^6.0.13
+    get_it: ^7.7.0
 
 dev_dependencies:
     flutter_test:
@@ -78,6 +80,11 @@ flutter:
         - assets/images/injection.png
         - assets/images/lotion.png
         - assets/images/tablets.png
+        - assets/images/pill.svg
+        - assets/images/emergency.svg
+        - assets/images/prescriptions.svg
+        - assets/images/home.svg
+        - assets/images/account.svg
 
     # To add assets to your application, add an assets section, like this:
     # assets:

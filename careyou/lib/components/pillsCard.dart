@@ -3,29 +3,33 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class Pill {
+  final int id; // Unique identifier for pill reminder
   final String pillName;
   final String pillType;
   final String pillNote;
-  final String pillTime; // Renamed to pillTime for backward compatibility
-  final int? frequency; // Changed to nullable int
-  bool taken; // Track whether pill has been taken
+  final String pillTime;
+  final int? frequency;
+  bool taken;
 
   Pill({
+    required this.id,
     required this.pillName,
     required this.pillType,
     required this.pillNote,
     required this.pillTime,
     required this.frequency,
-    this.taken = false, // Default to not taken
+    this.taken = false,
   });
 
   factory Pill.fromJson(Map<String, dynamic> json) {
     return Pill(
+      id: json['PillReminder_id'] ??
+          0, // Assuming id is present in your API response
       pillName: json['pill_name'],
       pillType: json['pill_type'],
       pillNote: json['pill_note'],
       pillTime: json['pill_Time'], // Adjust the key based on your API response
-      frequency: json['frequency'] ?? 0, // Nullable int
+      frequency: json['frequency'] ?? 0,
       taken: json['taken'] ?? false,
     );
   }
@@ -33,7 +37,7 @@ class Pill {
 
 class PillsCard extends StatelessWidget {
   final String token;
-  final bool isEditMode; // Add isEditMode to constructor
+  final bool isEditMode;
 
   const PillsCard({required this.token, required this.isEditMode});
 
@@ -49,7 +53,7 @@ class PillsCard extends StatelessWidget {
         List<dynamic> data = json.decode(response.body);
         return data.map((json) => Pill.fromJson(json)).toList();
       } else if (response.statusCode == 204) {
-        print('You have no pills for Today nakab');
+        print('You have no pills for Today');
         return [];
       } else {
         print(
@@ -62,7 +66,6 @@ class PillsCard extends StatelessWidget {
     }
   }
 
-  // Function to get image path based on medication type
   String getImageForMedicationType(String pillType) {
     switch (pillType.toLowerCase()) {
       case 'capsule':
@@ -104,7 +107,7 @@ class PillsCard extends StatelessWidget {
                   pill: pill,
                   getImageForMedicationType: getImageForMedicationType,
                   isEditMode: isEditMode,
-                  token: token, // Pass the token
+                  token: token,
                 ),
               );
             },
@@ -118,15 +121,15 @@ class PillsCard extends StatelessWidget {
 class PillsCard2 extends StatefulWidget {
   final Pill pill;
   final bool isEditMode;
-  final String token; // Add token to the constructor
-  final String Function(String)
-      getImageForMedicationType; // Pass the function as a parameter
+  final String token;
+  final String Function(String) getImageForMedicationType;
 
-  const PillsCard2(
-      {required this.pill,
-      required this.isEditMode,
-      required this.token,
-      required this.getImageForMedicationType});
+  const PillsCard2({
+    required this.pill,
+    required this.isEditMode,
+    required this.token,
+    required this.getImageForMedicationType,
+  });
 
   @override
   _PillsCard2State createState() => _PillsCard2State();
@@ -135,10 +138,71 @@ class PillsCard2 extends StatefulWidget {
 class _PillsCard2State extends State<PillsCard2> {
   bool isDeleted = false;
 
+  void deletePill(int id) async {
+    final int id = widget.pill.id;
+    print(id);
+
+    try {
+      final response = await http.delete(
+        Uri.parse('http://localhost:8000/DeletePillReminder/$id'),
+        headers: {'Authorization': 'Bearer ${widget.token}'},
+      );
+
+      print('Response status HERE: ${response.statusCode}');
+      print('Response body HERE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isDeleted = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Pill reminder deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (response.statusCode == 404) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Pill reminder not found for ID: $id'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // Optionally handle what should happen in your UI when a pill is not found
+        // For example, remove the card or update the UI accordingly.
+        setState(() {
+          isDeleted =
+              true; // Set isDeleted to true if desired behavior is to remove the card
+        });
+      } else if (response.statusCode == 403) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unauthorized access'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete pill - ${response.statusCode}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete pill: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isDeleted) {
-      return SizedBox.shrink(); // Return an empty SizedBox if deleted
+      return SizedBox.shrink();
     }
 
     double screenWidth = MediaQuery.of(context).size.width;
@@ -266,10 +330,9 @@ class _PillsCard2State extends State<PillsCard2> {
                   bottom: 10,
                   right: 18,
                   child: Container(
-                    height: 20, // Set desired height here
+                    height: 20,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Show delete confirmation dialog
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -299,54 +362,42 @@ class _PillsCard2State extends State<PillsCard2> {
                                       style: TextButton.styleFrom(
                                         foregroundColor: Colors.black,
                                         backgroundColor: const Color.fromARGB(
-                                            255,
-                                            218,
-                                            218,
-                                            218), // background color
+                                            255, 218, 218, 218),
                                         textStyle: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 12, // text size
-                                          fontWeight:
-                                              FontWeight.bold, // text weight
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 15), // button padding
+                                            horizontal: 20, vertical: 15),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              30), // button border radius
+                                          borderRadius:
+                                              BorderRadius.circular(30),
                                         ),
                                       ),
                                       child: const Text("Cancel"),
                                       onPressed: () =>
                                           Navigator.of(context).pop(),
                                     ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
+                                    const SizedBox(width: 10),
                                     TextButton(
                                       style: TextButton.styleFrom(
                                         foregroundColor: Colors.white,
-                                        backgroundColor:
-                                            Colors.red, // background color
+                                        backgroundColor: Colors.red,
                                         textStyle: const TextStyle(
-                                          fontSize: 12, // text size
-                                          fontWeight:
-                                              FontWeight.bold, // text weight
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 15), // button padding
+                                            horizontal: 20, vertical: 15),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              30), // button border radius
+                                          borderRadius:
+                                              BorderRadius.circular(30),
                                         ),
                                       ),
                                       child: const Text("Delete"),
                                       onPressed: () {
-                                        setState(() {
-                                          isDeleted = true;
-                                        });
+                                        deletePill(widget.pill.id);
                                         Navigator.of(context).pop();
                                       },
                                     ),
