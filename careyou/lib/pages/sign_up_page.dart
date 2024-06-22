@@ -7,6 +7,7 @@ import 'dart:convert';
 
 class SignUpPage extends StatefulWidget {
   final String selectedRole;
+  
 
   const SignUpPage({required this.selectedRole});
 
@@ -303,7 +304,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                                 builder: (context) =>
                                                     log_in_page(
                                                   selectedRole:
-                                                      widget.selectedRole,
+                                                      widget.selectedRole, 
                                                 ), // Pass empty token for now
                                               ),
                                             );

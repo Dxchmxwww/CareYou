@@ -4,7 +4,7 @@ const config = require("../config");
 const JWT_SECRET = config.JWT_SECRET;
 
 function verifyToken(req, res, next) {
-	const bearerHeader = req.headers["authorization"] || req.cookies.authToken;
+	const bearerHeader = req.headers["authorization"] || req.cookies.authToken || req.headers.authorization;
 	if (!bearerHeader) {
 		return res.status(401).json({ error: "Unauthorized" });
 	}
