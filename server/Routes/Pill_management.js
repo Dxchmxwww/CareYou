@@ -36,7 +36,6 @@ router.post(
     body("NumberofPills")
       .isInt({ min: 1 })
       .withMessage("Number of pills must be a positive integer"),
-    body("pill_image").isURL().withMessage("Pill image must be a valid URL"),
     body("pill_Time").notEmpty().withMessage("Pill time is required"),
   ],
 
@@ -54,7 +53,6 @@ router.post(
       frequency,
       reminder_times,
       NumberofPills,
-      pill_image,
       pill_Time,
     } = req.body;
 
@@ -108,9 +106,9 @@ router.post(
       const createPillReminderRequest = pool.request();
       const createPillReminderQuery = `
                 INSERT INTO CareYou.Pill_Reminder 
-                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_image, pill_Time, caregiver_id, elderly_id) 
+                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_Time, caregiver_id, elderly_id) 
                 VALUES 
-                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_image, @pill_Time, @caregiver_id, @elderly_id);
+                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_Time, @caregiver_id, @elderly_id);
                 SELECT SCOPE_IDENTITY() AS PillReminder_id;
             `;
 
@@ -122,7 +120,6 @@ router.post(
         .input("end_date", sql.Date, end_date)
         .input("frequency", sql.Int, frequency)
         .input("NumberofPills", sql.Int, NumberofPills)
-        .input("pill_image", sql.VarChar, pill_image)
         .input("pill_Time", sql.NVarChar, pill_Time)
         .input("caregiver_id", sql.Int, caregiver_id)
         .input("elderly_id", sql.Int, elderly_id)
@@ -888,10 +885,10 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 
     // Check if the user is a Caregiver or Elderly
     const RoleCheck = await pool.request().input("id", sql.Int, id).query(`
-                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
-                UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
-            `);
+            SELECT role FROM CareYou.[Caregiver] WHERE id = @id
+            UNION
+            SELECT role FROM CareYou.[Elderly] WHERE id = @id
+        `);
 
     if (RoleCheck.recordset.length === 0) {
       return res.status(403).send("Unauthorized access");
@@ -925,23 +922,45 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
       return res.status(403).send("Unauthorized access");
     }
 
-    // Delete associated reminder times
-    await pool
-      .request()
-      .input("PillReminder_id", sql.Int, PillReminder_id)
-      .query(
-        "DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
-      );
+    // Begin a transaction to ensure all operations are atomic
+    const transaction = await pool.transaction();
 
-    // Delete the pill reminder
-    await pool
-      .request()
-      .input("PillReminder_id", sql.Int, PillReminder_id)
-      .query(
-        "DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
-      );
+    try {
+      // Delete associated reminder times
+      await transaction.begin();
 
-    res.status(200).send("Pill reminder deleted successfully");
+      await transaction
+        .request()
+        .input("PillReminder_id", sql.Int, PillReminder_id)
+        .query(
+          "DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
+        );
+
+      // Delete taken pills records
+      await transaction
+        .request()
+        .input("PillReminder_id", sql.Int, PillReminder_id)
+        .query(
+          "DELETE FROM CareYou.[TakenPill] WHERE PillReminder_id = @PillReminder_id"
+        );
+
+      // Delete the pill reminder itself
+      await transaction
+        .request()
+        .input("PillReminder_id", sql.Int, PillReminder_id)
+        .query(
+          "DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
+        );
+
+      // Commit the transaction if all queries succeed
+      await transaction.commit();
+
+      res.status(200).send("Pill reminder deleted successfully");
+    } catch (err) {
+      // Rollback the transaction if any query fails
+      await transaction.rollback();
+      throw err; // Rethrow the error to be caught by the outer catch block
+    }
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
