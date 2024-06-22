@@ -40,7 +40,7 @@ dependencies:
     intl: ^0.17.0
     shared_preferences: ^2.2.3
     onesignal_flutter: ^3.2.7
-    url_launcher: ^6.0.13
+    url_launcher: ^6.3.0
     get_it: ^7.7.0
 
 dev_dependencies:
