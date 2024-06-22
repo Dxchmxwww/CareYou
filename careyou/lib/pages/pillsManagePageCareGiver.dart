@@ -1,19 +1,29 @@
+import 'package:flutter/material.dart';
 import 'package:careyou/components/pillsCard.dart';
 import 'package:careyou/pages/pillsManageCreatePage.dart';
-import 'package:flutter/material.dart';
 
-class PillsmanagePageCareGiver extends StatefulWidget {
+class PillsManagePageCareGiver extends StatefulWidget {
   final String token;
 
-  const PillsmanagePageCareGiver({required this.token});
+  const PillsManagePageCareGiver({required this.token});
 
   @override
-  State<PillsmanagePageCareGiver> createState() =>
-      _PillsmanagePageCareGiverState();
+  State<PillsManagePageCareGiver> createState() =>
+      _PillsManagePageCareGiverState(token: token);
 }
 
-class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
+class _PillsManagePageCareGiverState extends State<PillsManagePageCareGiver> {
+  final String token;
+
+  _PillsManagePageCareGiverState({required this.token});
   bool isEditMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    print('Bearer Token  dvasfhdeshgdf received: ${widget.token}');
+    // Other initialization logic
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +57,8 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => PillsmanageCreatePage(),
+                                  builder: (context) => PillsmanageCreatePage(
+                                      token: widget.token),
                                 ),
                               );
                             }
@@ -60,7 +71,6 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
-                          // minimumSize: Size(double.infinity, 0.3),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -92,6 +102,7 @@ class _PillsmanagePageCareGiverState extends State<PillsmanagePageCareGiver> {
                 child: Column(
                   children: [
                     PillsCard(isEditMode: isEditMode, token: widget.token),
+                    // Add other components/widgets as needed
                   ],
                 ),
               ),
