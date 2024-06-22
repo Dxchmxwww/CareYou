@@ -1,3 +1,4 @@
+import 'package:careyou/components/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -5,8 +6,9 @@ import 'package:careyou/components/logOutButton.dart';
 
 class caregiver_profile_page extends StatefulWidget {
   final String token;
+  final String selectedRole;
 
-  const caregiver_profile_page({required this.token});
+  const caregiver_profile_page({required this.token, required this.selectedRole});
 
   @override
   State<caregiver_profile_page> createState() => _HomepageState();
@@ -888,14 +890,15 @@ class _HomepageState extends State<caregiver_profile_page> {
             ),
           ),
         ),
+        bottomNavigationBar: NavBar(
+            token: widget.token,
+            initialIndex: 4,
+            selectedRole: widget.selectedRole),
       ),
     );
   }
 }
 
-void main() {
-  runApp(const caregiver_profile_page(token: 'your-token'));
-}
 
 class ElderModel {
   final String relation;

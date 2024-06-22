@@ -2,12 +2,11 @@ import 'package:careyou/pages/caregiver_profile.dart';
 import 'package:careyou/pages/elder_profile.dart';
 import 'package:careyou/pages/homePageCareGiver.dart';
 import 'package:careyou/pages/homePageElder.dart';
+import 'package:careyou/pages/pillsManagePageCareGiver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:careyou/pages/test_home.dart';
-import 'package:careyou/pages/test_home_2.dart';
 import 'package:careyou/pages/sign_up_page.dart';
 
 class log_in_page extends StatefulWidget {
@@ -90,14 +89,14 @@ class _HomepageState extends State<log_in_page> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => HomePageElder(token: token),
+          builder: (context) => HomePageElder(token: token, selectedRole: widget.selectedRole),
         ),
       );
     } else if (widget.selectedRole == 'Caregiver') {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => HomePageCareGiver(token: token),
+          builder: (context) => HomePageCareGiver(token: token, selectedRole: widget.selectedRole,),
         ),
       );
     }
@@ -163,7 +162,7 @@ class _HomepageState extends State<log_in_page> {
             ),
           ),
           content: Text(
-            'Please check your email and password and try again.',
+            'Please check your email and password or selected role and try again.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Poppins',
@@ -240,7 +239,6 @@ class _HomepageState extends State<log_in_page> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

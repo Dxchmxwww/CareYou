@@ -1,4 +1,4 @@
-import 'package:careyou/pages/log_in_page.dart';
+import 'package:careyou/components/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,8 +6,9 @@ import 'package:careyou/components/logOutButton.dart';
 
 class elder_profile_page extends StatefulWidget {
   final String token;
+  final String selectedRole;
 
-  const elder_profile_page({required this.token});
+  const elder_profile_page({required this.token, required this.selectedRole});
 
   @override
   State<elder_profile_page> createState() => _elderProfilePageState();
@@ -28,7 +29,38 @@ class _elderProfilePageState extends State<elder_profile_page> {
   @override
   void initState() {
     super.initState();
+    print("elder_profile_page token here: ${widget.token}"); 
     fetchElderlyData();
+  }
+
+  
+  bool _validateToken(String token) {
+    // Add your token validation logic here
+    // Return true if the token is valid, false otherwise
+    return true;
+  }
+
+// Helper method to show an authentication error dialog
+  void _showAuthenticationErrorDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Authentication Error'),
+          content: Text('You are not logged in. Please log in and try again.'),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                // Optionally, navigate to the login page
+                // Navigator.pushReplacementNamed(context, '/loginPage');
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> fetchElderlyData() async {
@@ -42,6 +74,7 @@ class _elderProfilePageState extends State<elder_profile_page> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('API Response Data: $data');
         setState(() {
           username = data['username'];
           email = data['email'];
@@ -49,9 +82,34 @@ class _elderProfilePageState extends State<elder_profile_page> {
           currentDate = data['currentDate'];
           usernameController.text = username;
         });
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        // Handle unauthorized access
+        print('Unauthorized: Token expired or invalid');
+        _showAuthenticationErrorDialog(context);
+        print('Authentication error: ${response.statusCode}');
+        // Example: Redirect to login page or show error dialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Unauthorized'),
+              content: Text('Please login again.'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    // Redirect to login page or perform logout
+                    // Example: Navigator.pushNamed(context, '/login');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
       } else {
         // Handle error
-        print('Failed to load data: ${response.statusCode}');
+        print('Failed to load  kaaaa: ${response.statusCode}');
       }
     } catch (e) {
       // Handle exceptions
@@ -608,11 +666,8 @@ class _elderProfilePageState extends State<elder_profile_page> {
             ),
           ),
         ),
+        bottomNavigationBar: NavBar(token: widget.token, initialIndex: 4, selectedRole: widget.selectedRole),
       ),
     );
   }
-}
-
-void main() {
-  runApp(elder_profile_page(token: 'your-token'));
 }

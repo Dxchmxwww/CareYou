@@ -1,14 +1,16 @@
 import 'package:careyou/components/appointmentCard.dart';
 import 'package:careyou/components/logOutButton.dart';
 import 'package:careyou/components/pillsCardElder.dart';
+import 'package:careyou/components/navbar.dart'; // Import the file that contains the NavBar class
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class HomePageElder extends StatefulWidget {
   final String token;
+  final String selectedRole;
 
-  const HomePageElder({required this.token});
+  HomePageElder({required this.token, required this.selectedRole});
 
   @override
   State<HomePageElder> createState() => _HomePageElderState();
@@ -19,10 +21,12 @@ class _HomePageElderState extends State<HomePageElder> {
 
   String username = '';
   String currentDate = '';
+  
 
   @override
   void initState() {
     super.initState();
+    print("HomePageElder token: ${widget.token}");
     fetchElderlyData();
   }
 
@@ -137,6 +141,7 @@ class _HomePageElderState extends State<HomePageElder> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    
                     // Today Appointment Card
                     Padding(
                       padding: EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 0),
@@ -165,6 +170,7 @@ class _HomePageElderState extends State<HomePageElder> {
           ),
         ],
       ),
+      bottomNavigationBar: NavBar(token: widget.token, initialIndex: 0, selectedRole: widget.selectedRole),
     );
   }
 }
