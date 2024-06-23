@@ -73,13 +73,6 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
       String formattedEndDate =
           selectedDate2?.toIso8601String().substring(0, 10) ?? '';
 
-      // Validate if at least one reminder time is selected
-      if (selectedreminderTime.isEmpty ||
-          selectedreminderTime.any((time) => time == null)) {
-        print('Please select at least one reminder time');
-        return;
-      }
-
       // Convert reminder times to a list of strings in 'HH:MM' format
       List<String> reminderTimesFormatted = selectedreminderTime
           .map((time) => time != null
@@ -88,9 +81,54 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
           .where((time) => time.isNotEmpty)
           .toList();
 
-      // Check if there's at least one valid time
-      if (reminderTimesFormatted.isEmpty) {
-        print('Please select at least one valid reminder time');
+      // Prepare the reminder times based on frequency
+      String reminderTimesString;
+      if (selectedFrequency == 1) {
+        reminderTimesString = reminderTimesFormatted.first;
+      } else {
+        reminderTimesString = reminderTimesFormatted.join(', ');
+      }
+
+      // Validate if at least one reminder time is selected
+      if (_pillNameController.text.isEmpty) {
+        _showValidationError('Please fill Pill Name');
+        return;
+      }
+      if (_noteController.text.isEmpty) {
+        _showValidationError('Please fill Note');
+        return;
+      }
+      if (selectedPillType?.isEmpty ?? true) {
+        _showValidationError('Please chosse Pill Type');
+        return;
+      }
+      if (selectedPillTime?.isEmpty ?? true) {
+        _showValidationError('Please choose Pill Time');
+        return;
+      }
+      if (selectedDate1 == null && selectedDate2 == null) {
+        _showValidationError('Please choose Date');
+        return;
+      }
+      if (selectedDate1 == null) {
+        _showValidationError('Please choose Start Date');
+        return;
+      }
+      if (selectedDate2 == null) {
+        _showValidationError('Please choose End Date');
+        return;
+      }
+      if (selectedreminderTime.isEmpty ||
+          selectedreminderTime.any((time) => time == null)) {
+        _showValidationError('Please fill reminder time');
+        return;
+      }
+      if (selectedFrequency == null) {
+        _showValidationError('Please choose Reminder Frequency');
+        return;
+      }
+      if (selectedPillCount == null) {
+        _showValidationError('Please choose Pill Count');
         return;
       }
 
@@ -112,10 +150,43 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
 
       // Call the function to send data to backend
       await sendReminderData(data);
+
+      // If data submission is successful, navigate to the next page
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PillsManagePageCareGiver(
+            token: widget.token,
+            selectedRole: '',
+          ),
+        ),
+      );
     } else {
-      // Handle validation errors
       print('Please fill all the fields');
+      _showValidationError('Please fill all the fields.');
     }
+  }
+
+  void _showValidationError(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Validation Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> sendReminderData(Map<String, dynamic> data) async {
@@ -333,15 +404,6 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
                         child: const Text("Create"),
                         onPressed: () async {
                           await _submitData(); // Wait for data submission to complete
-                          Navigator.of(context).popUntil((route) =>
-                              route.isFirst); // Pop until the first route
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  PillsManagePageCareGiver(token: widget.token),
-                            ),
-                          );
                         },
                       ),
                     ],
@@ -413,14 +475,14 @@ class CreatePillsCard extends StatelessWidget {
                               'Pill Name:',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: screenWidth * 0.03,
+                                fontSize: screenWidth * 0.035,
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFF00916E),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                height: 25,
+                                height: screenHeight * 0.025,
                                 margin: EdgeInsets.symmetric(horizontal: 10),
                                 decoration: BoxDecoration(
                                   border: Border(
@@ -441,15 +503,14 @@ class CreatePillsCard extends StatelessWidget {
                                       fontSize: screenWidth * 0.025,
                                     ),
                                     contentPadding:
-                                        EdgeInsets.symmetric(horizontal: 5),
+                                        EdgeInsets.only(left: 5.0, bottom: 18),
                                     border: InputBorder.none,
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter the pill name';
-                                    }
-                                    return null;
-                                  },
+                                  // validator: (value) {
+                                  //   if (value == null || value.isEmpty) {
+                                  //     return 'Please enter the pill name';
+                                  //   }
+                                  // },
                                 ),
                               ),
                             ),
@@ -463,14 +524,14 @@ class CreatePillsCard extends StatelessWidget {
                               'Note:',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: screenWidth * 0.03,
+                                fontSize: screenWidth * 0.035,
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFF00916E),
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                height: 25,
+                                height: screenHeight * 0.025,
                                 margin: EdgeInsets.symmetric(horizontal: 10),
                                 decoration: BoxDecoration(
                                   border: Border(
@@ -484,21 +545,21 @@ class CreatePillsCard extends StatelessWidget {
                                   controller: noteController,
                                   style: const TextStyle(fontSize: 12),
                                   decoration: InputDecoration(
-                                    hintText: 'Note',
+                                    hintText: 'Add more detail',
                                     hintStyle: TextStyle(
                                       color: Color(0xFF999797),
                                       fontSize: screenWidth * 0.025,
                                     ),
                                     contentPadding:
-                                        EdgeInsets.symmetric(horizontal: 5),
+                                        EdgeInsets.only(left: 5.0, bottom: 18),
                                     border: InputBorder.none,
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter a note';
-                                    }
-                                    return null;
-                                  },
+                                  // validator: (value) {
+                                  //   if (value == null || value.isEmpty) {
+                                  //     return 'Please enter a note';
+                                  //   }
+                                  //   return null;
+                                  // },
                                 ),
                               ),
                             ),
@@ -563,7 +624,7 @@ class _CreatePillsTypeState extends State<CreatePillsType> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.only(top: 10.0, left: 15.0, bottom: 10.0),
+              padding: EdgeInsets.only(top: 10.0, left: 15.0, bottom: 5.0),
               child: Text(
                 'Pill Type',
                 style: TextStyle(
@@ -577,21 +638,39 @@ class _CreatePillsTypeState extends State<CreatePillsType> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: Wrap(
-                spacing: 10.0,
+                spacing: 3.0,
                 children: pillTypes.map((type) {
-                  return ChoiceChip(
-                    label: Text(type),
-                    selected: selectedType == type,
-                    onSelected: (selected) {
-                      setState(() {
-                        selectedType = selected ? type : '';
-                        widget.onPillTypeSelected(selectedType);
-                      });
-                    },
-                    selectedColor: const Color(0xFF00916E),
-                    backgroundColor: Colors.grey[200],
-                    labelStyle: TextStyle(
-                      color: selectedType == type ? Colors.white : Colors.black,
+                  return Container(
+                    width: 65,
+                    height: 25,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          selectedType = selectedType == type ? '' : type;
+                          widget.onPillTypeSelected(selectedType);
+                        });
+                      },
+                      style: ButtonStyle(
+                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                          EdgeInsets.all(1), // Adjust padding as needed
+                        ),
+                        backgroundColor: selectedType == type
+                            ? MaterialStateProperty.all<Color>(
+                                const Color(0xFFF54900))
+                            : MaterialStateProperty.all<Color>(
+                                const Color(0xFFD1D1D1)),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(color: const Color(0xFFD1D1D1)),
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        type,
+                        style: TextStyle(fontSize: 10, color: Colors.white),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -649,7 +728,7 @@ class _CreatePillsTimeState extends State<CreatePillsTime> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.only(top: 10.0, left: 15.0, bottom: 10.0),
+              padding: EdgeInsets.only(top: 10.0, left: 15.0, bottom: 5.0),
               child: Text(
                 'Pill Time',
                 style: TextStyle(
@@ -663,23 +742,41 @@ class _CreatePillsTimeState extends State<CreatePillsTime> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: Wrap(
-                spacing: 10.0,
+                spacing: 3.0,
                 children: pillTimes.map((time) {
-                  return ChoiceChip(
-                    label: Text(time),
-                    selected: selectedTime == time,
-                    onSelected: (selected) {
-                      setState(() {
-                        selectedTime = selected ? time : '';
-                        widget.onPillTimeSelected(selectedTime);
-                      });
-                    },
-                    selectedColor: const Color(0xFF00916E),
-                    backgroundColor: Colors.grey[200],
-                    labelStyle: TextStyle(
-                      color: selectedTime == time ? Colors.white : Colors.black,
-                    ),
-                  );
+                  return Container(
+                      width: 90,
+                      height: 25,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            selectedTime = selectedTime == time ? '' : time;
+                            widget.onPillTimeSelected(selectedTime);
+                          });
+                        },
+                        style: ButtonStyle(
+                          padding:
+                              MaterialStateProperty.all<EdgeInsetsGeometry>(
+                            EdgeInsets.all(1), // Adjust padding as needed
+                          ),
+                          backgroundColor: selectedTime == time
+                              ? MaterialStateProperty.all<Color>(
+                                  const Color(0xFFF54900))
+                              : MaterialStateProperty.all<Color>(
+                                  const Color(0xFFD1D1D1)),
+                          shape:
+                              MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: const Color(0xFFD1D1D1)),
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          time,
+                          style: TextStyle(fontSize: 10, color: Colors.white),
+                        ),
+                      ));
                 }).toList(),
               ),
             ),
@@ -728,12 +825,34 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
     super.initState();
   }
 
+  DateTime currentDate = DateTime.now();
+
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      initialDate: currentDate,
+      firstDate: currentDate,
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData(
+            // Customize your theme here
+            primaryColor:
+                const Color(0xFFF54900), // Color of the header background
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFFF54900), // Selected day color
+              onPrimary: Color.fromARGB(
+                  255, 255, 255, 255), // Text color of the selected day
+              surface: const Color.fromARGB(
+                  255, 255, 255, 255), // Background color of non-selected days
+              onSurface: const Color.fromARGB(
+                  255, 0, 0, 0), // Text color of non-selected days
+            ),
+            // Specify any additional ThemeData properties you want to customize
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != (isStartDate ? startDate : endDate)) {
       setState(() {
@@ -753,7 +872,33 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
       context: context,
       initialTime: TimeOfDay.now(),
     );
+
     if (picked != null) {
+      final DateTime now = DateTime.now();
+      final DateTime selectedDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        picked.hour,
+        picked.minute,
+      );
+
+      // Check if selected date is today and picked time is in the past
+      if (selectedDateTime.isBefore(now) && selectedDateTime.day == now.day) {
+        _selectedTimeError('Cannot select a past time.');
+        return;
+      }
+
+      // Check if the picked time already exists in selectedreminderTime
+      bool isTimeAlreadySelected = selectedreminderTime.any((time) {
+        return time?.hour == picked.hour && time?.minute == picked.minute;
+      });
+
+      if (isTimeAlreadySelected) {
+        _selectedSameTimeError('This time is already selected.');
+        return;
+      }
+
       setState(() {
         if (selectedreminderTime.length <= index) {
           selectedreminderTime.add(picked);
@@ -763,6 +908,46 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
         widget.onReminderTimeSelected(selectedreminderTime);
       });
     }
+  }
+
+  void _selectedSameTimeError(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Selected Time Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _selectedTimeError(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Selected Time Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _updateFrequency(int frequency) {
@@ -793,7 +978,8 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding:
+              const EdgeInsets.only(top: 15, left: 10, right: 10, bottom: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -806,7 +992,7 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                   color: const Color(0xFF00916E),
                 ),
               ),
-              const SizedBox(height: 10.0),
+              const SizedBox(height: 7.0),
               Row(
                 children: [
                   Expanded(
@@ -821,24 +1007,30 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        const SizedBox(height: 5.0),
                         GestureDetector(
                           onTap: () => _selectDate(context, true),
                           child: Container(
+                            height: 30,
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 15),
                             decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(5),
+                              color: const Color(0xFFD1D1D1),
+                              borderRadius: BorderRadius.circular(30),
                             ),
+                            alignment: Alignment
+                                .center, // Center aligns the child (Text widget)
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5,
+                                horizontal: 10), // Adjust padding as needed
                             child: Text(
                               startDate == null
                                   ? 'Select Start Date'
                                   : DateFormat('yyyy-MM-dd').format(startDate!),
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: screenWidth * 0.03,
-                                color: const Color(0xFF00916E),
+                                fontSize: 12,
+                                color: const Color(0xFFFFFFFF),
                               ),
                             ),
                           ),
@@ -859,24 +1051,30 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        const SizedBox(height: 5.0),
                         GestureDetector(
                           onTap: () => _selectDate(context, false),
                           child: Container(
+                            height: 30,
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 15),
                             decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(5),
+                              color: const Color(0xFFD1D1D1),
+                              borderRadius: BorderRadius.circular(30),
                             ),
+                            alignment: Alignment
+                                .center, // Center aligns the child (Text widget)
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 5,
+                                horizontal: 10), // Adjust padding as needed
                             child: Text(
                               endDate == null
                                   ? 'Select End Date'
                                   : DateFormat('yyyy-MM-dd').format(endDate!),
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: screenWidth * 0.03,
-                                color: const Color(0xFF00916E),
+                                fontSize: 12,
+                                color: Color.fromARGB(255, 255, 255, 255),
                               ),
                             ),
                           ),
@@ -895,26 +1093,15 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Wrap(
-                spacing: 10.0,
-                children: frequencyOptions.map((frequency) {
-                  return ChoiceChip(
-                    label: Text(frequency.toString()),
-                    selected: selectedFrequency == frequency,
-                    onSelected: (selected) {
-                      if (selected) {
-                        _updateFrequency(frequency);
-                      }
-                    },
-                    selectedColor: const Color(0xFF00916E),
-                    backgroundColor: Colors.grey[200],
-                    labelStyle: TextStyle(
-                      color: selectedFrequency == frequency
-                          ? Colors.white
-                          : Colors.black,
-                    ),
-                  );
-                }).toList(),
+              SizedBox(height: 5.0),
+              DropdownTime(
+                options:
+                    frequencyOptions.map((freq) => freq.toString()).toList(),
+                dropdownBackgroundColor: Colors.grey[200]!,
+                onPressed: (String newValue) {
+                  // Handle frequency selection here
+                  _updateFrequency(int.parse(newValue));
+                },
               ),
               const SizedBox(height: 10.0),
               if (selectedFrequency > 0)
@@ -929,32 +1116,45 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    ...List.generate(selectedFrequency, (index) {
-                      return GestureDetector(
-                        onTap: () => _selectTime(context, index),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 15),
-                          margin: const EdgeInsets.only(top: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            selectedreminderTime.length > index &&
-                                    selectedreminderTime[index] != null
-                                ? selectedreminderTime[index]!.format(context)
-                                : 'Select Reminder Time',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: screenWidth * 0.03,
-                              color: const Color(0xFF00916E),
+                    const SizedBox(height: 5.0),
+                    Column(
+                      children: List.generate(selectedFrequency, (index) {
+                        return Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _selectTime(context, index),
+                              child: Container(
+                                height: 30,
+                                width: 170,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD1D1D1),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  selectedreminderTime.length > index &&
+                                          selectedreminderTime[index] != null
+                                      ? selectedreminderTime[index]!
+                                          .format(context)
+                                      : 'Select Time',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 12,
+                                    color: const Color(0xFFFFFFFF),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    }),
+                            const SizedBox(
+                                height:
+                                    10.0), // Adjust this SizedBox height as per your requirement
+                          ],
+                        );
+                      }),
+                    ),
                   ],
                 ),
               const SizedBox(height: 10.0),
@@ -966,31 +1166,188 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Wrap(
-                spacing: 10.0,
-                children: pillCountOptions.map((count) {
-                  return ChoiceChip(
-                    label: Text(count.toString()),
-                    selected: selectedPillCount == count,
-                    onSelected: (selected) {
-                      setState(() {
-                        selectedPillCount = selected ? count : 0;
-                        widget.onPillCountSelected(selectedPillCount);
-                      });
-                    },
-                    selectedColor: const Color(0xFF00916E),
-                    backgroundColor: Colors.grey[200],
-                    labelStyle: TextStyle(
-                      color: selectedPillCount == count
-                          ? Colors.white
-                          : Colors.black,
-                    ),
-                  );
-                }).toList(),
+              const SizedBox(height: 5.0),
+              DropdownPillCount(
+                options: pillCountOptions,
+                dropdownBackgroundColor: Colors.grey[200]!,
+                onChanged: (selectedCount) {
+                  setState(() {
+                    selectedPillCount = selectedCount;
+                  });
+                  widget.onPillCountSelected(selectedPillCount);
+                },
               ),
               const SizedBox(height: 10.0),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class DropdownTime extends StatefulWidget {
+  final List<String> options;
+  final Color dropdownBackgroundColor;
+  final Function(String) onPressed;
+
+  DropdownTime({
+    Key? key,
+    required this.options,
+    required this.dropdownBackgroundColor,
+    required this.onPressed,
+  }) : super(key: key);
+
+  @override
+  _DropdownTimeState createState() => _DropdownTimeState();
+}
+
+class _DropdownTimeState extends State<DropdownTime> {
+  late String _selectedOptionTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedOptionTime = '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 30,
+      width: 170,
+      decoration: BoxDecoration(
+        color: _selectedOptionTime.isNotEmpty
+            ? const Color(0xFFF54900)
+            : const Color(0xFFD1D1D1),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            spreadRadius: 0,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _selectedOptionTime.isNotEmpty ? _selectedOptionTime : null,
+            hint: const Text(
+              'Select Frequency',
+              style: TextStyle(
+                color: Color.fromARGB(255, 255, 255, 255),
+                fontSize: 12.0,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            items: widget.options.map((String option) {
+              return DropdownMenuItem<String>(
+                value: option,
+                child: Text(
+                  option,
+                  style: const TextStyle(
+                    fontSize: 12.0,
+                    fontFamily: 'Poppins',
+                    color: Color.fromARGB(255, 255, 255, 255),
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedOptionTime = newValue ?? '';
+              });
+              widget.onPressed(newValue ?? '');
+            },
+            icon: const Icon(
+              Icons.arrow_drop_down,
+              color: Color.fromARGB(255, 255, 255, 255),
+            ),
+            dropdownColor: widget.dropdownBackgroundColor,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DropdownPillCount extends StatefulWidget {
+  final List<int> options;
+  final Color dropdownBackgroundColor;
+  final Function(int) onChanged;
+
+  const DropdownPillCount({
+    Key? key,
+    required this.options,
+    required this.dropdownBackgroundColor,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  _DropdownPillCountState createState() => _DropdownPillCountState();
+}
+
+class _DropdownPillCountState extends State<DropdownPillCount> {
+  int? _selectedCount; // Use nullable int to handle initial hint
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 30,
+      width: 170,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: _selectedCount != null
+            ? const Color(0xFFF54900)
+            : const Color(0xFFD1D1D1),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            spreadRadius: 0,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedCount,
+          hint: const Text(
+            'Select Pill Count',
+            style: TextStyle(
+              color: Color.fromARGB(255, 255, 255, 255),
+              fontSize: 12.0,
+              fontFamily: 'Poppins',
+            ),
+          ),
+          items: widget.options.map((int count) {
+            return DropdownMenuItem<int>(
+              value: count,
+              child: Text(
+                count.toString(),
+                style: const TextStyle(
+                  fontSize: 14.0,
+                  fontFamily: 'Poppins',
+                  color: Color.fromARGB(255, 255, 255, 255),
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (int? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedCount = newValue;
+              });
+              widget.onChanged(newValue);
+            }
+          },
+          icon: const Icon(
+            Icons.arrow_drop_down,
+            color: Color.fromARGB(255, 255, 255, 255),
+          ),
+          dropdownColor: widget.dropdownBackgroundColor,
         ),
       ),
     );
