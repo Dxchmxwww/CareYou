@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:careyou/widgets/navbar.dart';
 import 'package:careyou/widgets/app_card.dart';
 import 'package:careyou/pages/add_app.dart'; // Import AddApp screen
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AppManage extends StatefulWidget {
   const AppManage({Key? key}) : super(key: key);
@@ -12,6 +14,81 @@ class AppManage extends StatefulWidget {
 
 class _AppManageState extends State<AppManage> {
   bool showEditButton = true; // Initially show "Edit" button
+  List<Map<String, dynamic>> _appointments = [];
+  bool _isLoading = true;
+  String _token = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _getToken();
+  }
+
+  Future<void> _getToken() async {
+    // Replace with actual token retrieval logic
+    // For example, you might fetch it from secure storage or a login service
+    setState(() {
+      _token = 'YOUR_TOKEN_HERE'; // Replace with actual token
+    });
+    _fetchAppointments();
+  }
+
+  Future<void> _fetchAppointments() async {
+    if (_token.isEmpty) {
+      print("Token is empty");
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8000/ShowAppointmentListForElderlyAppointmentBoxs'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $_token', // Use the token
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _appointments = List<Map<String, dynamic>>.from(json.decode(response.body));
+          _isLoading = false;
+        });
+      } else {
+        print("Failed to fetch appointments: ${response.statusCode}");
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Exception while fetching appointments: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _deleteAppointment(int appointmentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://localhost:8000/DeleteAppointmentReminder/$appointmentId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $_token', // Use the token
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("Appointment deleted successfully");
+        setState(() {
+          _appointments.removeWhere((appointment) => appointment['Appointment_id'] == appointmentId);
+        });
+      } else {
+        print("Failed to delete appointment: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Exception while deleting appointment: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +139,7 @@ class _AppManageState extends State<AppManage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(
-                        left: 20.0, right: 20.0, top: 30.0),
+                    padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -114,7 +190,8 @@ class _AppManageState extends State<AppManage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => const AddApp()),
+                                      builder: (context) => const AddApp(),
+                                    ),
                                   );
                                 },
                                 child: Container(
@@ -144,17 +221,22 @@ class _AppManageState extends State<AppManage> {
                   ),
                   Expanded(
                     child: Padding(
-                      padding:
-                          const EdgeInsets.only(top: 30, left: 20, right: 20),
-                      child: Column(
-                        children: [
-                          AppCard(
-                            showButtons: !showEditButton, appointment: {},
-                          ),
-                          const SizedBox(height: 35),
-                          // Additional widgets can be added here
-                        ],
-                      ),
+                      padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+                      child: _isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : _appointments.isEmpty
+                              ? Center(child: Text('No appointments found'))
+                              : ListView.builder(
+                                  itemCount: _appointments.length,
+                                  itemBuilder: (context, index) {
+                                    final appointment = _appointments[index];
+                                    return AppCard(
+                                      showButtons: !showEditButton,
+                                      appointment: appointment,
+                                      deleteAppointment: showEditButton ? null : _deleteAppointment,
+                                    );
+                                  },
+                                ),
                     ),
                   ),
                 ],

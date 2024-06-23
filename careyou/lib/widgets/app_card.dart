@@ -2,266 +2,95 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class AppointmentsList extends StatefulWidget {
-  final String token;
-
-  const AppointmentsList({required this.token});
-  
-  @override
-  _AppointmentsListState createState() => _AppointmentsListState();
-}
-
-class _AppointmentsListState extends State<AppointmentsList> {
-  List<Map<String, dynamic>> _appointments = [];
-  bool _isLoading = true;
-  
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchAppointments();
-  }
-
-  Future<void> _fetchAppointments() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8000/ShowAppointmentListForElderlyAppointmentBoxs'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          // Add your authorization token if needed
-          'Authorization': 'Bearer ${widget.token}',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _appointments = List<Map<String, dynamic>>.from(json.decode(response.body));
-          _isLoading = false;
-        });
-      } else {
-        print("Failed to fetch appointments: ${response.statusCode}");
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print("Exception while fetching appointments: $e");
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _showDeleteConfirmationDialog(int appointmentId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFFFFFFFF),
-          title: Text(
-            "Delete Appointment",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w500,
-              fontSize: 20,
-              color: const Color(0xFF000000),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                "Are you sure you want to delete this appointment?",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: const Color(0xFF727070),
-                ),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDADADA),
-                  ),
-                  child: Text(
-                    "Cancel",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                      color: Colors.black,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF0000),
-                  ),
-                  child: Text(
-                    "Yes, Delete",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.normal,
-                      color: Colors.white,
-                    ),
-                  ),
-                  onPressed: () {
-                    _deleteAppointment(appointmentId);
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _deleteAppointment(int appointmentId) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('http://localhost:8000/DeleteAppointmentReminder/$appointmentId'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          // Add your authorization token if needed
-          // 'Authorization': 'Bearer yourAccessTokenHere',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        print("Appointment deleted successfully");
-        // Remove the deleted appointment from the list
-        setState(() {
-          _appointments.removeWhere((appointment) => appointment['id'] == appointmentId);
-        });
-      } else {
-        print("Failed to delete appointment: ${response.statusCode}");
-        // Handle error, e.g., show an error message
-      }
-    } catch (e) {
-      print("Exception while deleting appointment: $e");
-      // Handle exception, e.g., show an error message
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Appointments List'),
-      ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _appointments.isEmpty
-              ? Center(child: Text('No appointments found'))
-              : ListView.builder(
-                  itemCount: _appointments.length,
-                  itemBuilder: (context, index) {
-                    final appointment = _appointments[index];
-                    return AppCard(
-                      appointment: appointment,
-                      showButtons: true,
-                    );
-                  },
-                ),
-    );
-  }
-}
-
 class AppCard extends StatelessWidget {
   final Map<String, dynamic> appointment;
   final bool showButtons;
+  final Function(int)? deleteAppointment;
 
-  const AppCard({Key? key, required this.appointment, required this.showButtons})
-      : super(key: key);
+  const AppCard({
+    Key? key,
+    required this.appointment,
+    required this.showButtons,
+    this.deleteAppointment, // Make this parameter optional
+  }) : super(key: key);
 
   void _showDeleteConfirmationDialog(BuildContext context, int appointmentId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFFFFFFFF),
-          title: Text(
-            "Delete Appointment",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w500,
-              fontSize: 20,
-              color: const Color(0xFF000000),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                "Are you sure you want to delete this appointment?",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: const Color(0xFF727070),
-                ),
+    if (deleteAppointment != null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFFFFFFFF),
+            title: Text(
+              "Delete Appointment",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500,
+                fontSize: 20,
+                color: const Color(0xFF000000),
               ),
-            ],
-          ),
-          actions: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDADADA),
+                Text(
+                  "Are you sure you want to delete this appointment?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: const Color(0xFF727070),
                   ),
-                  child: Text(
-                    "Cancel",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                      color: Colors.black,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF0000),
-                  ),
-                  child: Text(
-                    "Yes, Delete",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.normal,
-                      color: Colors.white,
-                    ),
-                  ),
-                  onPressed: () {
-                    // Call delete function passed via constructor
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
                 ),
               ],
             ),
-          ],
-        );
-      },
-    );
+            actions: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFDADADA),
+                    ),
+                    child: Text(
+                      "Cancel",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF0000),
+                    ),
+                    child: Text(
+                      "Yes, Delete",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.normal,
+                        color: Colors.white,
+                      ),
+                    ),
+                    onPressed: () {
+                      deleteAppointment!(appointmentId);
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override
@@ -375,7 +204,7 @@ class AppCard extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       // Show delete confirmation dialog
-                      _showDeleteConfirmationDialog(context, appointment['id']); // Replace with actual appointment ID
+                      _showDeleteConfirmationDialog(context, appointment['Appointment_id']); // Replace with actual appointment ID
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,
@@ -408,6 +237,103 @@ class AppCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class AppointmentsList extends StatefulWidget {
+  final String token;
+
+  const AppointmentsList({required this.token});
+  
+  @override
+  _AppointmentsListState createState() => _AppointmentsListState();
+}
+
+class _AppointmentsListState extends State<AppointmentsList> {
+  List<Map<String, dynamic>> _appointments = [];
+  bool _isLoading = true;
+  
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAppointments();
+  }
+
+  Future<void> _fetchAppointments() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8000/ShowAppointmentListForElderlyAppointmentBoxs'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _appointments = List<Map<String, dynamic>>.from(json.decode(response.body));
+          _isLoading = false;
+        });
+      } else {
+        print("Failed to fetch appointments: ${response.statusCode}");
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Exception while fetching appointments: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _deleteAppointment(int appointmentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://localhost:8000/DeleteAppointmentReminder/$appointmentId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("Appointment deleted successfully");
+        setState(() {
+          _appointments.removeWhere((appointment) => appointment['Appointment_id'] == appointmentId);
+        });
+      } else {
+        print("Failed to delete appointment: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Exception while deleting appointment: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Appointments List'),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _appointments.isEmpty
+              ? Center(child: Text('No appointments found'))
+              : ListView.builder(
+                  itemCount: _appointments.length,
+                  itemBuilder: (context, index) {
+                    final appointment = _appointments[index];
+                    return AppCard(
+                      appointment: appointment,
+                      showButtons: true,
+                      deleteAppointment: _deleteAppointment,
+                    );
+                  },
+                ),
     );
   }
 }

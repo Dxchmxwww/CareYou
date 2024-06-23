@@ -5,7 +5,6 @@ import 'package:careyou/widgets/navbar.dart';
 
 class AddApp extends StatefulWidget {
   const AddApp({Key? key}) : super(key: key);
-  
 
   @override
   _AddAppState createState() => _AddAppState();
@@ -242,8 +241,7 @@ class _AddAppState extends State<AddApp> {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4),
+                                      padding: const EdgeInsets.symmetric(vertical: 4),
                                       alignment: Alignment.centerLeft,
                                       child: Text(value),
                                     ),
@@ -298,8 +296,7 @@ class _AddAppState extends State<AddApp> {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4),
+                                      padding: const EdgeInsets.symmetric(vertical: 4),
                                       alignment: Alignment.centerLeft,
                                       child: Text(value),
                                     ),
@@ -349,8 +346,7 @@ class _AddAppState extends State<AddApp> {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4),
+                                      padding: const EdgeInsets.symmetric(vertical: 4),
                                       alignment: Alignment.centerLeft,
                                       child: Text(value),
                                     ),
@@ -442,11 +438,11 @@ class _AddAppState extends State<AddApp> {
             ),
           ),
           Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: NavBar(), // Renders the navigation bar at the bottom
-              ),
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: NavBar(), // Renders the navigation bar at the bottom
+          ),
         ],
       ),
       backgroundColor: const Color(0xFFFFFFFF),
