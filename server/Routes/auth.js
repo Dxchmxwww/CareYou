@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -176,7 +176,7 @@ async function authenticateUser(email, password, selectedRole) {
 }
 
 function generateToken(id) {
-	return jwt.sign({ id: id }, JWT_SECRET, { expiresIn: "1h" });
+	return jwt.sign({ id }, JWT_SECRET, { expiresIn: "7d" });
 }
 
 router.post("/login", async (req, res) => {

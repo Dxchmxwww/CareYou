@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:careyou/widgets/navbar.dart';
+import 'package:careyou/components/navbar.dart';
 
 
 class DocApp extends StatelessWidget {
@@ -79,12 +79,7 @@ class DocApp extends StatelessWidget {
               ),
             ],
           ),
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: NavBar(),
-          ),
+          
         ],
       ),
       backgroundColor: const Color(0xFFFFFFFF),

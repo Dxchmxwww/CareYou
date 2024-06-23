@@ -766,42 +766,6 @@ router.put(
     }
   }
 );
-router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
-  const { PillReminder_id, reminder_times } = req.body;
-
-  // Validate request body
-  if (!PillReminder_id || !reminder_times) {
-    return res
-      .status(400)
-      .send("PillReminder_id and reminder_time are required");
-  }
-
-  try {
-    const pool = await sql.connect(config);
-
-    // Update the status in the PillReminder_Time table
-    const updateResult = await pool
-      .request()
-      .input("PillReminder_id", sql.Int, PillReminder_id)
-      .input("reminder_times", sql.NVarChar, reminder_times)
-      .input("status", sql.Int, 1) // status = 1 indicates taken
-      .query(`
-                UPDATE CareYou.PillReminder_Time 
-                SET status = @status 
-                WHERE PillReminder_id = @PillReminder_id 
-                  AND reminder_times = @reminder_times
-            `);
-
-    if (updateResult.rowsAffected[0] === 0) {
-      return res.status(404).send("Pill reminder time not found");
-    }
-
-    res.status(200).send("Pill status updated successfully");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Internal Server Error");
-  }
-});
 
 router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
   const { PillReminder_id, reminder_times } = req.body;
@@ -817,13 +781,17 @@ router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
     const pool = await sql.connect(config); // Connect to the database pool
     const elderly_id = req.user.id; // Assuming elderly_id is obtained from the token
 
-    // Verify that the PillReminder_id belongs to the elderly user
     const verifyPillReminder = await pool
       .request()
       .input("PillReminder_id", sql.Int, PillReminder_id)
-      .input("elderly_id", sql.Int, elderly_id).query(`
-                SELECT * FROM CareYou.Pill_Reminder 
-                WHERE PillReminder_id = @PillReminder_id AND elderly_id = @elderly_id
+      .input("elderly_id", sql.Int, elderly_id)
+      .input("reminder_times", sql.VarChar, reminder_times).query(`
+                SELECT pr.*, prt.reminder_times 
+                FROM CareYou.Pill_Reminder pr
+                JOIN CareYou.PillReminder_Time prt ON pr.PillReminder_id = prt.PillReminder_id
+                WHERE pr.PillReminder_id = @PillReminder_id 
+                  AND pr.elderly_id = @elderly_id
+                  AND prt.reminder_times = @reminder_times
             `);
 
     if (verifyPillReminder.recordset.length === 0) {
@@ -838,34 +806,47 @@ router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
     try {
       await transaction.begin(); // Begin the transaction
 
+      const todays = new Date();
+      const year = todays.getFullYear();
+      const month = String(todays.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+      const day = String(todays.getDate()).padStart(2, "0");
+      const today = `${year}-${month}-${day}`;
+
+      console.log(today);
       // Insert into the TakenPill table
       const insertQuery = `
-                INSERT INTO CareYou.TakenPill (PillReminder_id, reminderTimes, status)
-                VALUES (@PillReminder_id, @reminderTimes, 1)
+                INSERT INTO CareYou.[TakenPill] (PillReminder_id,reminderDates, reminderTimes, status)
+                VALUES (@PillReminder_id, @today, @reminderTimes, 1)
             `;
-      await transaction
+      const insertResult = await transaction
         .request()
         .input("PillReminder_id", sql.Int, PillReminder_id)
-        .input("reminderTimes", sql.NVarChar, reminder_times)
+        .input("reminderTimes", sql.VarChar, reminder_times)
+        .input("today", sql.Date, today)
         .query(insertQuery);
+
+      console.log("Insert Result:", insertResult);
 
       // Delete from the PillReminder_Time table
       const deleteQuery = `
-                DELETE FROM CareYou.PillReminder_Time 
+                DELETE FROM CareYou.[PillReminder_Time]
                 WHERE PillReminder_id = @PillReminder_id 
-                  AND reminder_times = @reminder_times
+                  AND reminder_times = @reminderTimes
             `;
-      await transaction
+      const deleteResult = await transaction
         .request()
         .input("PillReminder_id", sql.Int, PillReminder_id)
-        .input("reminder_times", sql.NVarChar, reminder_times)
+        .input("reminderTimes", sql.VarChar, reminder_times)
         .query(deleteQuery);
 
+      console.log("Delete Result:", deleteResult);
+
       await transaction.commit(); // Commit the transaction
+      console.log("Transaction committed successfully");
 
       res
         .status(200)
-        .send("Pill status updated and moved to Takenpill successfully");
+        .send("Pill status updated and moved to TakenPill successfully");
     } catch (err) {
       await transaction.rollback(); // Rollback transaction on error
       console.error("Transaction Error:", err);

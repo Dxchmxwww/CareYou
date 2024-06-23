@@ -21,7 +21,7 @@ class _PillsManagePageCareGiverState extends State<PillsManagePageCareGiver> {
   @override
   void initState() {
     super.initState();
-    print('Bearer Token  dvasfhdeshgdf received: ${widget.token}');
+    print('Bearer Token received: ${widget.token}');
     // Other initialization logic
   }
 

@@ -3,6 +3,7 @@ const app = express();
 const corsMiddleware = require("./middleware/Middleware");
 const pillRoutes = require("./Routes/Pill_management");
 const authRoutes = require("./Routes/auth");
+const notificationsRoutes = require("./Routes/Notification");
 const AppointmentRoutes = require("./Routes/Appointment_management");
 const profileRoutes = require("./Routes/profile");
 const verifyToken = require("./middleware/verifyToken");
@@ -14,14 +15,16 @@ app.use(corsMiddleware);
 
 // Route middlewares
 app.use(bodyParser.json());
-app.use(cookieParser());
 
-app.use(express.json());
-app.use("/auth", authRoutes);
+app.use('/auth', authRoutes);
+
+app.use(cookieParser());
 app.use(verifyToken);
-app.use("/pills", pillRoutes);
-app.use("/appointments", AppointmentRoutes);
-app.use("/profiles", profileRoutes);
+
+app.use('/pills', pillRoutes);
+app.use('/appointments', AppointmentRoutes);
+app.use('/profiles', profileRoutes);
+app.use('/notifications', notificationsRoutes);
 
 app.listen(port, () => {
 	console.log(`Server is running on http://localhost:${port}`);
