@@ -95,7 +95,8 @@ class AppCardForCargiver extends StatelessWidget {
           ),
           if (showButtons)
             Positioned(
-              top: 0, // Adjust the top position to move the delete button higher
+              top:
+                  10, // Adjust the top position to move the delete button higher
               right: 14,
               child: Row(
                 children: [
@@ -222,8 +223,10 @@ class AppCardForCargiver extends StatelessWidget {
     );
   }
 
-  Future<void> _deleteAppointment(BuildContext context, int appointmentId) async {
-    final url = Uri.parse('http://localhost:8000/appointments/DeleteAppointmentReminder/$appointmentId');
+  Future<void> _deleteAppointment(
+      BuildContext context, int appointmentId) async {
+    final url = Uri.parse(
+        'http://localhost:8000/appointments/DeleteAppointmentReminder/$appointmentId');
 
     try {
       final response = await http.delete(

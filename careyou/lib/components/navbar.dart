@@ -1,7 +1,10 @@
+import 'package:careyou/pages/app_manage.dart';
 import 'package:careyou/pages/caregiver_appointmentOFelder.dart';
 import 'package:careyou/pages/elder_appointment.dart';
+import 'package:careyou/pages/homePageCareGiver.dart';
 import 'package:careyou/pages/pillBox.dart'; // Import caregiver appointment page
 import 'package:careyou/pages/pillBoxs_caregiver.dart'; // Import caregiver pill box page
+import 'package:careyou/pages/pillsManagePageCareGiver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -58,15 +61,27 @@ class _NavBarState extends State<NavBar> {
   void _defaultOnPressed(int index) {
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePageElder(
-              token: widget.token,
-              selectedRole: widget.selectedRole,
+        if (widget.selectedRole == 'Elderly') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePageElder(
+                token: widget.token,
+                selectedRole: widget.selectedRole,
+              ),
             ),
-          ),
-        );
+          );
+        } else if (widget.selectedRole == 'Caregiver') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePageCareGiver(
+                token: widget.token,
+                selectedRole: widget.selectedRole,
+              ),
+            ),
+          );
+        }
         break;
       case 1:
         if (widget.selectedRole == 'Elderly') {
@@ -83,7 +98,7 @@ class _NavBarState extends State<NavBar> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PillBoxCaregiver(
+              builder: (context) => PillsManagePageCareGiver(
                 token: widget.token,
                 selectedRole: widget.selectedRole,
               ),
@@ -108,7 +123,7 @@ class _NavBarState extends State<NavBar> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => CaregiverAppointmentOfElder(
+              builder: (context) => AppManage(
                 token: widget.token,
                 selectedRole: widget.selectedRole,
               ),

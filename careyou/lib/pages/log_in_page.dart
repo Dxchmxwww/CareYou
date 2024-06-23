@@ -90,17 +90,20 @@ class _HomepageState extends State<log_in_page> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => HomePageElder(token: token, selectedRole: widget.selectedRole),
+          builder: (context) =>
+              HomePageElder(token: token, selectedRole: widget.selectedRole),
         ),
       );
     } else if (widget.selectedRole == 'Caregiver') {
       Navigator.push(
         context,
         MaterialPageRoute(
-          // builder: (context) => HomePageCareGiver(token: token, selectedRole: widget.selectedRole,),
-          //
-          builder: (context) => AppManage(token: token),
-         ),
+          builder: (context) => HomePageCareGiver(
+            token: token,
+            selectedRole: widget.selectedRole,
+          ),
+          // builder: (context) => AppManage(token: token),
+        ),
       );
     }
   }
@@ -242,7 +245,6 @@ class _HomepageState extends State<log_in_page> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
