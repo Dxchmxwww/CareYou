@@ -6,7 +6,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AppManage extends StatefulWidget {
-  const AppManage({Key? key}) : super(key: key);
+  final String token;
+
+  const AppManage({required this.token});
 
   @override
   _AppManageState createState() => _AppManageState();
@@ -186,13 +188,13 @@ class _AppManageState extends State<AppManage> {
                             if (!showEditButton)
                               GestureDetector(
                                 onTap: () {
-                                  // Navigate to AddApp screen
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const AddApp(),
-                                    ),
-                                  );
+                                  // // Navigate to AddApp screen
+                                  // Navigator.push(
+                                  //   context,
+                                  //   MaterialPageRoute(
+                                  //     builder: (context) => const AddApp(),
+                                  //   ),
+                                  // );
                                 },
                                 child: Container(
                                   width: 60,

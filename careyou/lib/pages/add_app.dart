@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:careyou/widgets/navbar.dart';
 
 class AddApp extends StatefulWidget {
-  const AddApp({Key? key}) : super(key: key);
+  final String token;
+
+  const AddApp({required this.token});
 
   @override
   _AddAppState createState() => _AddAppState();
@@ -18,7 +20,7 @@ class _AddAppState extends State<AddApp> {
   String _endTime = 'HH:MM:SS';
 
   // Replace with your actual authentication token
-  final String authToken = 'Bearer YOUR_AUTH_TOKEN_HERE';
+  final String authToken = 'Bearer token';
 
   Future<void> _submitAppointment() async {
     final appointmentName = _reminderController.text;
