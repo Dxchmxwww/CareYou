@@ -45,7 +45,6 @@ void main() {
 //   }
 // }
 
-
 class MyApp extends StatelessWidget {
   final String token = ''; // Initialize your token here
   @override
@@ -62,7 +61,8 @@ class MyApp extends StatelessWidget {
         '/home': (context) => HomePageElder(token: token, selectedRole: ''),
         '/pill': (context) => PillBox(token: token, selectedRole: ''),
         'appointment': (context) => AppointmentForElder(token: token),
-        '/profile': (context) => elder_profile_page(token: token, selectedRole: ''),
+        '/profile': (context) =>
+            elder_profile_page(token: token, selectedRole: ''),
 
         // Add more routes as necessary
       },
