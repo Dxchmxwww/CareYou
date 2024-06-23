@@ -97,9 +97,8 @@ class _HomepageState extends State<log_in_page> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          // builder: (context) => HomePageCareGiver(token: token, selectedRole: widget.selectedRole,),
-          //
-          builder: (context) => AppManage(token: token),
+          builder: (context) => HomePageCareGiver(token: token, selectedRole: widget.selectedRole,),
+          
          ),
       );
     }
