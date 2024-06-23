@@ -143,6 +143,7 @@ class _PillsCardCareGiverState extends State<PillsCardCareGiver> {
         List<String> timeParts = reminderTimes.split(':');
         DateTime pillDateTime = DateTime(date.year, date.month, date.day,
             int.parse(timeParts[0]), int.parse(timeParts[1]));
+        print(pillDateTime);
         return true; // Assuming the time format implies today
       }
     } catch (e) {

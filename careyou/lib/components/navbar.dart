@@ -1,10 +1,8 @@
 import 'package:careyou/pages/app_manage.dart';
-import 'package:careyou/pages/caregiver_appointmentOFelder.dart';
 import 'package:careyou/pages/caregiver_profile.dart';
 import 'package:careyou/pages/elder_appointment.dart';
 import 'package:careyou/pages/homePageCareGiver.dart';
 import 'package:careyou/pages/pillBox.dart'; // Import caregiver appointment page
-import 'package:careyou/pages/pillBoxs_caregiver.dart'; // Import caregiver pill box page
 import 'package:careyou/pages/pillsManagePageCareGiver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';

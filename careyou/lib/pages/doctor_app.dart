@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:careyou/components/navbar.dart';
 
 
 class DocApp extends StatelessWidget {

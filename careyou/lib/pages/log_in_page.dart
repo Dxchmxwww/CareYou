@@ -1,9 +1,5 @@
-import 'package:careyou/pages/app_manage.dart';
-import 'package:careyou/pages/caregiver_profile.dart';
-import 'package:careyou/pages/elder_profile.dart';
 import 'package:careyou/pages/homePageCareGiver.dart';
 import 'package:careyou/pages/homePageElder.dart';
-import 'package:careyou/pages/pillsManagePageCareGiver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;

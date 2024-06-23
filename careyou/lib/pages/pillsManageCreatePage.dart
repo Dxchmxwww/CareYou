@@ -1,4 +1,3 @@
-import 'package:careyou/pages/pillsManagePageCareGiver.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -75,7 +74,7 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
       // Convert reminder times to a list of strings in 'HH:MM' format
       List<String> reminderTimesFormatted = selectedreminderTime
           .map((time) => time != null
-              ? '${time!.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'
+              ? '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'
               : '')
           .where((time) => time.isNotEmpty)
           .toList();

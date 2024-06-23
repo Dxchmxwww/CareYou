@@ -333,41 +333,7 @@ class _HomepageState extends State<caregiver_profile_page> {
             'relation': relation,
           }),
         );
-
-        // if (response.statusCode == 200) {
-        //   // Elderly added successfully
-        //   ElderModel newElder = ElderModel(relation: relation);
-
-        //   // Update UI
-        //   setState(() {
-        //     elders.add(newElder.toMap()); // Adjusted to use toMap()
-        //     _elderEmailController.clear();
-        //     _relationController.clear();
-        //   });
-        // } else {
-        //   // Show error message if request failed
-        //   showDialog(
-        //     context: context,
-        //     builder: (BuildContext context) {
-        //       return AlertDialog(
-        //         backgroundColor: Colors.white,
-        //         title: Text(
-        //           'Error',
-        //           style: TextStyle(fontWeight: FontWeight.bold),
-        //         ),
-        //         content: Text('Failed to add elderly. Please try again later.'),
-        //         actions: [
-        //           TextButton(
-        //             child: Text('OK'),
-        //             onPressed: () {
-        //               Navigator.of(context).pop();
-        //             },
-        //           ),
-        //         ],
-        //       );
-        //     },
-        //   );
-        // }
+        print(response);
       } catch (e) {
         print('Exception during adding elderly: $e');
         // Handle exception if any
