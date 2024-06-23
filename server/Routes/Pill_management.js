@@ -9,54 +9,55 @@ const moment = require("moment");
 
 //-----------------------------------CreatePill------------------------------------
 router.post(
-  "/CreatePillReminder",
-  verifyToken,
-  [
-    body("pill_name").notEmpty().withMessage("Pill name is required"),
-    body("pill_note")
-      .optional()
-      .notEmpty()
-      .withMessage("Pill note is required"),
-    body("pill_type").notEmpty().withMessage("Pill type is required"),
-    body("start_date").isDate().withMessage("Start date must be a valid date"),
-    body("end_date").isDate().withMessage("End date must be a valid date"),
-    body("frequency")
-      .isInt({ min: 1 })
-      .withMessage("Frequency must be a positive integer"),
-    body("reminder_times")
-      .isArray({ min: 1 })
-      .withMessage(
-        "Reminder times must be an array with at least one time slot"
-      ),
-    body("reminder_times.*")
-      .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
-      .withMessage(
-        "Each reminder time must be in HH:MM:SS format ending with :00"
-      ),
-    body("NumberofPills")
-      .isInt({ min: 1 })
-      .withMessage("Number of pills must be a positive integer"),
-    body("pill_image").isURL().withMessage("Pill image must be a valid URL"),
-    body("pill_Time").notEmpty().withMessage("Pill time is required"),
-  ],
+	"/CreatePillReminder",
+	verifyToken,
+	[
+		body("pill_name").notEmpty().withMessage("Pill name is required"),
+		body("pill_note")
+			.optional()
+			.notEmpty()
+			.withMessage("Pill note is required"),
+		body("pill_type").notEmpty().withMessage("Pill type is required"),
+		body("start_date")
+			.isDate()
+			.withMessage("Start date must be a valid date"),
+		body("end_date").isDate().withMessage("End date must be a valid date"),
+		body("frequency")
+			.isInt({ min: 1 })
+			.withMessage("Frequency must be a positive integer"),
+		body("reminder_times")
+			.isArray({ min: 1 })
+			.withMessage(
+				"Reminder times must be an array with at least one time slot"
+			),
+		body("reminder_times.*")
+			.matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+			.withMessage(
+				"Each reminder time must be in HH:MM:SS format ending with :00"
+			),
+		body("NumberofPills")
+			.isInt({ min: 1 })
+			.withMessage("Number of pills must be a positive integer"),
+		body("pill_Time").notEmpty().withMessage("Pill time is required"),
+	],
 
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    const {
-      pill_name,
-      pill_note,
-      pill_type,
-      start_date,
-      end_date,
-      frequency,
-      reminder_times,
-      NumberofPills,
-      pill_image,
-      pill_Time,
-    } = req.body;
+	async (req, res) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		const {
+			pill_name,
+			pill_note,
+			pill_type,
+			start_date,
+			end_date,
+			frequency,
+			reminder_times,
+			NumberofPills,
+			pill_image,
+			pill_Time,
+		} = req.body;
 
     const caregiver_id = req.user.id;
 
@@ -108,58 +109,58 @@ router.post(
       const createPillReminderRequest = pool.request();
       const createPillReminderQuery = `
                 INSERT INTO CareYou.Pill_Reminder 
-                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_image, pill_Time, caregiver_id, elderly_id) 
+                (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_Time, caregiver_id, elderly_id) 
                 VALUES 
-                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_image, @pill_Time, @caregiver_id, @elderly_id);
+                (@pill_name, @pill_note, @pill_type, @start_date, @end_date, @frequency, @NumberofPills, @pill_Time, @caregiver_id, @elderly_id);
                 SELECT SCOPE_IDENTITY() AS PillReminder_id;
             `;
 
-      const createPillReminderResult = await createPillReminderRequest
-        .input("pill_name", sql.VarChar, pill_name)
-        .input("pill_note", sql.VarChar, pill_note || null)
-        .input("pill_type", sql.NVarChar, pill_type)
-        .input("start_date", sql.Date, start_date)
-        .input("end_date", sql.Date, end_date)
-        .input("frequency", sql.Int, frequency)
-        .input("NumberofPills", sql.Int, NumberofPills)
-        .input("pill_image", sql.VarChar, pill_image)
-        .input("pill_Time", sql.NVarChar, pill_Time)
-        .input("caregiver_id", sql.Int, caregiver_id)
-        .input("elderly_id", sql.Int, elderly_id)
-        .query(createPillReminderQuery);
+			const createPillReminderResult = await createPillReminderRequest
+				.input("pill_name", sql.VarChar, pill_name)
+				.input("pill_note", sql.VarChar, pill_note || null)
+				.input("pill_type", sql.NVarChar, pill_type)
+				.input("start_date", sql.Date, start_date)
+				.input("end_date", sql.Date, end_date)
+				.input("frequency", sql.Int, frequency)
+				.input("NumberofPills", sql.Int, NumberofPills)
+				.input("pill_image", sql.VarChar, pill_image)
+				.input("pill_Time", sql.NVarChar, pill_Time)
+				.input("caregiver_id", sql.Int, caregiver_id)
+				.input("elderly_id", sql.Int, elderly_id)
+				.query(createPillReminderQuery);
 
-      const PillReminder_id =
-        createPillReminderResult.recordset[0].PillReminder_id;
-      console.log(reminder_times);
-      const startDate = moment(start_date);
-      const endDate = moment(end_date);
-      let currentDate = startDate.clone();
+			const PillReminder_id =
+				createPillReminderResult.recordset[0].PillReminder_id;
+			console.log(reminder_times);
+			const startDate = moment(start_date);
+			const endDate = moment(end_date);
+			let currentDate = startDate.clone();
 
-      const insertReminderTimesPromises = [];
+			const insertReminderTimesPromises = [];
 
-      while (currentDate <= endDate) {
-        reminder_times.forEach((time) => {
-          const insertReminderTimeRequest = pool.request();
-          const insertReminderTimeQuery = `
+            while (currentDate <= endDate) {
+                reminder_times.forEach((time) => {
+                    const insertReminderTimeRequest = pool.request();
+                    const insertReminderTimeQuery = `
                         INSERT INTO CareYou.PillReminder_Time (PillReminder_id, reminderDates, reminder_times) 
                         VALUES (@PillReminder_id, @reminderDates, @reminder_times);
                     `;
-          insertReminderTimesPromises.push(
-            insertReminderTimeRequest
-              .input("PillReminder_id", sql.Int, PillReminder_id)
-              .input(
-                "reminderDates",
-                sql.Date,
-                currentDate.format("YYYY-MM-DD")
-              )
-              .input("reminder_times", sql.NVarChar, time)
-              .query(insertReminderTimeQuery)
-          );
-        });
-        currentDate.add(1, "days"); // Move to the next day
-      }
+					insertReminderTimesPromises.push(
+						insertReminderTimeRequest
+							.input("PillReminder_id", sql.Int, PillReminder_id)
+							.input(
+								"reminderDates",
+								sql.Date,
+								currentDate.format("YYYY-MM-DD")
+							)
+							.input("reminder_times", sql.NVarChar, time)
+							.query(insertReminderTimeQuery)
+					);
+				});
+				currentDate.add(1, "days"); // Move to the next day
+			}
 
-      await Promise.all(insertReminderTimesPromises);
+            await Promise.all(insertReminderTimesPromises);
 
       res.status(201).send("Pill reminder created successfully");
     } catch (error) {
@@ -168,6 +169,7 @@ router.post(
     }
   }
 );
+
 
 router.get(
   "/ShowPillRemailderListForCaregiver",
@@ -413,7 +415,8 @@ router.get(
       const day = String(todays.getDate()).padStart(2, "0");
       const today = `${year}-${month}-${day}`;
 
-      console.log(today);
+			console.log(today);
+
 
       const CaregiverPillList = await pool
         .request()
@@ -440,31 +443,31 @@ router.get(
                         AND CAST(prt.reminderDates AS DATE) = @today
                 `);
 
-      if (CaregiverPillList.recordset.length > 0) {
-        const PillList = CaregiverPillList.recordset.map((row) => ({
-          PillReminder_id: row.PillReminder_id,
-          pill_name: row.pill_name,
-          pill_type: row.pill_type,
-          pill_note: row.pill_note,
-          pill_Time: row.pill_Time,
-          reminderDates: row.reminderDates,
-          reminder_times: new Date(row.reminder_times)
-            .toISOString()
-            .split("T")[1]
-            .substring(0, 5),
-        }));
-        res.status(200).json(PillList);
-      } else {
-        // Return a JSON response with the message
-        res.status(204).json({
-          message: "You have no pills for Today",
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      res.status(500).send(err.message);
-    }
-  }
+			if (CaregiverPillList.recordset.length > 0) {
+				const PillList = CaregiverPillList.recordset.map((row) => ({
+                    PillReminder_id: row.PillReminder_id,
+					pill_name: row.pill_name,
+					pill_type: row.pill_type,
+					pill_note: row.pill_note,
+					pill_Time: row.pill_Time,
+                    reminderDates: row.reminderDates,
+					reminder_times: new Date(row.reminder_times)
+						.toISOString()
+						.split("T")[1]
+						.substring(0, 5),
+				}));
+				res.status(200).json(PillList);
+			} else {
+				// Return a JSON response with the message
+				res.status(204).json({
+					message: "You have no pills for Today",
+				});
+			}
+		} catch (err) {
+			console.error(err);
+			res.status(500).send(err.message);
+		}
+	}
 );
 
 router.put(
@@ -769,116 +772,116 @@ router.put(
     }
   }
 );
-router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
-  const { PillReminder_id, reminder_times } = req.body;
+router.put('/UpdatePillStatus', verifyToken, async (req, res) => {
+    const { PillReminder_id, reminder_times } = req.body;
 
-  // Validate request body
-  if (!PillReminder_id || !reminder_times) {
-    return res
-      .status(400)
-      .send("PillReminder_id and reminder_time are required");
-  }
+    // Validate request body
+    if (!PillReminder_id || !reminder_times) {
+        return res.status(400).send('PillReminder_id and reminder_time are required');
+    }
 
-  try {
-    const pool = await sql.connect(config);
+    try {
+        const pool = await sql.connect(config);
 
-    // Update the status in the PillReminder_Time table
-    const updateResult = await pool
-      .request()
-      .input("PillReminder_id", sql.Int, PillReminder_id)
-      .input("reminder_times", sql.NVarChar, reminder_times)
-      .input("status", sql.Int, 1) // status = 1 indicates taken
-      .query(`
+        // Update the status in the PillReminder_Time table
+        const updateResult = await pool.request()
+            .input('PillReminder_id', sql.Int, PillReminder_id)
+            .input('reminder_times', sql.NVarChar, reminder_times)
+            .input('status', sql.Int, 1) // status = 1 indicates taken
+            .query(`
                 UPDATE CareYou.PillReminder_Time 
                 SET status = @status 
                 WHERE PillReminder_id = @PillReminder_id 
                   AND reminder_times = @reminder_times
             `);
 
-    if (updateResult.rowsAffected[0] === 0) {
-      return res.status(404).send("Pill reminder time not found");
-    }
+        if (updateResult.rowsAffected[0] === 0) {
+            return res.status(404).send('Pill reminder time not found');
+        }
 
-    res.status(200).send("Pill status updated successfully");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Internal Server Error");
-  }
+        res.status(200).send('Pill status updated successfully');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
 router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
-  const { PillReminder_id, reminder_times } = req.body;
+	const { PillReminder_id, reminder_times } = req.body;
 
-  // Validate request body
-  if (!PillReminder_id || !reminder_times) {
-    return res
-      .status(400)
-      .send("PillReminder_id and reminder_times are required");
-  }
+	// Validate request body
+	if (!PillReminder_id || !reminder_times) {
+		return res
+			.status(400)
+			.send("PillReminder_id and reminder_times are required");
+	}
 
-  try {
-    const pool = await sql.connect(config); // Connect to the database pool
-    const elderly_id = req.user.id; // Assuming elderly_id is obtained from the token
+	try {
+		const pool = await sql.connect(config); // Connect to the database pool
+		const elderly_id = req.user.id; // Assuming elderly_id is obtained from the token
 
-    // Verify that the PillReminder_id belongs to the elderly user
-    const verifyPillReminder = await pool
-      .request()
-      .input("PillReminder_id", sql.Int, PillReminder_id)
-      .input("elderly_id", sql.Int, elderly_id).query(`
+		// Verify that the PillReminder_id belongs to the elderly user
+		const verifyPillReminder = await pool
+			.request()
+			.input("PillReminder_id", sql.Int, PillReminder_id)
+			.input("elderly_id", sql.Int, elderly_id).query(`
                 SELECT * FROM CareYou.Pill_Reminder 
                 WHERE PillReminder_id = @PillReminder_id AND elderly_id = @elderly_id
             `);
 
-    if (verifyPillReminder.recordset.length === 0) {
-      return res
-        .status(403)
-        .send("Unauthorized access or PillReminder not found");
-    }
+		if (verifyPillReminder.recordset.length === 0) {
+			return res
+				.status(403)
+				.send("Unauthorized access or PillReminder not found");
+		}
 
-    // Start a transaction
-    const transaction = new sql.Transaction(pool);
+		// Start a transaction
+		const transaction = new sql.Transaction(pool);
 
-    try {
-      await transaction.begin(); // Begin the transaction
+		try {
+			await transaction.begin(); // Begin the transaction
 
-      // Insert into the TakenPill table
-      const insertQuery = `
+			// Insert into the TakenPill table
+			const insertQuery = `
                 INSERT INTO CareYou.TakenPill (PillReminder_id, reminderTimes, status)
                 VALUES (@PillReminder_id, @reminderTimes, 1)
             `;
-      await transaction
-        .request()
-        .input("PillReminder_id", sql.Int, PillReminder_id)
-        .input("reminderTimes", sql.NVarChar, reminder_times)
-        .query(insertQuery);
+			await transaction
+				.request()
+				.input("PillReminder_id", sql.Int, PillReminder_id)
+				.input("reminderTimes", sql.NVarChar, reminder_times)
+				.query(insertQuery);
 
-      // Delete from the PillReminder_Time table
-      const deleteQuery = `
+			// Delete from the PillReminder_Time table
+			const deleteQuery = `
                 DELETE FROM CareYou.PillReminder_Time 
                 WHERE PillReminder_id = @PillReminder_id 
-                  AND reminder_times = @reminder_times
+                  AND reminder_times = @reminderTimes
             `;
-      await transaction
-        .request()
-        .input("PillReminder_id", sql.Int, PillReminder_id)
-        .input("reminder_times", sql.NVarChar, reminder_times)
-        .query(deleteQuery);
+			await transaction
+				.request()
+				.input("PillReminder_id", sql.Int, PillReminder_id)
+				.input("reminder_times", sql.NVarChar, reminder_times)
+				.query(deleteQuery);
 
-      await transaction.commit(); // Commit the transaction
+			await transaction.commit(); // Commit the transaction
 
-      res
-        .status(200)
-        .send("Pill status updated and moved to Takenpill successfully");
-    } catch (err) {
-      await transaction.rollback(); // Rollback transaction on error
-      console.error("Transaction Error:", err);
-      res.status(500).send("Transaction failed. Pill status not updated.");
-    }
-  } catch (err) {
-    console.error("Connection Error:", err);
-    res.status(500).send("Internal Server Error");
-  }
+			res.status(200).send(
+				"Pill status updated and moved to Takenpill successfully"
+			);
+		} catch (err) {
+			await transaction.rollback(); // Rollback transaction on error
+			console.error("Transaction Error:", err);
+			res.status(500).send(
+				"Transaction failed. Pill status not updated."
+			);
+		}
+	} catch (err) {
+		console.error("Connection Error:", err);
+		res.status(500).send("Internal Server Error");
+	}
 });
+
 
 router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
   try {
@@ -886,8 +889,8 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
     const id = req.user.id;
     const PillReminder_id = req.params.id;
 
-    // Check if the user is a Caregiver or Elderly
-    const RoleCheck = await pool.request().input("id", sql.Int, id).query(`
+		// Check if the user is a Caregiver or Elderly
+		const RoleCheck = await pool.request().input("id", sql.Int, id).query(`
                 SELECT role FROM CareYou.[Caregiver] WHERE id = @id
                 UNION
                 SELECT role FROM CareYou.[Elderly] WHERE id = @id
@@ -925,27 +928,27 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
       return res.status(403).send("Unauthorized access");
     }
 
-    // Delete associated reminder times
-    await pool
-      .request()
-      .input("PillReminder_id", sql.Int, PillReminder_id)
-      .query(
-        "DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
-      );
+		// Delete associated reminder times
+		await pool
+			.request()
+			.input("PillReminder_id", sql.Int, PillReminder_id)
+			.query(
+				"DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
+			);
 
-    // Delete the pill reminder
-    await pool
-      .request()
-      .input("PillReminder_id", sql.Int, PillReminder_id)
-      .query(
-        "DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
-      );
+		// Delete the pill reminder
+		await pool
+			.request()
+			.input("PillReminder_id", sql.Int, PillReminder_id)
+			.query(
+				"DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
+			);
 
-    res.status(200).send("Pill reminder deleted successfully");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Internal Server Error");
-  }
+		res.status(200).send("Pill reminder deleted successfully");
+	} catch (err) {
+		console.error(err);
+		res.status(500).send("Internal Server Error");
+	}
 });
 
 module.exports = router;

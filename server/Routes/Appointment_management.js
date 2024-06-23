@@ -4,6 +4,7 @@ const { body, validationResult } = require("express-validator");
 const sql = require("mssql");
 const config = require("../config");
 const verifyToken = require("../middleware/verifyToken");
+const moment  = require("moment");
 
 // CreateAppointmentReminder route
 router.post(
@@ -169,59 +170,6 @@ router.get(
 );
 
 router.get(
-  "/ShowTodayPillRemindersOfElderForCaregiver",
-  verifyToken,
-  async (req, res) => {
-    try {
-      const pool = await sql.connect(config);
-      const id = req.user.id;
-
-      // Check if the user is a caregiver
-      const roleCheck = await pool
-        .request()
-        .input("id", sql.Int, id)
-        .query(
-          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-        );
-
-      if (roleCheck.recordset.length === 0) {
-        return res.status(403).send("User is not authorized as a caregiver");
-      }
-
-      // Get today's date
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
-      const day = String(today.getDate()).padStart(2, "0");
-      const todayDate = `${year}-${month}-${day}`;
-
-      console.log(todayDate);
-
-      // Query to get today's pill reminders
-      const getTodayPillRemindersQuery = `
-                SELECT Pill_name, Dosage, Time
-                FROM CareYou.Pill_reminder 
-                WHERE caregiver_id = @caregiver_id AND date = @todayDate
-            `;
-      const todayPillRemindersResult = await pool
-        .request()
-        .input("caregiver_id", sql.Int, id)
-        .input("todayDate", sql.Date, todayDate)
-        .query(getTodayPillRemindersQuery);
-
-      if (todayPillRemindersResult.recordset.length === 0) {
-        return res.status(404).send("No pill reminders found for today");
-      }
-
-      res.status(200).json(todayPillRemindersResult.recordset);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Internal Server Error");
-    }
-  }
-);
-
-router.get(
   "/ShowAppointmentListForElderlyAppointmentBoxs",
   verifyToken,
   async (req, res) => {
@@ -237,20 +185,25 @@ router.get(
           "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
         );
 
-      if (roleCheck.recordset.length === 0) {
-        return res.status(403).send("Unauthorized access");
-      }
+			if (roleCheck.recordset.length === 0) {
+				return res.status(403).send("Unauthorized access");
+			}
+            const currentTime = new Date();
+            const year = currentTime.getFullYear();
+            const month = String(currentTime.getMonth() + 1).padStart(2, "0");
+            const day = String(currentTime.getDate()).padStart(2, "0");
+            
 
-      // Get today's date in 'YYYY-MM-DD' format
-      const today = new Date().toISOString().split("T")[0];
+			// Get today's date in 'YYYY-MM-DD' format
+			// const today = new Date().toISOString().split("T")[0];
 
-      // Fetch today's appointments for the elderly
-      const elderlyAppointmentList = await pool
-        .request()
-        .input("elderly_id", sql.Int, id)
-        .input("today", sql.Date, today).query(`
+			// Fetch today's appointments for the elderly
+			const elderlyAppointmentList = await pool
+				.request()
+				.input("elderly_id", sql.Int, id)
+				.input("today", sql.Date, `${year}-${month}-${day}`).query(`
                     SELECT 
-                        Appointment_name, Date, StartTime, EndTime, Location
+                        *
                     FROM 
                         CareYou.[Appointment_reminder] 
                     WHERE 
@@ -258,29 +211,50 @@ router.get(
                         AND Date >= @today 
                 `);
 
-      if (elderlyAppointmentList.recordset.length > 0) {
-        const AppointmentList = elderlyAppointmentList.recordset.map((row) => ({
-          Appointment_name: row.Appointment_name,
-          Date: row.Date,
-          StartTime: new Date(row.StartTime)
-            .toISOString()
-            .split("T")[1]
-            .substring(0, 5), // Format to HH:mm
-          EndTime: new Date(row.EndTime)
-            .toISOString()
-            .split("T")[1]
-            .substring(0, 5), // Format to HH:mm
-          Location: row.Location,
-        }));
-        res.status(200).json(AppointmentList);
-      } else {
-        throw err;
-      }
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Internal Server Error");
-    }
-  }
+                
+                if (elderlyAppointmentList.recordset.length > 0) {
+                    const AppointmentList = elderlyAppointmentList.recordset.map(row => {
+                        // Format StartTime to HH:mm
+                        // const startTime = new Date(row.StartTime);
+                        // const endTime = new Date(row.EndTime);
+
+                        // // Check if parsing was successful
+                        // if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+                        //     throw new Error('Invalid date format');
+                        // }
+
+                        // // Format StartTime and EndTime to HH:mm
+                        // const formattedStartTime = startTime.toLocaleTimeString('en-US', {
+                        //     hour: '2-digit',
+                        //     minute: '2-digit',
+                        //     hour12: false
+                        // });
+                        // const formattedEndTime = endTime.toLocaleTimeString('en-US', {
+                        //     hour: '2-digit',
+                        //     minute: '2-digit',
+                        //     hour12: false
+                        // });
+                
+                        return {
+                            Appointment_id: row.Appointment_id,
+                            Appointment_name: row.Appointment_name,
+                            Date: row.Date,
+                            StartTime: row.StartTime,
+                            EndTime: row.EndTime,
+                            Location: row.Location
+                        };
+                    });
+                
+                    res.status(200).json(AppointmentList);
+                } else {
+                    throw err; // Handle the error as per your application's requirements
+                }
+                
+		} catch (err) {
+			console.error(err);
+			res.status(500).send("Internal Server Error");
+		}
+	}
 );
 
 router.get(
@@ -408,20 +382,24 @@ router.get(
           "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
         );
 
-      if (roleCheck.recordset.length === 0) {
-        return res.status(403).send("Unauthorized access");
-      }
+			if (roleCheck.recordset.length === 0) {
+				return res.status(403).send("Unauthorized access");
+			}
+			const currentTime = new Date();
+			const year = currentTime.getFullYear();
+			const month = String(currentTime.getMonth() + 1).padStart(2, "0");
+			const day = String(currentTime.getDate()).padStart(2, "0");
 
-      // Get today's date in 'YYYY-MM-DD' format
-      const today = new Date().toISOString().split("T")[0];
+			// Get today's date in 'YYYY-MM-DD' format
+			// const today = new Date().toISOString().split("T")[0];
 
-      // Fetch today's appointments for the elderly
-      const elderlyAppointmentList = await pool
-        .request()
-        .input("elderly_id", sql.Int, id)
-        .input("today", sql.Date, today).query(`
+			// Fetch today's appointments for the elderly
+			const elderlyAppointmentList = await pool
+				.request()
+				.input("elderly_id", sql.Int, id)
+				.input("today", sql.Date, `${year}-${month}-${day}`).query(`
                     SELECT 
-                        Appointment_name, Date, StartTime, EndTime, Location
+                        *
                     FROM 
                         CareYou.[Appointment_reminder] 
                     WHERE 
@@ -429,29 +407,50 @@ router.get(
                         AND Date >= @today 
                 `);
 
-      if (elderlyAppointmentList.recordset.length > 0) {
-        const AppointmentList = elderlyAppointmentList.recordset.map((row) => ({
-          Appointment_name: row.Appointment_name,
-          Date: row.Date,
-          StartTime: new Date(row.StartTime)
-            .toISOString()
-            .split("T")[1]
-            .substring(0, 5), // Format to HH:mm
-          EndTime: new Date(row.EndTime)
-            .toISOString()
-            .split("T")[1]
-            .substring(0, 5), // Format to HH:mm
-          Location: row.Location,
-        }));
-        res.status(200).json(AppointmentList);
-      } else {
-        throw err;
-      }
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Internal Server Error");
-    }
-  }
+			if (elderlyAppointmentList.recordset.length > 0) {
+				const AppointmentList = elderlyAppointmentList.recordset.map(
+					(row) => {
+						// Format StartTime to HH:mm
+						// const startTime = new Date(row.StartTime);
+						// const endTime = new Date(row.EndTime);
+
+						// // Check if parsing was successful
+						// if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+						//     throw new Error('Invalid date format');
+						// }
+
+						// // Format StartTime and EndTime to HH:mm
+						// const formattedStartTime = startTime.toLocaleTimeString('en-US', {
+						//     hour: '2-digit',
+						//     minute: '2-digit',
+						//     hour12: false
+						// });
+						// const formattedEndTime = endTime.toLocaleTimeString('en-US', {
+						//     hour: '2-digit',
+						//     minute: '2-digit',
+						//     hour12: false
+						// });
+
+						return {
+							Appointment_id: row.Appointment_id,
+							Appointment_name: row.Appointment_name,
+							Date: row.Date,
+							StartTime: row.StartTime,
+							EndTime: row.EndTime,
+							Location: row.Location,
+						};
+					}
+				);
+
+				res.status(200).json(AppointmentList);
+			} else {
+				
+			}
+		} catch (err) {
+			console.error(err);
+			res.status(500).send("Internal Server Error");
+		}
+	}
 );
 
 router.get(
@@ -516,46 +515,46 @@ router.get(
           "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
         );
 
-      if (RoleCheck.recordset.length > 0) {
-        console.log("User is authorized as a caregiver");
-      }
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
-      const day = String(today.getDate()).padStart(2, "0");
+			if (RoleCheck.recordset.length > 0) {
+				console.log("User is authorized as a caregiver");
+			}
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+            const day = String(today.getDate()).padStart(2, "0");
+            
+			const todayDate = `${year}-${month}-${day}`;
+			console.log(todayDate); 
+            
 
-      const todayDate = `${year}-${month}-${day}`;
-      console.log(todayDate);
+			const CaregiverAppointmentList = await pool
+				.request()
+				.input("caregiver_id", sql.Int, id)
+				.input("today", sql.Date, todayDate)
+				.query(
+					"SELECT * FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
+				);
 
-      const CaregiverAppointmentList = await pool
-        .request()
-        .input("caregiver_id", sql.Int, id)
-        .input("today", sql.Date, todayDate)
-        .query(
-          "SELECT * FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
-        );
-
-      if (CaregiverAppointmentList.recordset.length > 0) {
-        const AppointmentList = CaregiverAppointmentList.recordset.map(
-          (row) => ({
-            Appointment_id: row.Appointment_id,
-            Appointment_name: row.Appointment_name,
-            Date: row.Date,
-            StartTime: row.StartTime,
-            EndTime: row.EndTime,
-            Location: row.Location,
-          })
-        );
-        res.json(AppointmentList);
-      } else {
-        res.json([]);
-      }
-      res.status(200).send("Appointments reminder already show");
-    } catch (err) {
-      console.error(err);
-      res.status(500).send(err.message);
-    }
-  }
+			if (CaregiverAppointmentList.recordset.length > 0) {
+				const AppointmentList = CaregiverAppointmentList.recordset.map(
+					(row) => ({
+                        Appointment_id: row.Appointment_id,
+						Appointment_name: row.Appointment_name,
+						Date: row.Date,
+						StartTime: row.StartTime,
+						EndTime: row.EndTime,
+						Location: row.Location,
+                        
+					})
+				);
+				res.status(200).json(AppointmentList)
+			} 
+			
+		} catch (err) {
+			console.error(err);
+			res.status(500).send(err.message);
+		}
+	}
 );
 
 router.get(
@@ -603,12 +602,12 @@ router.get(
         return res.status(404).send("No appointments found for today");
       }
 
-      res.json(todayAppointmentsResult.recordset);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Internal Server Error");
-    }
-  }
+			res.status(200).json(todayAppointmentsResult.recordset);
+		} catch (err) {
+			console.error(err);
+			res.status(500).send("Internal Server Error");
+		}
+	}
 );
 
 router.put(

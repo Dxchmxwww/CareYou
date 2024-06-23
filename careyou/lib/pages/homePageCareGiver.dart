@@ -2,6 +2,7 @@
 import 'package:careyou/components/logOutButton.dart';
 import 'package:careyou/components/pillsCardCareGiver.dart';
 import 'package:careyou/components/appointmentCard_forCaregiver.dart';
+import 'package:careyou/components/navbar.dart'; // Import the file that contains the NavBar class
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,8 +10,9 @@ import 'dart:convert';
 
 class HomePageCareGiver extends StatefulWidget {
   final String token;
+  final String selectedRole;
 
-  const HomePageCareGiver({required this.token});
+  const HomePageCareGiver({required this.token, required this.selectedRole});
 
   @override
   State<HomePageCareGiver> createState() => _HomePageCareGiverState();
@@ -190,10 +192,10 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Today Appointment Card
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 0),
-                      child: AppointmentCard_caregiver(token: widget.token),
-                    ),
+                    // Padding(
+                    //   padding: EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 0),
+                    //   child: AppointmentCard(token: widget.token),
+                    // ),
 
                     // Line between AppointmentCard and PillsCard
                     Padding(
@@ -217,6 +219,7 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
           ),
         ],
       ),
+      bottomNavigationBar: NavBar(token: widget.token, initialIndex: 0, selectedRole: widget.selectedRole),
     );
   }
 }
