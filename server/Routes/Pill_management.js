@@ -173,34 +173,46 @@ router.get(
     try {
       const pool = await sql.connect(config);
       const id = req.user.id;
-
-      const RoleCheck = await pool.request().input("id", sql.Int, id).query(`
-                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
-                UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
-            `);
-
-      if (RoleCheck.recordset.length > 0) {
-        console.log("This account is Caregiver");
-      }
-
-      const today = new Date().toISOString().split("T")[0];
-      const currentDate = new Date().toLocaleString("en-us", {
-        weekday: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-
-      const CaregiverPillList = await pool
+      const RoleCheck = await pool
         .request()
-        .input("caregiver_id", sql.Int, id)
-        .input("today", sql.Date, today)
+        .input("id", sql.Int, id)
         .query(
-          "SELECT PillReminder_id, pill_name, pill_type, pill_note, frequency, pill_Time FROM CareYou.[Pill_Reminder] WHERE caregiver_id = @caregiver_id  AND start_date <= @today AND end_date > @today OR end_date = @today"
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
         );
 
-      if (CaregiverPillList.recordset.length > 0) {
-        const PillList = CaregiverPillList.recordset.map((row) => ({
+      if (RoleCheck.recordset.length === 0) {
+        return res.status(403).send("Unauthorized access");
+      }
+
+      // Determine today's date in SQL-compatible format (YYYY-MM-DD)
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayDate = `${year}-${month}-${day}`;
+
+      // Fetch pill reminders
+      const query = `
+        SELECT 
+          PillReminder_id, pill_name, pill_type, pill_note, frequency, pill_Time 
+        FROM 
+          CareYou.[Pill_Reminder] 
+        WHERE 
+          caregiver_id = @caregiver_id 
+          AND (
+            (Start_date <= @today AND End_date >= @today) OR 
+            (Start_date > @today)
+          )
+      `;
+
+      const result = await pool
+        .request()
+        .input("caregiver_id", sql.Int, id)
+        .input("today", sql.Date, todayDate)
+        .query(query);
+
+      if (result.recordset.length > 0) {
+        const PillList = result.recordset.map((row) => ({
           PillReminder_id: row.PillReminder_id,
           pill_name: row.pill_name,
           pill_type: row.pill_type,
@@ -209,9 +221,12 @@ router.get(
           pill_Time: row.pill_Time,
         }));
         res.status(201).json(PillList);
+      } else {
+        res.status(204).json({ message: "No pill reminders found" });
       }
     } catch (err) {
-      res.status(500).send(err.message);
+      console.error("Error fetching pill reminders:", err);
+      res.status(500).send("Internal Server Error");
     }
   }
 );
@@ -237,13 +252,17 @@ router.get(
       }
 
       // Get today's date in 'YYYY-MM-DD' format
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayDate = `${year}-${month}-${day}`;
 
       // Fetch today's pill reminders for the elderly
       const elderlyPillList = await pool
         .request()
         .input("elderly_id", sql.Int, id)
-        .input("today", sql.Date, today).query(`
+        .input("today", sql.Date, todayDate).query(`
                     SELECT 
                         pill_name, 
                         pill_type, 

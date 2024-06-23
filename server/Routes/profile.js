@@ -89,75 +89,76 @@ router.get("/Caregiver", verifyToken, async (req, res) => {
 
 router.get("/Elderly", verifyToken, async (req, res) => {
 	try {
-		const elderlyId = req.user.id;
-		const pool = await sql.connect(config);
-
-		// Check if the user is an elderly
-		const roleCheck = await pool.request().input("id", sql.Int, elderlyId)
-			.query(`
-                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
-                UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
-            `);
-
-		if (roleCheck.recordset[0] == "Elderly") {
-			console.log(roleCheck.recordset[0]);
-			// If user is not a caregiver, send appropriate response
-			return res.status(403).send("User is not authorized as a Elderly");
-		}
-
-		const elderlyInfoQuery = `
-            SELECT username, email, yourcaregiver_email
-            FROM CareYou.[Elderly] 
-            WHERE id = @id
-        `;
-		const elderlyInfoResult = await pool
-			.request()
-			.input("id", sql.Int, elderlyId)
-			.query(elderlyInfoQuery);
-
-		if (elderlyInfoResult.recordset.length === 0) {
-			return res.status(404).send("Elderly information not found");
-		}
-
-		const elderlyInfo = elderlyInfoResult.recordset[0];
-		const caregiverEmail = elderlyInfo.yourcaregiver_email;
-
+	  const elderlyId = req.user.id;
+	  const pool = await sql.connect(config);
+  
+	  // Check if the user is an elderly
+	  const roleCheck = await pool.request().input("id", sql.Int, elderlyId)
+		.query(`
+		  SELECT role FROM CareYou.[Caregiver] WHERE id = @id
+		  UNION
+		  SELECT role FROM CareYou.[Elderly] WHERE id = @id
+		`);
+  
+	  if (roleCheck.recordset[0].role !== "Elderly") {
+		// If user is not an elderly, send appropriate response
+		return res.status(403).send("User is not authorized as an Elderly");
+	  }
+  
+	  // Fetch elderly information
+	  const elderlyInfoQuery = `
+		SELECT username, email, yourcaregiver_email
+		FROM CareYou.[Elderly] 
+		WHERE id = @id
+	  `;
+	  const elderlyInfoResult = await pool.request()
+		.input("id", sql.Int, elderlyId)
+		.query(elderlyInfoQuery);
+  
+	  if (elderlyInfoResult.recordset.length === 0) {
+		return res.status(404).send("Elderly information not found");
+	  }
+  
+	  const elderlyInfo = elderlyInfoResult.recordset[0];
+	  const caregiverEmail = elderlyInfo.yourcaregiver_email;
+  
+	  // Fetch caregiver username based on email
+	  let caregiverUsername = "You don't have a caregiver.";
+	  if (caregiverEmail) {
 		const caregiverUsernameQuery = `
-            SELECT username
-            FROM CareYou.[Caregiver] 
-            WHERE email = @yourcaregiver_email
-        `;
-		const caregiverUsernameResult = await pool
-			.request()
-			.input("yourcaregiver_email", sql.VarChar, caregiverEmail)
-			.query(caregiverUsernameQuery);
-
-		if (caregiverUsernameResult.recordset.length === 0) {
-			return res
-				.status(404)
-				.send("Caregiver username information not found");
+		  SELECT username
+		  FROM CareYou.[Caregiver] 
+		  WHERE email = @yourcaregiver_email
+		`;
+		const caregiverUsernameResult = await pool.request()
+		  .input("yourcaregiver_email", sql.VarChar, caregiverEmail)
+		  .query(caregiverUsernameQuery);
+  
+		if (caregiverUsernameResult.recordset.length > 0) {
+		  caregiverUsername = caregiverUsernameResult.recordset[0].username;
 		}
-
-		const caregiverUsername = caregiverUsernameResult.recordset[0];
-
-		const currentDate = new Date().toLocaleString("en-us", {
-			weekday: "short",
-			day: "numeric",
-			year: "numeric",
-		});
-
-		res.json({
-			username: elderlyInfo.username,
-			email: elderlyInfo.email,
-			your_caregiver: caregiverUsername.username,
-			currentDate: currentDate,
-		});
+	  }
+  
+	  // Format current date
+	  const currentDate = new Date().toLocaleString("en-us", {
+		weekday: "short",
+		day: "numeric",
+		year: "numeric",
+	  });
+  
+	  res.json({
+		username: elderlyInfo.username,
+		email: elderlyInfo.email,
+		your_caregiver: caregiverUsername,
+		currentDate: currentDate,
+	  });
+  
 	} catch (err) {
-		console.error(err);
-		res.status(500).send("Internal Server Error");
+	  console.error(err);
+	  res.status(500).send("Internal Server Error");
 	}
-});
+  });
+  
 
 router.put("/EditPassword", verifyToken, async (req, res) => {
 	const { oldPassword, newPassword } = req.body;
