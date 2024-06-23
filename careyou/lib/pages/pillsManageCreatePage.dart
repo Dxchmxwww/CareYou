@@ -871,6 +871,26 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData(
+            // Customize your theme here
+            primaryColor:
+                const Color(0xFFF54900), // Color of the header background
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFFF54900), // Selected day color
+              onPrimary: Color.fromARGB(
+                  255, 255, 255, 255), // Text color of the selected day
+              surface: const Color.fromARGB(
+                  255, 255, 255, 255), // Background color of non-selected days
+              onSurface: const Color.fromARGB(
+                  255, 0, 0, 0), // Text color of non-selected days
+            ),
+            // Specify any additional ThemeData properties you want to customize
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -1014,7 +1034,9 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                             height: 30,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD1D1D1),
+                              color: startDate != null
+                                  ? const Color(0xFFF54900)
+                                  : const Color(0xFFD1D1D1),
                               borderRadius: BorderRadius.circular(30),
                             ),
                             alignment: Alignment
@@ -1058,7 +1080,9 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                             height: 30,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD1D1D1),
+                              color: endDate != null
+                                  ? const Color(0xFFF54900)
+                                  : const Color(0xFFD1D1D1),
                               borderRadius: BorderRadius.circular(30),
                             ),
                             alignment: Alignment
@@ -1129,7 +1153,9 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 5, horizontal: 10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFD1D1D1),
+                                  color: selectedreminderTime[index] != null
+                                      ? const Color(0xFFF54900)
+                                      : const Color(0xFFD1D1D1),
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                                 alignment: Alignment.center,
@@ -1265,7 +1291,7 @@ class _DropdownTimeState extends State<DropdownTime> {
               Icons.arrow_drop_down,
               color: Color.fromARGB(255, 255, 255, 255),
             ),
-            dropdownColor: widget.dropdownBackgroundColor,
+            dropdownColor: const Color(0xFFD1D1D1),
           ),
         ),
       ),
@@ -1347,7 +1373,7 @@ class _DropdownPillCountState extends State<DropdownPillCount> {
             Icons.arrow_drop_down,
             color: Color.fromARGB(255, 255, 255, 255),
           ),
-          dropdownColor: widget.dropdownBackgroundColor,
+          dropdownColor: const Color(0xFFD1D1D1),
         ),
       ),
     );
