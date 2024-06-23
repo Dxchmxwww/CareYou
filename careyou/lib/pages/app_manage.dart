@@ -2,26 +2,27 @@ import 'dart:async';
 import 'package:careyou/pages/Cargiver_createappoinment.dart';
 import 'package:flutter/material.dart';
 import 'package:careyou/components/navbar.dart';
-import 'package:careyou/widgets/app_card.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import '../widgets/app_card_forcargiver.dart';
 
 class AppManage extends StatefulWidget {
   final String token;
+  final String selectedRole;
 
-  // const AppManage({required this.token, this.selectedRole = 'Caregiver'});
-  const AppManage({required this.token});
+  const AppManage({
+    required this.token,
+    required this.selectedRole,
+  });
 
   @override
-  _AppManageState createState() => _AppManageState();
+  State<AppManage> createState() => _AppManageState();
 }
 
 class _AppManageState extends State<AppManage> {
-  bool showEditButton = true; // Initially show "Edit" button
-  List<Map<String, dynamic>> appointments =
-      []; // Store today's date for display
+  bool showEditButton = false;
+  List<Map<String, dynamic>> appointments = [];
+
   late Timer _timer;
 
   @override
@@ -62,10 +63,10 @@ class _AppManageState extends State<AppManage> {
             final originalDate = DateTime.parse(appointment['Date']);
             final formattedDate =
                 '${originalDate.day.toString().padLeft(2, '0')}/${originalDate.month.toString().padLeft(2, '0')}/${originalDate.year}';
-            final formattedStartTime = appointment['StartTime']
-                .substring(0, 5); // Extract HH:MM from backend time string
-            final formattedEndTime = appointment['EndTime']
-                .substring(0, 5); // Extract HH:MM from backend time string
+            final formattedStartTime =
+                appointment['StartTime'].substring(0, 5); // HH:MM
+            final formattedEndTime =
+                appointment['EndTime'].substring(0, 5); // HH:MM
             return {
               'Appointment_id': appointment['Appointment_id'],
               'Appointment_name': appointment['Appointment_name'],
@@ -88,179 +89,132 @@ class _AppManageState extends State<AppManage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
+        preferredSize: Size.fromHeight(70),
         child: AppBar(
           automaticallyImplyLeading: false,
-          backgroundColor: const Color(0xFF00916E),
-          flexibleSpace: Padding(
-            padding: const EdgeInsets.only(top: 30.0),
-            child: Stack(
-              children: [
-                Center(
-                  child: Text(
-                    'Appointment Management',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  top: 0,
-                  bottom: 0,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    color: Colors.white,
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Navigate back
-                    },
-                  ),
-                ),
-              ],
+          backgroundColor: Color(0xFF00916E),
+          title: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              'Appointment management',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
+          centerTitle: true,
         ),
       ),
       body: GestureDetector(
         onTap: () {
           setState(() {
-            showEditButton =
-                true; // Toggle to show edit button on tap anywhere on the page
+            showEditButton = false;
           });
         },
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Stack(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          left: 20.0, right: 20.0, top: 30.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Spacer(), // Pushes the buttons to the far right
-                          Row(
-                            children: [
-                              if (showEditButton)
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      showEditButton =
-                                          false; // Toggle the state to show/hide edit button
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 65,
-                                    height: 25,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF54900),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Edit',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
+                    SizedBox(
+                      height: 20,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            if (showEditButton) {
+                              // Navigate to add appointment screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      CreateAppointmentReminder(
+                                    token: widget.token,
                                   ),
                                 ),
-                              if (!showEditButton)
-                                GestureDetector(
-                                  onTap: () {
-                                    // Navigate to AddApp screen
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CreateAppointmentReminder(token: widget.token),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 65,
-                                    height: 25,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF54900),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '+Add',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                              );
+                            }
+                            showEditButton = !showEditButton;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF54900),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding:
-                            const EdgeInsets.only(top: 30, left: 20, right: 20),
-                        child: ListView.builder(
-                          itemCount: appointments.length,
-                          itemBuilder: (context, index) {
-                            final appointment = appointments[index];
-                            return GestureDetector(
-                              onTap: () {
-                                // Handle tap on appointment card to set showEditButton to true
-                                setState(() {
-                                  showEditButton = true;
-                                });
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 10.0),
-                                child: AppCardForCargiver(
-                                  showButtons: !showEditButton,
-                                  appointmentId: appointment['Appointment_id'],
-                                  appointmentName:
-                                      appointment['Appointment_name'],
-                                  date: appointment['Date'],
-                                  startTime: appointment['StartTime'],
-                                  endTime: appointment['EndTime'],
-                                  location: appointment['Location'],
-                                  token: widget.token,
-                                ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              showEditButton ? Icons.add : Icons.edit,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 5),
+                            Text(
+                              showEditButton ? 'Add' : 'Edit',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
-                // Positioned(
-                //   left: 0,
-                //   right: 0,
-                //   bottom: 0,
-                //   child: NavBar(), // Renders the navigation bar at the bottom
-                // ),
-              ],
-            );
-          },
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: appointments.length,
+                itemBuilder: (context, index) {
+                  final appointment = appointments[index];
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        showEditButton = false;
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      child: AppCardForCargiver(
+                        showButtons: showEditButton,
+                        appointmentId: appointment['Appointment_id'] ?? '',
+                        appointmentName: appointment['Appointment_name'] ?? '',
+                        date: appointment['Date'] ?? '',
+                        startTime: appointment['StartTime'] ?? '',
+                        endTime: appointment['EndTime'] ?? '',
+                        location: appointment['Location'] ?? '',
+                        token: widget.token,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
       backgroundColor: const Color(0xFFFFFFFF),
+      bottomNavigationBar: NavBar(
+        token: widget.token,
+        initialIndex: 3, // Adjust initial index as needed
+        selectedRole: widget.selectedRole,
+      ),
     );
   }
 }

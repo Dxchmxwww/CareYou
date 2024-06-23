@@ -52,7 +52,6 @@ class PillManagement {
 }
 
 class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
-  bool isEditMode = false;
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _pillNameController = TextEditingController();
@@ -152,16 +151,18 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
       await sendReminderData(data);
 
       // If data submission is successful, navigate to the next page
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PillsManagePageCareGiver(
-            token: widget.token,
-            selectedRole: '',
-          ),
-        ),
-      );
+      // Navigator.of(context).pop();
+      // Navigator.of(context).pop();
+      // Navigator.of(context).popUntil((route) => route.isFirst);
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => PillsManagePageCareGiver(
+      //       token: widget.token,
+      //       selectedRole: '',
+      //     ),
+      //   ),
+      // );
     } else {
       print('Please fill all the fields');
       _showValidationError('Please fill all the fields.');
@@ -200,18 +201,17 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
     try {
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${widget.token}',
-        },
+        headers: headers,
         body: jsonEncode(data),
       );
-
-      print('Token: ${widget.token}');
 
       if (response.statusCode == 201) {
         // Handle successful API call
         print('Data sent successfully');
+
+        // Assuming you want to pop back to the previous screen after successful send
+        Navigator.of(context).pop();
+        Navigator.of(context).pop();
       } else {
         // Handle API errors
         print('Failed to send data. Error: ${response.reasonPhrase}');

@@ -1,5 +1,6 @@
 import 'package:careyou/pages/app_manage.dart';
 import 'package:careyou/pages/caregiver_appointmentOFelder.dart';
+import 'package:careyou/pages/caregiver_profile.dart';
 import 'package:careyou/pages/elder_appointment.dart';
 import 'package:careyou/pages/homePageCareGiver.dart';
 import 'package:careyou/pages/pillBox.dart'; // Import caregiver appointment page
@@ -132,15 +133,27 @@ class _NavBarState extends State<NavBar> {
         }
         break;
       case 4:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => elder_profile_page(
-              token: widget.token,
-              selectedRole: widget.selectedRole,
+        if (widget.selectedRole == 'Elderly') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => elder_profile_page(
+                token: widget.token,
+                selectedRole: widget.selectedRole,
+              ),
             ),
-          ),
-        );
+          );
+        } else if (widget.selectedRole == 'Caregiver') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => caregiver_profile_page(
+                token: widget.token,
+                selectedRole: widget.selectedRole,
+              ),
+            ),
+          );
+        }
         break;
       default:
         break;
