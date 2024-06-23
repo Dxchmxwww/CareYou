@@ -38,7 +38,8 @@ class _HomePageElderState extends State<HomePageElder> {
     fetchElderlyData();
     initializeNotifications();
     fetchAndCheckReminders();
-    timer = Timer.periodic(Duration(seconds: 10), (Timer t) => fetchAndCheckReminders());
+    timer = Timer.periodic(
+        Duration(seconds: 10), (Timer t) => fetchAndCheckReminders());
   }
 
   @override
@@ -95,12 +96,14 @@ class _HomePageElderState extends State<HomePageElder> {
 
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     var initializationSettingsIOS = IOSInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
-      onDidReceiveLocalNotification: onDidReceiveLocalNotification, // Callback for when a notification is received
+      onDidReceiveLocalNotification:
+          onDidReceiveLocalNotification, // Callback for when a notification is received
     );
     var initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -121,7 +124,8 @@ class _HomePageElderState extends State<HomePageElder> {
   Future<void> fetchAndCheckReminders() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8000/notifications/GetUpcomingPillReminders'),
+        Uri.parse(
+            'http://localhost:8000/notifications/GetUpcomingPillReminders'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
         },
@@ -182,7 +186,8 @@ class _HomePageElderState extends State<HomePageElder> {
     DateTime scheduledDateTime = DateTime.parse('$reminderDate $reminderTime');
 
     // Convert DateTime to TZDateTime using the local time zone
-    tz.TZDateTime scheduledTZDateTime = tz.TZDateTime.from(scheduledDateTime, tz.local);
+    tz.TZDateTime scheduledTZDateTime =
+        tz.TZDateTime.from(scheduledDateTime, tz.local);
 
     // Check if the reminder has already been scheduled
     if (scheduledReminderIds.contains(timeId)) {
@@ -192,7 +197,6 @@ class _HomePageElderState extends State<HomePageElder> {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'reminders_channel', // channel_id
       'Reminders', // channel_name
-      'Receive reminders for medication and appointments', // channel_description
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -204,11 +208,15 @@ class _HomePageElderState extends State<HomePageElder> {
       presentSound: true,
     );
 
-    var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
 
-    final formattedReminderTime = DateFormat.Hm().format(DateTime.parse('$reminderDate $reminderTime'));
+    final formattedReminderTime =
+        DateFormat.Hm().format(DateTime.parse('$reminderDate $reminderTime'));
 
-    String notificationMessage = 'Take {$NumberofPills} {$pillName} ({$pillType}) now. Take it at {$PillTime}';
+    String notificationMessage =
+        'Take {$NumberofPills} {$pillName} ({$pillType}) now. Take it at {$PillTime}';
 
     // Schedule the notification if it's in the future
     if (scheduledTZDateTime.isAfter(tz.TZDateTime.now(tz.local))) {
@@ -219,7 +227,8 @@ class _HomePageElderState extends State<HomePageElder> {
         scheduledTZDateTime,
         platformChannelSpecifics,
         androidAllowWhileIdle: true,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'Reminder',
       );
 
@@ -235,7 +244,8 @@ class _HomePageElderState extends State<HomePageElder> {
     scheduledReminderIds.remove(timeId);
   }
 
-  Future<void> onDidReceiveLocalNotification(int id, String? title, String? body, String? payload) async {
+  Future<void> onDidReceiveLocalNotification(
+      int id, String? title, String? body, String? payload) async {
     // Display a dialog with the notification details, tap Ok to go to another page
     showDialog(
       context: context,
@@ -252,7 +262,10 @@ class _HomePageElderState extends State<HomePageElder> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HomePageElder(token: widget.token, selectedRole: '',), // Replace with your second screen
+                  builder: (context) => HomePageElder(
+                    token: widget.token,
+                    selectedRole: '',
+                  ), // Replace with your second screen
                 ),
               );
             },
@@ -330,7 +343,6 @@ class _HomePageElderState extends State<HomePageElder> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
                     // Today Appointment Card
                     Padding(
                       padding: EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 0),
@@ -359,7 +371,10 @@ class _HomePageElderState extends State<HomePageElder> {
           ),
         ],
       ),
-      bottomNavigationBar: NavBar(token: widget.token, initialIndex: 0, selectedRole: widget.selectedRole),
+      bottomNavigationBar: NavBar(
+          token: widget.token,
+          initialIndex: 0,
+          selectedRole: widget.selectedRole),
     );
   }
 }
