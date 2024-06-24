@@ -155,9 +155,10 @@ async function authenticateUser(email, password, selectedRole) {
 
 		const user = userCheck.recordset[0];
 		console.log(user);
-		if (user.role === selectedRole) {
-		} else {
-			throw new Error("Invalid role");
+		if (user.role !== selectedRole) {
+			const error = new Error("Invalid role. Please ensure you are filling correct role.");
+			error.statusCode = 402;
+			throw error;
 		}
 
 		const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -171,6 +172,9 @@ async function authenticateUser(email, password, selectedRole) {
 
 		return { token, role }; // Return token and user's role
 	} catch (error) {
+		if (error.statusCode) {
+			throw error;
+		}
 		throw new Error(`Authentication failed: ${error.message}`);
 	}
 }
@@ -183,11 +187,7 @@ router.post("/login", async (req, res) => {
 	const { email, password, selectedRole } = req.body;
 	console.log(`Login attempt: email=${email}, role=${selectedRole}`);
 	try {
-		const { token, role } = await authenticateUser(
-			email,
-			password,
-			selectedRole
-		); // Assuming authenticateUser returns both token and role
+		const { token, role } = await authenticateUser(email, password, selectedRole); // Assuming authenticateUser returns both token and role
 
 		// Set cookie with JWT token
 		res.cookie("authToken", token, {
@@ -199,6 +199,11 @@ router.post("/login", async (req, res) => {
 		// Respond with token, role, and message
 		res.status(200).json({ message: "Login successful", token, role });
 	} catch (error) {
+		if (error.statusCode === 402) {
+			return res.status(402).json({
+				error: "Invalid role. Please ensure you are filling correct role.",
+			});
+		}
 		if (error.code === "ECONNREFUSED") {
 			return res.status(503).json({
 				error: "Server is currently unavailable, please try again later.",
