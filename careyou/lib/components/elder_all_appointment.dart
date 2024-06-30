@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -23,11 +25,21 @@ class _AppointmentsListState extends State<AppointmentsList> {
     _fetchAppointments();
   }
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
   Future<void> _fetchAppointments() async {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/ShowAppointmentListForElderlyAppointmentBoxs'),
+            '${getServerUrl()}/appointments/ShowAppointmentListForElderlyAppointmentBoxs'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           // Add your authorization token if needed
@@ -136,7 +148,7 @@ class _AppointmentsListState extends State<AppointmentsList> {
     try {
       final response = await http.delete(
         Uri.parse(
-            'http://localhost:8000/DeleteAppointmentReminder/$appointmentId'),
+            '${getServerUrl()}/appointments/DeleteAppointmentReminder/$appointmentId'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           // Add your authorization token if needed

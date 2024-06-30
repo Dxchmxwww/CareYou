@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:careyou/pages/Cargiver_createappoinment.dart';
 import 'package:flutter/material.dart';
 import 'package:careyou/components/navbar.dart';
@@ -42,9 +43,21 @@ class _AppManageState extends State<AppManage> {
     super.dispose();
   }
 
+    String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
+
+
   Future<void> _fetchAppointments() async {
     final url = Uri.parse(
-        'http://localhost:8000/appointments/ShowAppointmentReminderListforCaregiver');
+        '${getServerUrl()}/appointments/ShowAppointmentReminderListforCaregiver');
 
     try {
       final response = await http.get(
@@ -136,7 +149,7 @@ class _AppManageState extends State<AppManage> {
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       CreateAppointmentReminder(
-                                    token: widget.token,
+                                    token: widget.token, selectedRole: widget.selectedRole
                                   ),
                                 ),
                               );
@@ -176,35 +189,85 @@ class _AppManageState extends State<AppManage> {
                   ],
                 ),
               ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: appointments.length,
-                itemBuilder: (context, index) {
-                  final appointment = appointments[index];
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        showEditButton = false;
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      child: AppCardForCargiver(
-                        showButtons: showEditButton,
-                        appointmentId: appointment['Appointment_id'] ?? '',
-                        appointmentName: appointment['Appointment_name'] ?? '',
-                        date: appointment['Date'] ?? '',
-                        startTime: appointment['StartTime'] ?? '',
-                        endTime: appointment['EndTime'] ?? '',
-                        location: appointment['Location'] ?? '',
-                        token: widget.token,
+              // ListView.builder(
+              //   shrinkWrap: true,
+              //   physics: NeverScrollableScrollPhysics(),
+              //   itemCount: appointments.length,
+              //   itemBuilder: (context, index) {
+              //     final appointment = appointments[index];
+              //     return GestureDetector(
+              //       onTap: () {
+              //         setState(() {
+              //           showEditButton = false;
+              //         });
+              //       },
+              //       child: Padding(
+              //         padding: const EdgeInsets.symmetric(
+              //             horizontal: 20, vertical: 10),
+              //         child: AppCardForCargiver(
+              //           showButtons: showEditButton,
+              //           appointmentId: appointment['Appointment_id'] ?? '',
+              //           appointmentName: appointment['Appointment_name'] ?? '',
+              //           date: appointment['Date'] ?? '',
+              //           startTime: appointment['StartTime'] ?? '',
+              //           endTime: appointment['EndTime'] ?? '',
+              //           location: appointment['Location'] ?? '',
+              //           token: widget.token,
+              //         ),
+              //       ),
+              //     );
+              //   },
+              // ),
+
+              appointments.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Text(
+                          "Your elder doesn't have any appointment",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
                       ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: appointments.length,
+                          itemBuilder: (context, index) {
+                            final appointment = appointments[index];
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  showEditButton = false;
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                child: AppCardForCargiver(
+                                  showButtons: showEditButton,
+                                  appointmentId: appointment['Appointment_id'] ?? '',
+                                  appointmentName: appointment['Appointment_name'] ?? '',
+                                  date: appointment['Date'] ?? '',
+                                  startTime: appointment['StartTime'] ?? '',
+                                  endTime: appointment['EndTime'] ?? '',
+                                  location: appointment['Location'] ?? '',
+                                  token: widget.token,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
             ],
           ),
         ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:careyou/components/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -62,11 +64,20 @@ class _elderProfilePageState extends State<elder_profile_page> {
       },
     );
   }
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
 
   Future<void> fetchElderlyData() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8000/profiles/Elderly'),
+        Uri.parse('${getServerUrl()}/profiles/Elderly'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
         },

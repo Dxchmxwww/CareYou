@@ -38,7 +38,7 @@ router.get('/GetUpcomingPillReminders', verifyToken, async (req, res) => {
             WHERE 
                 pr.elderly_id = @elderly_id 
                 AND prt.reminderDates = @today
-                AND prt.reminder_times >= @currentMinute
+                AND prt.reminder_times >= @currentMinute    
                
             ORDER BY 
                 prt.reminderDates ASC, prt.reminder_times ASC;

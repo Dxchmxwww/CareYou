@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For jsonDecode
 import 'package:http/http.dart' as http; // For making HTTP requests
@@ -13,11 +15,22 @@ class AppointmentCard extends StatefulWidget {
 class _AppointmentCardState extends State<AppointmentCard> {
   List<Map<String, dynamic>> appointments = []; // List to store appointments
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
+
   Future<void> fetchAppointmentData() async {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/appointments/ShowTodayAppointmentRemailderListForElderly'),
+            '${getServerUrl()}/appointments/ShowTodayAppointmentRemailderListForElderly'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
         },

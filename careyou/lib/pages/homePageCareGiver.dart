@@ -1,4 +1,6 @@
 //import 'package:careyou/components/appointmentCard.dart';
+import 'dart:io';
+
 import 'package:careyou/components/appointmentCard.dart';
 import 'package:careyou/components/logOutButton.dart';
 import 'package:careyou/components/pillsCardCareGiver.dart';
@@ -31,11 +33,21 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
     super.initState();
     fetchCaregiverData();
   }
+  
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
 
   Future<void> fetchCaregiverData() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8000/profiles/Caregiver'),
+        Uri.parse('${getServerUrl()}/profiles/Caregiver'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
         },

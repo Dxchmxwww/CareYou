@@ -79,7 +79,8 @@ class _PillsManagePageCareGiverState extends State<PillsManagePageCareGiver> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PillsmanageCreatePage(
-                                    token: widget.token,
+                                    token: widget.token,// Adjust initial index as needed
+                                    selectedRole: widget.selectedRole,
                                   ),
                                 ),
                               );

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -41,11 +43,21 @@ class PillsCard extends StatelessWidget {
 
   const PillsCard({required this.token, required this.isEditMode});
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
   Future<List<Pill>> fetchPills() async {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/pills/ShowPillRemailderListForCaregiver'),
+            '${getServerUrl()}/pills/ShowPillRemailderListForCaregiver'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -93,7 +105,7 @@ class PillsCard extends StatelessWidget {
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('You don\'t have pills today'));
+          return Center(child: Text('You don\'t have medicine today'));
         } else {
           return ListView.builder(
             shrinkWrap: true,
@@ -138,10 +150,20 @@ class PillsCard2 extends StatefulWidget {
 class _PillsCard2State extends State<PillsCard2> {
   bool isDeleted = false;
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
   Future<void> deletePill(int id) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://localhost:8000/pills/DeletePillReminder/$id'),
+        Uri.parse('${getServerUrl()}/pills/DeletePillReminder/$id'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 

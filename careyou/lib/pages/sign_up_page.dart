@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:careyou/pages/log_in_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
@@ -24,6 +26,16 @@ class _SignUpPageState extends State<SignUpPage> {
   String _username = '';
   String _elderEmail = '';
   String _relation = '';
+  
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
 
   Future<void> _registerUser() async {
     if (_formKey.currentState?.validate() == true) {
@@ -31,7 +43,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://localhost:8000/auth/register'),
+          Uri.parse('${getServerUrl()}/auth/register'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -56,7 +68,11 @@ class _SignUpPageState extends State<SignUpPage> {
               'The elder user already has a caregiver assigned.');
         } else if (response.statusCode == 402) {
           _showErrorDialog('Elder user not found with provided email.');
-        } else {
+        } else if (response.statusCode == 400) {
+          _showErrorDialog(
+              'Username or Email already exists.');
+        }
+        else {
           _showErrorDialog('Error: ${response.statusCode}');
         }
       } catch (e) {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:careyou/pages/user_onboard_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -107,8 +109,18 @@ class LogoutButton extends StatelessWidget {
     );
   }
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
   Future<void> _handleLogout(BuildContext context) async {
-    final url = 'http://localhost:8000/auth/logout';
+    final url = '${getServerUrl()}/auth/logout';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -57,6 +59,16 @@ class _AppCardState extends State<AppCard> {
     fetchData();
   }
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
   Future<void> fetchData() async {
     setState(() {
       isLoading = true;
@@ -65,7 +77,7 @@ class _AppCardState extends State<AppCard> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/appointments/ShowAppointmentListForElderlyAppointmentBoxs'),
+            '${getServerUrl()}/appointments/ShowAppointmentListForElderlyAppointmentBoxs'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 
@@ -110,7 +122,7 @@ class _AppCardState extends State<AppCard> {
     try {
       final response = await http.delete(
         Uri.parse(
-            'http://localhost:8000/appointments/DeleteAppointmentReminder/$appointmentId'),
+            '${getServerUrl()}/appointments/DeleteAppointmentReminder/$appointmentId'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 

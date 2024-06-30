@@ -1,5 +1,7 @@
 PODS:
   - Flutter (1.0.0)
+  - flutter_local_notifications (0.0.1):
+    - Flutter
   - onesignal_flutter (3.5.3):
     - Flutter
     - OneSignalXCFramework (= 3.12.9)
@@ -13,6 +15,8 @@ PODS:
     - OneSignalXCFramework/OneSignalOutcomes
   - OneSignalXCFramework/OneSignalOutcomes (3.12.9):
     - OneSignalXCFramework/OneSignalCore
+  - permission_handler_apple (9.3.0):
+    - Flutter
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -21,7 +25,9 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - onesignal_flutter (from `.symlinks/plugins/onesignal_flutter/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
@@ -32,8 +38,12 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
   onesignal_flutter:
     :path: ".symlinks/plugins/onesignal_flutter/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   url_launcher_ios:
@@ -41,8 +51,10 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   onesignal_flutter: c56e81f5a422b0b1e06820338f299333ca85c171
   OneSignalXCFramework: 3c3ef25ecca5eae1bf80a3272c49fd1dbab96b35
+  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
   shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
 

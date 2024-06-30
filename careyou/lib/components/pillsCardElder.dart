@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -71,11 +73,22 @@ class _PillsCardElderState extends State<PillsCardElder> {
     super.dispose();
   }
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
+
   Future<void> fetchAndSortPills() async {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/pills/ShowTodayPillRemailderListForElderly'),
+            '${getServerUrl()}/pills/ShowTodayPillRemailderListForElderly'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 
@@ -162,31 +175,55 @@ class _PillsCardElderState extends State<PillsCardElder> {
   }
 
   @override
+  // Widget build(BuildContext context) {
+  //   // return ListView.builder(
+  //   //   shrinkWrap: true,
+  //   //   physics: NeverScrollableScrollPhysics(),
+  //   //   itemCount: _pills.length,
+  //   //   itemBuilder: (context, index) {
+  //   //     final pill = _pills[index];
+  //   //     return Padding(
+  //   //       padding: const EdgeInsets.symmetric(vertical: 8.0),
+  //   //       child: PillCard(
+  //   //         token: widget.token,
+  //   //         pill: pill,
+  //   //         getImageForMedicationType: getImageForMedicationType,
+  //   //         getGrayImageForMedicationType: getGrayImageForMedicationType,
+  //   //         onTake: (Pill pill) {
+  //   //           // Define the action to take when the 'Take' button is pressed
+  //   //           print('Pill taken: ${pill.pillName}');
+  //   //           print('Pill taken ID: ${pill.PillReminder_id}');
+  //   //           print('Pill taken Remainder Time: ${pill.reminderTimes}');
+  //   //           // Optionally, you can update the UI or make API calls here
+  //   //         },
+  //   //       ),
+  //   //     );
+  //   //   },
+  //   // );
+    
+  // }
   Widget build(BuildContext context) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: _pills.length,
-      itemBuilder: (context, index) {
-        final pill = _pills[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: PillCard(
-            token: widget.token,
-            pill: pill,
-            getImageForMedicationType: getImageForMedicationType,
-            getGrayImageForMedicationType: getGrayImageForMedicationType,
-            onTake: (Pill pill) {
-              // Define the action to take when the 'Take' button is pressed
-              print('Pill taken: ${pill.pillName}');
-              print('Pill taken ID: ${pill.PillReminder_id}');
-              print('Pill taken Remainder Time: ${pill.reminderTimes}');
-              // Optionally, you can update the UI or make API calls here
-            },
-          ),
-        );
-      },
-    );
+      return Column(
+        children: List.generate(_pills.length, (index) {
+          final pill = _pills[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: PillCard(
+              token: widget.token,
+              pill: pill,
+              getImageForMedicationType: getImageForMedicationType,
+              getGrayImageForMedicationType: getGrayImageForMedicationType,
+              onTake: (Pill pill) {
+                // Define the action to take when the 'Take' button is pressed
+                print('Pill taken: ${pill.pillName}');
+                print('Pill taken ID: ${pill.PillReminder_id}');
+                print('Pill taken Remainder Time: ${pill.reminderTimes}');
+                // Optionally, you can update the UI or make API calls here
+              },
+            ),
+          );
+        }),
+      );
   }
 }
 
@@ -214,9 +251,20 @@ class PillCard extends StatelessWidget {
     await updatePillStatus(reminderTimes, pillReminderId, token);
   }
 
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
+
   Future<void> updatePillStatus(
       String? reminderTimes, int? pillReminderId, String token) async {
-    String url = 'http://localhost:8000/pills/UpdatePillStatus';
+    String url = '${getServerUrl()}/pills/UpdatePillStatus';
 
     Map<String, dynamic> body = {
       'PillReminder_id': pillReminderId,

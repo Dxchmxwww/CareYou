@@ -1,5 +1,7 @@
 
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -65,12 +67,22 @@ class _PillsCardCareGiverState extends State<PillsCardCareGiver> {
       _fetchPills();
     });
   }
-
+  
+  String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+  
   Future<void> _fetchPills() async {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/pills/ShowPillRemailderListForCaregiver'),
+            '${getServerUrl()}/pills/ShowPillRemailderListForCaregiver'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
         },

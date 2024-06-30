@@ -1,12 +1,16 @@
+
 import 'dart:convert';
+import 'dart:io';
+import 'package:careyou/pages/app_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // For date formatting
 
 class CreateAppointmentReminder extends StatefulWidget {
   final String token;
+  final String selectedRole;
 
-  const CreateAppointmentReminder({required this.token});
+  const CreateAppointmentReminder({required this.token, required this.selectedRole});
 
   @override
   _CreateAppointmentReminderState createState() =>
@@ -20,7 +24,7 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
-  Future<void> _submitAppointment() async {
+    Future<void> _submitAppointment() async {
     final appointmentName = _reminderController.text;
     final location = _locationController.text;
     final date = _selectedDate;
@@ -75,9 +79,18 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
       );
       return;
     }
+    String getServerUrl() {
+        if (Platform.isAndroid) {
+          return 'http://10.0.2.2:8000'; // Android emulator
+        } else if (Platform.isIOS) {
+          return 'http://localhost:8000'; // iOS simulator
+        } else{
+          return 'http://localhost:8000';
+        }
+      }
 
-    final url =
-        Uri.parse('http://localhost:8000/appointments/CreateAppointmentReminder');
+    final url = Uri.parse(
+        '${getServerUrl()}/appointments/CreateAppointmentReminder');
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ${widget.token}',
@@ -103,13 +116,9 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
     print(body);
 
     try {
-      final response =
-          await http.post(url, headers: headers, body: body);
+      final response = await http.post(url, headers: headers, body: body);
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Appointment added successfully')),
-        );
-        Navigator.of(context).pop(); // Navigate back or show confirmation
+        print('Appointment added successfully'); // Navigate back or show confirmation
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -139,6 +148,7 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
       });
     }
   }
+
   String formatTime(TimeOfDay timeOfDay) {
     return '${timeOfDay.hour}:${timeOfDay.minute.toString().padLeft(2, '0')}';
   }
@@ -325,28 +335,33 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                               onTap: () => _selectDate(context),
                               child: Container(
                                 height: 20,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
                                 ),
                                 child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [   
-                                  Text(
-                                    _selectedDate == null
-                                        ? 'Select Date'
-                                        : DateFormat('dd/MM/yyyy').format(_selectedDate!),
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 10,
-                                      color: Color(0xFF00916E),
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _selectedDate == null
+                                          ? 'Select Date'
+                                          : DateFormat('dd/MM/yyyy')
+                                              .format(_selectedDate!),
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 10,
+                                        color: Color(0xFF00916E),
+                                      ),
                                     ),
-                                  ),
-                                  Icon(Icons.arrow_drop_down, color: Color.fromARGB(255, 98, 98, 98)), // Adjust color as needed
-                                ],
-                              ),
+                                    Icon(Icons.arrow_drop_down,
+                                        color: Color.fromARGB(255, 98, 98,
+                                            98)), // Adjust color as needed
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -370,7 +385,8 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                             onTap: () => _selectTime(context, true),
                             child: Container(
                               height: 20,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(100),
@@ -389,7 +405,8 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                                       color: Color(0xFF00916E),
                                     ),
                                   ),
-                                   Icon(Icons.arrow_drop_down, color: Color.fromARGB(255, 98, 98, 98)),
+                                  Icon(Icons.arrow_drop_down,
+                                      color: Color.fromARGB(255, 98, 98, 98)),
                                 ],
                               ),
                             ),
@@ -409,7 +426,8 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                             onTap: () => _selectTime(context, false),
                             child: Container(
                               height: 20,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(100),
@@ -428,7 +446,8 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                                       color: Color(0xFF00916E),
                                     ),
                                   ),
-                                   Icon(Icons.arrow_drop_down, color: Color.fromARGB(255, 98, 98, 98)),
+                                  Icon(Icons.arrow_drop_down,
+                                      color: Color.fromARGB(255, 98, 98, 98)),
                                 ],
                               ),
                             ),
@@ -443,7 +462,7 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Duration:',
+                                'Location:',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 10,
@@ -482,38 +501,112 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                           ),
                         ],
                       ),
-                       SizedBox(height: 16),
-                      
+                      SizedBox(height: 16),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 57,
-                              height: 57,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF00916E),
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                onPressed: _submitAppointment,
-                                icon: const Icon(
-                                  Icons.save_outlined,
-                                  color: Colors.white,
-                                  size: 35,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
               ],
             ),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text(
+                  "Create Appointment",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                content: const Text(
+                  "Are you sure you want to create this appointment?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                actions: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black,
+                          backgroundColor: const Color.fromARGB(
+                              255, 218, 218, 218), // background color
+                          textStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12, // text size
+                            fontWeight: FontWeight.bold, // text weight
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 15), // button padding
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                10), // button border radius
+                          ),
+                        ),
+                        child: const Text("Cancel"),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: const Color.fromARGB(
+                              255, 66, 169, 144), // background color
+                          textStyle: const TextStyle(
+                            fontSize: 12, // text size
+                            fontWeight: FontWeight.bold, // text weight
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 15), // button padding
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                10), // button border radius
+                          ),
+                        ),
+                        child: const Text("Create"),
+                        onPressed: () async {
+                          await _submitAppointment(); // Wait for data submission to complete
+                          Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AppManage(
+                                    token: widget.token, selectedRole: widget.selectedRole
+                                  ),
+                                ),
+                              );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        backgroundColor: const Color(0xFF00916E),
+        shape: const CircleBorder(),
+        child: const Icon(
+          Icons.save,
+          size: 30,
+          color: Colors.white,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

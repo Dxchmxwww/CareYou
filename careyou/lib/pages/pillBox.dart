@@ -47,7 +47,7 @@ class PillBox extends StatelessWidget {
                 padding:
                     const EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0),
                 child: Text(
-                  'Your medication timetable',
+                  'Your medication',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 20,

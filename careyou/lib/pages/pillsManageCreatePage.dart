@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:careyou/pages/pillsManagePageCareGiver.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -5,8 +8,9 @@ import 'dart:convert';
 
 class PillsmanageCreatePage extends StatefulWidget {
   final String token; // Add the 'token' field here
+  final String selectedRole; // Add the 'selectedRole' field here
 
-  const PillsmanageCreatePage({Key? key, required this.token})
+  const PillsmanageCreatePage({Key? key, required this.token, required this.selectedRole})
       : super(key: key);
 
   @override
@@ -33,7 +37,7 @@ class PillManagement {
     required this.reminderDurationEnd,
     required this.reminderTime,
     required this.reminderFrequency,
-    required this.token,
+    required this.token
   });
 
   Map<String, dynamic> toJson() {
@@ -149,19 +153,6 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
       // Call the function to send data to backend
       await sendReminderData(data);
 
-      // If data submission is successful, navigate to the next page
-      // Navigator.of(context).pop();
-      // Navigator.of(context).pop();
-      // Navigator.of(context).popUntil((route) => route.isFirst);
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => PillsManagePageCareGiver(
-      //       token: widget.token,
-      //       selectedRole: '',
-      //     ),
-      //   ),
-      // );
     } else {
       print('Please fill all the fields');
       _showValidationError('Please fill all the fields.');
@@ -188,10 +179,20 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
       },
     );
   }
+   String getServerUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000'; // Android emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:8000'; // iOS simulator
+    } else{
+      return 'http://localhost:8000';
+    }
+  }
+
 
   Future<void> sendReminderData(Map<String, dynamic> data) async {
     // Replace this with your actual API call to send data
-    final Uri url = Uri.parse('http://localhost:8000/pills/CreatePillReminder');
+    final Uri url = Uri.parse('${getServerUrl()}/pills/CreatePillReminder');
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ${widget.token}',
@@ -209,8 +210,12 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
         print('Data sent successfully');
 
         // Assuming you want to pop back to the previous screen after successful send
-        Navigator.of(context).pop();
-        Navigator.of(context).pop();
+       Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PillsManagePageCareGiver(token: widget.token, selectedRole: widget.selectedRole),
+        ),
+      );
       } else {
         // Handle API errors
         print('Failed to send data. Error: ${response.reasonPhrase}');
@@ -902,11 +907,22 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
         picked.minute,
       );
 
-      // Check if selected date is today and picked time is in the past
-      if (selectedDateTime.isBefore(now) && selectedDateTime.day == now.day) {
-        _selectedTimeError('Cannot select a past time.');
-        return;
+      if (selectedDateTime.isAfter(now) || selectedDateTime.isAtSameMomentAs(now)) {
+            // Proceed with the selected time
+            setState(() {
+              // Set the selected time for the given index
+              // _selectedTimes[index] = picked;
+            });
       }
+
+      if (selectedDateTime.isAtSameMomentAs(DateTime(now.year, now.month, now.day)) && selectedDateTime.isBefore(now)) {
+      _selectedTimeError('Cannot select a past time.');
+      return;
+      
+    
+    
+}
+      
 
       // Check if the picked time already exists in selectedreminderTime
       bool isTimeAlreadySelected = selectedreminderTime.any((time) {

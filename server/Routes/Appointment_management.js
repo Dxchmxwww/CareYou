@@ -107,67 +107,133 @@ router.get(
   "/ShowTodayAppointmentOfElderForCaregiverHome",
   verifyToken, // Middleware to verify token
   async (req, res) => {
-    try {
-      const pool = await sql.connect(config);
-      const id = req.user.id;
+      try {
+          const pool = await sql.connect(config.database);
+          const id = req.user.id;
 
-      // Check if the user is a caregiver
-      const roleCheck = await pool
-        .request()
-        .input("id", sql.Int, id)
-        .query(
-          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-        );
+          // Check if the user is a caregiver
+          const roleCheck = await pool
+              .request()
+              .input("id", sql.Int, id)
+              .query(
+                  "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+              );
 
-      if (roleCheck.recordset.length === 0) {
-        return res.status(403).send("User is not authorized as a caregiver");
+          if (roleCheck.recordset.length === 0) {
+              return res.status(403).send("User is not authorized as a caregiver");
+          }
+
+          // Get today's date
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+          const day = String(today.getDate()).padStart(2, "0");
+          const todayDate = `${year}-${month}-${day}`;
+
+          const getTodayAppointmentsQuery = `
+              SELECT 
+                  Appointment_name, 
+                  CONVERT(VARCHAR, StartTime, 108) AS StartTime, -- HH:mm:ss format
+                  CONVERT(VARCHAR, EndTime, 108) AS EndTime,     -- HH:mm:ss format
+                  Location
+              FROM CareYou.Appointment_reminder 
+              WHERE caregiver_id = @caregiver_id AND CONVERT(DATE, date) = @todayDate
+          `;
+
+          const todayAppointmentsResult = await pool
+              .request()
+              .input("caregiver_id", sql.Int, id)
+              .input("todayDate", sql.Date, todayDate)
+              .query(getTodayAppointmentsQuery);
+
+          if (todayAppointmentsResult.recordset.length === 0) {
+              return res.status(404).send("No appointments found for today");
+          }
+
+          // Format the appointments
+          const formattedAppointments = todayAppointmentsResult.recordset.map(
+              (appointment) => ({
+                  Appointment_name: appointment.Appointment_name,
+                  StartTime: appointment.StartTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
+                  EndTime: appointment.EndTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
+                  Location: appointment.Location,
+              })
+          );
+
+          console.log("Formatted appointments:", formattedAppointments);
+          res.status(200).json(formattedAppointments);
+      } catch (err) {
+          console.error(err);
+          res.status(500).send("Internal Server Error");
       }
-
-      // Get today's date
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
-      const day = String(today.getDate()).padStart(2, "0");
-      const todayDate = `${year}-${month}-${day}`;
-
-      const getTodayAppointmentsQuery = `
-        SELECT 
-          Appointment_name, 
-          CONVERT(VARCHAR, StartTime, 108) AS StartTime, -- HH:mm:ss format
-          CONVERT(VARCHAR, EndTime, 108) AS EndTime,     -- HH:mm:ss format
-          Location
-        FROM CareYou.Appointment_reminder 
-        WHERE caregiver_id = @caregiver_id AND CONVERT(DATE, date) = @todayDate
-      `;
-
-      const todayAppointmentsResult = await pool
-        .request()
-        .input("caregiver_id", sql.Int, id)
-        .input("todayDate", sql.Date, todayDate)
-        .query(getTodayAppointmentsQuery);
-
-      if (todayAppointmentsResult.recordset.length === 0) {
-        return res.status(404).send("No appointments found for today");
-      }
-
-      // Format the appointments
-      const formattedAppointments = todayAppointmentsResult.recordset.map(
-        (appointment) => ({
-          Appointment_name: appointment.Appointment_name,
-          StartTime: appointment.StartTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
-          EndTime: appointment.EndTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
-          Location: appointment.Location,
-        })
-      );
-
-      console.log("Formatted appointments:", formattedAppointments);
-      res.status(200).json(formattedAppointments);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Internal Server Error");
-    }
   }
 );
+
+// router.get(
+//   "/ShowTodayAppointmentOfElderForCaregiverHome",
+//   verifyToken, // Middleware to verify token
+//   async (req, res) => {
+//     try {
+//       const pool = await sql.connect(config);
+//       const id = req.user.id;
+
+//       // Check if the user is a caregiver
+//       const roleCheck = await pool
+//         .request()
+//         .input("id", sql.Int, id)
+//         .query(
+//           "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+//         );
+
+//       if (roleCheck.recordset.length === 0) {
+//         return res.status(403).send("User is not authorized as a caregiver");
+//       }
+
+//       // Get today's date
+//       const today = new Date();
+//       const year = today.getFullYear();
+//       const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+//       const day = String(today.getDate()).padStart(2, "0");
+//       const todayDate = `${year}-${month}-${day}`;
+
+//       const getTodayAppointmentsQuery = `
+//         SELECT 
+//           Appointment_name, 
+//           CONVERT(VARCHAR, StartTime, 108) AS StartTime, -- HH:mm:ss format
+//           CONVERT(VARCHAR, EndTime, 108) AS EndTime,     -- HH:mm:ss format
+//           Location
+//         FROM CareYou.Appointment_reminder 
+//         WHERE caregiver_id = @caregiver_id AND CONVERT(DATE, date) = @todayDate
+//       `;
+
+//       const todayAppointmentsResult = await pool
+//         .request()
+//         .input("caregiver_id", sql.Int, id)
+//         .input("todayDate", sql.Date, todayDate)
+//         .query(getTodayAppointmentsQuery);
+
+//       if (todayAppointmentsResult.recordset.length === 0) {
+//         return res.status(404).send("No appointments found for today");
+//       }
+
+//       // Format the appointments
+//       const formattedAppointments = todayAppointmentsResult.recordset.map(
+//         (appointment) => ({
+//           Appointment_name: appointment.Appointment_name,
+//           StartTime: appointment.StartTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
+//           EndTime: appointment.EndTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
+//           Location: appointment.Location,
+//         })
+//       );
+
+//       console.log("Formatted appointments:", formattedAppointments);
+//       res.status(200).json(formattedAppointments);
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).send("Internal Server Error");
+//     }
+//   }
+// );
 
 router.get(
   "/ShowAppointmentListForElderlyAppointmentBoxs",
