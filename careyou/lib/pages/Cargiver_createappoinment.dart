@@ -378,7 +378,7 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                             ),
                           ),
                           SizedBox(width: 12),
-                          Expanded(
+                          Container(
                             child: GestureDetector(
                               onTap: () => _selectDate(context),
                               child: Container(
@@ -564,82 +564,93 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-              title: const Text(
+              title: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                Icons.add,
+                size: 60,
+                color: const Color.fromARGB(255, 255, 54, 32),
+                ),
+                const SizedBox(height: 15),
+                const Text(
                 "Create Appointment",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
                 ),
+                ),
+              ],
               ),
               content: const Text(
-                "Are you sure you want to create this appointment?",
-                textAlign: TextAlign.center,
-                style: TextStyle(
+              "Are you sure you want to create this appointment?",
+              textAlign: TextAlign.center,
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                ),
+              ),
               ),
               backgroundColor: Colors.white, // Set the background color to white
               actions: <Widget>[
-                Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TextButton(
+                TextButton(
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: const Color.fromARGB(255, 239, 239, 239), // background color
-                    textStyle: const TextStyle(
+                  foregroundColor: Colors.black,
+                  backgroundColor: const Color.fromARGB(255, 239, 239, 239), // background color
+                  textStyle: const TextStyle(
                     color: Colors.white,
                     fontSize: 12, // text size
                     fontWeight: FontWeight.bold, // text weight
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 15), // button padding
-                    shape: RoundedRectangleBorder(
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 15), // button padding
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(
-                      25), // button border radius
-                    ),
+                    25), // button border radius
+                  ),
                   ),
                   child: const Text("Cancel"),
                   onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  const SizedBox(
+                ),
+                const SizedBox(
                   width: 10,
-                  ),
-                  TextButton(
+                ),
+                TextButton(
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: const Color.fromARGB(
-                      255, 66, 169, 144), // background color
-                    textStyle: const TextStyle(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color.fromARGB(
+                    255, 66, 169, 144), // background color
+                  textStyle: const TextStyle(
                     fontSize: 12, // text size
                     fontWeight: FontWeight.bold, // text weight
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 15), // button padding
-                    shape: RoundedRectangleBorder(
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 15), // button padding
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(
-                      25), // button border radius
-                    ),
+                    25), // button border radius
+                  ),
                   ),
                   child: const Text("Create"),
                   onPressed: () async {
-                    await _submitAppointment(); // Wait for data submission to complete
-                    Navigator.push(
+                  await _submitAppointment(); // Wait for data submission to complete
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AppManage(
-                        token: widget.token,
-                        selectedRole: widget.selectedRole),
+                    builder: (context) => AppManage(
+                      token: widget.token,
+                      selectedRole: widget.selectedRole),
                     ),
-                    );
+                  );
                   },
-                  ),
-                ],
                 ),
+                ],
+              ),
               ],
               );
             },

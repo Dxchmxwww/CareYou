@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For jsonDecode
 import 'package:http/http.dart' as http; // For making HTTP requests
@@ -14,6 +14,7 @@ class AppointmentCard extends StatefulWidget {
 
 class _AppointmentCardState extends State<AppointmentCard> {
   List<Map<String, dynamic>> appointments = []; // List to store appointments
+  Timer? _timer; // Timer to periodically fetch data
 
   String getServerUrl() {
     if (Platform.isAndroid) {
@@ -54,6 +55,17 @@ class _AppointmentCardState extends State<AppointmentCard> {
   void initState() {
     super.initState();
     fetchAppointmentData(); // Fetch data when the widget is initialized
+
+    // Set up a timer to fetch data every second
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      fetchAppointmentData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
   }
 
   @override
