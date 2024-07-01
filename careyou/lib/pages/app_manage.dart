@@ -189,35 +189,6 @@ class _AppManageState extends State<AppManage> {
                   ],
                 ),
               ),
-              // ListView.builder(
-              //   shrinkWrap: true,
-              //   physics: NeverScrollableScrollPhysics(),
-              //   itemCount: appointments.length,
-              //   itemBuilder: (context, index) {
-              //     final appointment = appointments[index];
-              //     return GestureDetector(
-              //       onTap: () {
-              //         setState(() {
-              //           showEditButton = false;
-              //         });
-              //       },
-              //       child: Padding(
-              //         padding: const EdgeInsets.symmetric(
-              //             horizontal: 20, vertical: 10),
-              //         child: AppCardForCargiver(
-              //           showButtons: showEditButton,
-              //           appointmentId: appointment['Appointment_id'] ?? '',
-              //           appointmentName: appointment['Appointment_name'] ?? '',
-              //           date: appointment['Date'] ?? '',
-              //           startTime: appointment['StartTime'] ?? '',
-              //           endTime: appointment['EndTime'] ?? '',
-              //           location: appointment['Location'] ?? '',
-              //           token: widget.token,
-              //         ),
-              //       ),
-              //     );
-              //   },
-              // ),
 
               appointments.isEmpty
                   ? Center(
