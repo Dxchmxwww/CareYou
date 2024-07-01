@@ -489,7 +489,6 @@
 //   }
 // }
 
-
 import 'package:careyou/pages/homePageCareGiver.dart';
 import 'package:careyou/pages/homePageElder.dart';
 import 'package:flutter/material.dart';
@@ -526,7 +525,7 @@ class _LogInPageState extends State<log_in_page> {
       return 'http://10.0.2.2:8000'; // Android emulator
     } else if (Platform.isIOS) {
       return 'http://localhost:8000'; // iOS simulator
-    } else{
+    } else {
       return 'http://localhost:8000';
     }
   }
@@ -568,11 +567,11 @@ class _LogInPageState extends State<log_in_page> {
 
           if (roleFromDatabase == widget.selectedRole) {
             _navigateToHomePage();
-          } else {
-            _showRoleMismatchDialog();
           }
         } else if (response.statusCode == 401) {
           _showAccountNotFoundDialog();
+        } else if (response.statusCode == 402) {
+          _showRoleMismatchDialog();
         }
       } catch (e) {
         print('Error: $e');
@@ -612,13 +611,23 @@ class _LogInPageState extends State<log_in_page> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(
-            'Role Mismatch',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-            ),
+          title: Column(
+            children: [
+              Icon(
+                Icons.warning,
+                size: 60,
+                color: const Color.fromARGB(255, 244, 86, 54),
+              ),
+              SizedBox(height: 15),
+              Text(
+                'Role Mismatch',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
+              ),
+            ],
           ),
           content: Text(
             'Selected role does not match your account role.',
@@ -658,13 +667,23 @@ class _LogInPageState extends State<log_in_page> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(
-            'Account Not Found',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-            ),
+          title: Column(
+            children: [
+              Icon(
+          Icons.warning,
+          size: 60,
+          color: const Color.fromARGB(255, 244, 86, 54),
+              ),
+              SizedBox(height: 15),
+              Text(
+          'Account Not Found',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+              ),
+            ],
           ),
           content: Text(
             'Please check your email and password or selected role and try again.',
@@ -677,20 +696,20 @@ class _LogInPageState extends State<log_in_page> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+          Navigator.of(context).pop();
               },
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
-                  Color(0xFF00916E),
-                ),
+          backgroundColor: MaterialStateProperty.all<Color>(
+            Color(0xFF00916E),
+          ),
               ),
               child: Text(
-                'OK',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontFamily: 'Poppins',
-                ),
+          'OK',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontFamily: 'Poppins',
+          ),
               ),
             ),
           ],

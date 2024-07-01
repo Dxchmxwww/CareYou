@@ -43,7 +43,7 @@ class _CreatePillsTimeState extends State<CreatePillsTime> {
                 padding: const EdgeInsets.only(
                     top: 10.0, bottom: 10.0, left: 10.0, right: 4.0),
                 child: Text(
-                  'Pill Time',
+                  'Medication Time',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: screenWidth * 0.03,

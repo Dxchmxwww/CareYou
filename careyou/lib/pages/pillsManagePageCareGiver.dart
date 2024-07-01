@@ -38,7 +38,7 @@ class _PillsManagePageCareGiverState extends State<PillsManagePageCareGiver> {
           title: Padding(
             padding: const EdgeInsets.only(top: 10),
             child: Text(
-              'Medication management',
+              'Medication Management',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 22,

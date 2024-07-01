@@ -10,7 +10,8 @@ class PillsmanageCreatePage extends StatefulWidget {
   final String token; // Add the 'token' field here
   final String selectedRole; // Add the 'selectedRole' field here
 
-  const PillsmanageCreatePage({Key? key, required this.token, required this.selectedRole})
+  const PillsmanageCreatePage(
+      {Key? key, required this.token, required this.selectedRole})
       : super(key: key);
 
   @override
@@ -28,17 +29,16 @@ class PillManagement {
   final int reminderFrequency;
   final String token;
 
-  PillManagement({
-    required this.pillName,
-    required this.note,
-    required this.pillType,
-    required this.pillTime,
-    required this.reminderDurationStart,
-    required this.reminderDurationEnd,
-    required this.reminderTime,
-    required this.reminderFrequency,
-    required this.token
-  });
+  PillManagement(
+      {required this.pillName,
+      required this.note,
+      required this.pillType,
+      required this.pillTime,
+      required this.reminderDurationStart,
+      required this.reminderDurationEnd,
+      required this.reminderTime,
+      required this.reminderFrequency,
+      required this.token});
 
   Map<String, dynamic> toJson() {
     return {
@@ -152,7 +152,6 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
 
       // Call the function to send data to backend
       await sendReminderData(data);
-
     } else {
       print('Please fill all the fields');
       _showValidationError('Please fill all the fields.');
@@ -179,16 +178,16 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
       },
     );
   }
-   String getServerUrl() {
+
+  String getServerUrl() {
     if (Platform.isAndroid) {
       return 'http://10.0.2.2:8000'; // Android emulator
     } else if (Platform.isIOS) {
       return 'http://localhost:8000'; // iOS simulator
-    } else{
+    } else {
       return 'http://localhost:8000';
     }
   }
-
 
   Future<void> sendReminderData(Map<String, dynamic> data) async {
     // Replace this with your actual API call to send data
@@ -210,12 +209,13 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
         print('Data sent successfully');
 
         // Assuming you want to pop back to the previous screen after successful send
-       Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PillsManagePageCareGiver(token: widget.token, selectedRole: widget.selectedRole),
-        ),
-      );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PillsManagePageCareGiver(
+                token: widget.token, selectedRole: widget.selectedRole),
+          ),
+        );
       } else {
         // Handle API errors
         print('Failed to send data. Error: ${response.reasonPhrase}');
@@ -231,10 +231,10 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80.0),
+        preferredSize: const Size.fromHeight(70.0),
         child: Container(
           color: const Color(0xFF00916E),
-          padding: const EdgeInsets.only(top: 20),
+          padding: const EdgeInsets.only(top: 0),
           child: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -245,11 +245,11 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
               },
             ),
             title: const Text(
-              "Pills management",
+              "Create Medication Reminder",
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 18.0,
-                fontWeight: FontWeight.w600,
+                fontSize: 20.0,
+                fontWeight: FontWeight.w700,
                 color: Colors.white,
               ),
             ),
@@ -340,82 +340,97 @@ class _PillsmanageCreatePageState extends State<PillsmanageCreatePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showDialog(
+            showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: const Text(
+              title: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                const Icon(
+                  Icons.add,
+                  color: Color.fromARGB(255, 244, 86, 54),
+                  size: 50,
+                ),
+                const SizedBox(height: 15),
+                const Text(
                   "Create Medication",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
                   ),
                 ),
-                content: const Text(
-                  "Are you sure you want to create this medication?",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
+                ],
+              ),
+              content: const Text(
+                "Are you sure you want to create this medication?",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
                 ),
-                actions: <Widget>[
+              ),
+              backgroundColor: Colors.white, // Set background color to white
+              actions: <Widget>[
+                Column(
+                children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.black,
-                          backgroundColor: const Color.fromARGB(
-                              255, 218, 218, 218), // background color
-                          textStyle: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12, // text size
-                            fontWeight: FontWeight.bold, // text weight
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15), // button padding
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                10), // button border radius
-                          ),
-                        ),
-                        child: const Text("Cancel"),
-                        onPressed: () => Navigator.of(context).pop(),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      backgroundColor: const Color.fromARGB(255, 232, 232, 232), // background color
+                      textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12, // text size
+                      fontWeight: FontWeight.bold, // text weight
                       ),
-                      const SizedBox(
-                        width: 10,
+                      padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 15), // button padding
+                      shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        25), // button border radius
                       ),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: const Color.fromARGB(
-                              255, 66, 169, 144), // background color
-                          textStyle: const TextStyle(
-                            fontSize: 12, // text size
-                            fontWeight: FontWeight.bold, // text weight
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15), // button padding
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                10), // button border radius
-                          ),
-                        ),
-                        child: const Text("Create"),
-                        onPressed: () async {
-                          await _submitData(); // Wait for data submission to complete
-                        },
+                    ),
+                    child: const Text("Cancel"),
+                    onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(
+                    width: 10,
+                    ),
+                    TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color.fromARGB(
+                        255, 66, 169, 144), // background color
+                      textStyle: const TextStyle(
+                      fontSize: 12, // text size
+                      fontWeight: FontWeight.bold, // text weight
                       ),
-                    ],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 15), // button padding
+                      shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        25), // button border radius
+                      ),
+                    ),
+                    child: const Text("Create"),
+                    onPressed: () async {
+                      await _submitData(); // Wait for data submission to complete
+                    },
+                    ),
+                  ],
                   ),
                 ],
+                ),
+              ],
               );
             },
-          );
+            );
         },
         backgroundColor: const Color(0xFF00916E),
         shape: const CircleBorder(),
@@ -907,22 +922,21 @@ class _CreateSetReminderState extends State<CreateSetReminder> {
         picked.minute,
       );
 
-      if (selectedDateTime.isAfter(now) || selectedDateTime.isAtSameMomentAs(now)) {
-            // Proceed with the selected time
-            setState(() {
-              // Set the selected time for the given index
-              // _selectedTimes[index] = picked;
-            });
+      if (selectedDateTime.isAfter(now) ||
+          selectedDateTime.isAtSameMomentAs(now)) {
+        // Proceed with the selected time
+        setState(() {
+          // Set the selected time for the given index
+          // _selectedTimes[index] = picked;
+        });
       }
 
-      if (selectedDateTime.isAtSameMomentAs(DateTime(now.year, now.month, now.day)) && selectedDateTime.isBefore(now)) {
-      _selectedTimeError('Cannot select a past time.');
-      return;
-      
-    
-    
-}
-      
+      if (selectedDateTime
+              .isAtSameMomentAs(DateTime(now.year, now.month, now.day)) &&
+          selectedDateTime.isBefore(now)) {
+        _selectedTimeError('Cannot select a past time.');
+        return;
+      }
 
       // Check if the picked time already exists in selectedreminderTime
       bool isTimeAlreadySelected = selectedreminderTime.any((time) {

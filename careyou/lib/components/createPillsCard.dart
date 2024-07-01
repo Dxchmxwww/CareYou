@@ -49,7 +49,7 @@ class CreatePillsCard extends StatelessWidget {
                       children: [
                         _buildTextField(
                           screenWidth,
-                          'Pill Name:',
+                          'Medication Name:',
                           'Type pill name, treat for, label',
                           context,
                         ),

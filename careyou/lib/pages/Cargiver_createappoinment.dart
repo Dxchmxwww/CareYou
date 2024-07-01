@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:careyou/pages/app_manage.dart';
@@ -10,7 +9,8 @@ class CreateAppointmentReminder extends StatefulWidget {
   final String token;
   final String selectedRole;
 
-  const CreateAppointmentReminder({required this.token, required this.selectedRole});
+  const CreateAppointmentReminder(
+      {required this.token, required this.selectedRole});
 
   @override
   _CreateAppointmentReminderState createState() =>
@@ -24,7 +24,7 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
-    Future<void> _submitAppointment() async {
+  Future<void> _submitAppointment() async {
     final appointmentName = _reminderController.text;
     final location = _locationController.text;
     final date = _selectedDate;
@@ -80,17 +80,17 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
       return;
     }
     String getServerUrl() {
-        if (Platform.isAndroid) {
-          return 'http://10.0.2.2:8000'; // Android emulator
-        } else if (Platform.isIOS) {
-          return 'http://localhost:8000'; // iOS simulator
-        } else{
-          return 'http://localhost:8000';
-        }
+      if (Platform.isAndroid) {
+        return 'http://10.0.2.2:8000'; // Android emulator
+      } else if (Platform.isIOS) {
+        return 'http://localhost:8000'; // iOS simulator
+      } else {
+        return 'http://localhost:8000';
       }
+    }
 
-    final url = Uri.parse(
-        '${getServerUrl()}/appointments/CreateAppointmentReminder');
+    final url =
+        Uri.parse('${getServerUrl()}/appointments/CreateAppointmentReminder');
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ${widget.token}',
@@ -118,7 +118,8 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
     try {
       final response = await http.post(url, headers: headers, body: body);
       if (response.statusCode == 200) {
-        print('Appointment added successfully'); // Navigate back or show confirmation
+        print(
+            'Appointment added successfully'); // Navigate back or show confirmation
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -139,6 +140,29 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(DateTime.now().year + 1),
+       builder: (context, child) {
+        return Theme(
+          data: ThemeData(
+            // Set the background color to white
+            dialogBackgroundColor: Colors.white,
+            colorScheme: ColorScheme.light(
+              // Set the selected date color to red
+              primary: const Color.fromARGB(255, 244, 76, 54),
+              // Ensure text on the selected date is white for better contrast
+              onPrimary: Colors.white,
+              // Background color of non-selected days
+              surface: Colors.white,
+              // Text color of non-selected days
+              onSurface: Colors.black,
+            ),
+            // Apply other customizations as needed
+            buttonTheme: ButtonThemeData(
+              textTheme: ButtonTextTheme.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -158,6 +182,29 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
     final picked = await showTimePicker(
       context: context,
       initialTime: isStartTime ? now : _startTime ?? now,
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData(
+            // Set the background color to white
+            dialogBackgroundColor: Colors.white,
+            colorScheme: ColorScheme.light(
+              // Set the selected date color to red
+              primary: const Color.fromARGB(255, 244, 76, 54),
+              // Ensure text on the selected date is white for better contrast
+              onPrimary: Colors.white,
+              // Background color of non-selected days
+              surface: Colors.white,
+              // Text color of non-selected days
+              onSurface: Colors.black,
+            ),
+            // Apply other customizations as needed
+            buttonTheme: ButtonThemeData(
+              textTheme: ButtonTextTheme.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -187,13 +234,14 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+       backgroundColor: Colors.white, // Set the background color to white
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
+        preferredSize: const Size.fromHeight(70),
         child: AppBar(
           automaticallyImplyLeading: false,
           backgroundColor: const Color(0xFF00916E),
           flexibleSpace: Padding(
-            padding: const EdgeInsets.only(top: 30.0),
+            padding: const EdgeInsets.only(top: 60.0),
             child: Stack(
               children: [
                 Center(
@@ -203,7 +251,7 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
                       fontFamily: 'Poppins',
                       fontSize: 20,
                       color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w800,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -512,91 +560,90 @@ class _CreateAppointmentReminderState extends State<CreateAppointmentReminder> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showDialog(
+            showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: const Text(
-                  "Create Appointment",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+              title: const Text(
+                "Create Appointment",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
                 ),
-                content: const Text(
-                  "Are you sure you want to create this appointment?",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
+              ),
+              content: const Text(
+                "Are you sure you want to create this appointment?",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
                 ),
-                actions: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.black,
-                          backgroundColor: const Color.fromARGB(
-                              255, 218, 218, 218), // background color
-                          textStyle: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12, // text size
-                            fontWeight: FontWeight.bold, // text weight
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15), // button padding
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                10), // button border radius
-                          ),
-                        ),
-                        child: const Text("Cancel"),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: const Color.fromARGB(
-                              255, 66, 169, 144), // background color
-                          textStyle: const TextStyle(
-                            fontSize: 12, // text size
-                            fontWeight: FontWeight.bold, // text weight
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15), // button padding
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                10), // button border radius
-                          ),
-                        ),
-                        child: const Text("Create"),
-                        onPressed: () async {
-                          await _submitAppointment(); // Wait for data submission to complete
-                          Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      AppManage(
-                                    token: widget.token, selectedRole: widget.selectedRole
-                                  ),
-                                ),
-                              );
-                        },
-                      ),
-                    ],
+              ),
+              backgroundColor: Colors.white, // Set the background color to white
+              actions: <Widget>[
+                Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    backgroundColor: const Color.fromARGB(255, 239, 239, 239), // background color
+                    textStyle: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12, // text size
+                    fontWeight: FontWeight.bold, // text weight
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 15), // button padding
+                    shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      25), // button border radius
+                    ),
+                  ),
+                  child: const Text("Cancel"),
+                  onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(
+                  width: 10,
+                  ),
+                  TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color.fromARGB(
+                      255, 66, 169, 144), // background color
+                    textStyle: const TextStyle(
+                    fontSize: 12, // text size
+                    fontWeight: FontWeight.bold, // text weight
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 15), // button padding
+                    shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      25), // button border radius
+                    ),
+                  ),
+                  child: const Text("Create"),
+                  onPressed: () async {
+                    await _submitAppointment(); // Wait for data submission to complete
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AppManage(
+                        token: widget.token,
+                        selectedRole: widget.selectedRole),
+                    ),
+                    );
+                  },
                   ),
                 ],
+                ),
+              ],
               );
             },
-          );
+            );
         },
         backgroundColor: const Color(0xFF00916E),
         shape: const CircleBorder(),

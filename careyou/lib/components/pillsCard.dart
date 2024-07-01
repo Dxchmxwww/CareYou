@@ -350,6 +350,7 @@ class _PillsCard2State extends State<PillsCard2> {
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
+                              backgroundColor: Colors.white, // Set background color to white
                               title: const Text(
                                 "Confirm Deletion",
                                 textAlign: TextAlign.center,
@@ -374,23 +375,19 @@ class _PillsCard2State extends State<PillsCard2> {
                                     TextButton(
                                       style: TextButton.styleFrom(
                                         foregroundColor: Colors.black,
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 218, 218, 218),
+                                        backgroundColor: const Color.fromARGB(255, 228, 228, 228),
                                         textStyle: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 15),
+                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(30),
+                                          borderRadius: BorderRadius.circular(30),
                                         ),
                                       ),
                                       child: const Text("Cancel"),
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
+                                      onPressed: () => Navigator.of(context).pop(),
                                     ),
                                     const SizedBox(width: 10),
                                     TextButton(
@@ -401,11 +398,9 @@ class _PillsCard2State extends State<PillsCard2> {
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 15),
+                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(30),
+                                          borderRadius: BorderRadius.circular(30),
                                         ),
                                       ),
                                       child: const Text("Delete"),

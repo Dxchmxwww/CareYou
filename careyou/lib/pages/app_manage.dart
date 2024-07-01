@@ -227,8 +227,8 @@ class _AppManageState extends State<AppManage> {
                           "Your elder doesn't have any appointment",
                           style: TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black,
                           ),
                         ),

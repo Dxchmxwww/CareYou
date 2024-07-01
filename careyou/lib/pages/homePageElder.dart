@@ -488,7 +488,10 @@ class _HomePageElderState extends State<HomePageElder> {
             content: Text('Failed to fetch data. Please try again later.'),
             actions: [
               TextButton(
-                child: Text('OK'),
+                child: Text(
+                  'OK',
+                  style: TextStyle(color: Colors.green),
+                ),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },

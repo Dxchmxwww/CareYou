@@ -231,7 +231,10 @@ class _elderProfilePageState extends State<elder_profile_page> {
               content: Text('Username updated successfully.'),
               actions: [
                 TextButton(
-                  child: Text('OK'),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(color: Colors.green),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -312,7 +315,10 @@ class _elderProfilePageState extends State<elder_profile_page> {
               content: Text('Password updated successfully.'),
               actions: [
                 TextButton(
-                  child: Text('OK'),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(color: Colors.green),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },

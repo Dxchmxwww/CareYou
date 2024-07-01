@@ -88,7 +88,10 @@ class _HomepageState extends State<caregiver_profile_page> {
             content: Text('Failed to fetch data. Please try again later.'),
             actions: [
               TextButton(
-                child: Text('OK'),
+                child: Text(
+                  'OK',
+                  style: TextStyle(color: Colors.green),
+                ),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -128,7 +131,10 @@ class _HomepageState extends State<caregiver_profile_page> {
               content: Text('Username cannot be empty.'),
               actions: [
                 TextButton(
-                  child: Text('OK'),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(color: Colors.green),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -191,14 +197,17 @@ class _HomepageState extends State<caregiver_profile_page> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: Text('Username updated successfully.'),
-              actions: [
+                actions: [
                 TextButton(
-                  child: Text('OK'),
+                  child: Text(
+                  'OK',
+                  style: TextStyle(color: Colors.green),
+                  ),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                  Navigator.of(context).pop();
                   },
                 ),
-              ],
+                ],
             );
           },
         );
@@ -274,7 +283,10 @@ class _HomepageState extends State<caregiver_profile_page> {
               content: Text('Password updated successfully.'),
               actions: [
                 TextButton(
-                  child: Text('OK'),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(color: Colors.green),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },

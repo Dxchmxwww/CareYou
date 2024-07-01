@@ -45,7 +45,7 @@ class _CreatePillsTypeState extends State<CreatePillsType> {
                 padding: const EdgeInsets.only(
                     top: 10.0, bottom: 10.0, left: 10.0, right: 4.0),
                 child: Text(
-                  'Pill Types',
+                  'Medication Types',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: screenWidth * 0.03,

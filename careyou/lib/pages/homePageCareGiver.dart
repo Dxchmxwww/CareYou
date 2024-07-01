@@ -79,7 +79,10 @@ class _HomePageCareGiverState extends State<HomePageCareGiver> {
             content: Text('Failed to fetch data. Please try again later.'),
             actions: [
               TextButton(
-                child: Text('OK'),
+                child: Text(
+                  'OK',
+                  style: TextStyle(color: Colors.green),
+                ),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
