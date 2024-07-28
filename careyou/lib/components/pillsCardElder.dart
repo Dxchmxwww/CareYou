@@ -78,11 +78,10 @@ class _PillsCardElderState extends State<PillsCardElder> {
       return 'http://10.0.2.2:8000'; // Android emulator
     } else if (Platform.isIOS) {
       return 'http://localhost:8000'; // iOS simulator
-    } else{
+    } else {
       return 'http://localhost:8000';
     }
   }
-
 
   Future<void> fetchAndSortPills() async {
     try {
@@ -200,30 +199,30 @@ class _PillsCardElderState extends State<PillsCardElder> {
   //   //     );
   //   //   },
   //   // );
-    
+
   // }
   Widget build(BuildContext context) {
-      return Column(
-        children: List.generate(_pills.length, (index) {
-          final pill = _pills[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: PillCard(
-              token: widget.token,
-              pill: pill,
-              getImageForMedicationType: getImageForMedicationType,
-              getGrayImageForMedicationType: getGrayImageForMedicationType,
-              onTake: (Pill pill) {
-                // Define the action to take when the 'Take' button is pressed
-                print('Pill taken: ${pill.pillName}');
-                print('Pill taken ID: ${pill.PillReminder_id}');
-                print('Pill taken Remainder Time: ${pill.reminderTimes}');
-                // Optionally, you can update the UI or make API calls here
-              },
-            ),
-          );
-        }),
-      );
+    return Column(
+      children: List.generate(_pills.length, (index) {
+        final pill = _pills[index];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: PillCard(
+            token: widget.token,
+            pill: pill,
+            getImageForMedicationType: getImageForMedicationType,
+            getGrayImageForMedicationType: getGrayImageForMedicationType,
+            onTake: (Pill pill) {
+              // Define the action to take when the 'Take' button is pressed
+              print('Pill taken: ${pill.pillName}');
+              print('Pill taken ID: ${pill.PillReminder_id}');
+              print('Pill taken Remainder Time: ${pill.reminderTimes}');
+              // Optionally, you can update the UI or make API calls here
+            },
+          ),
+        );
+      }),
+    );
   }
 }
 
@@ -256,11 +255,10 @@ class PillCard extends StatelessWidget {
       return 'http://10.0.2.2:8000'; // Android emulator
     } else if (Platform.isIOS) {
       return 'http://localhost:8000'; // iOS simulator
-    } else{
+    } else {
       return 'http://localhost:8000';
     }
   }
-
 
   Future<void> updatePillStatus(
       String? reminderTimes, int? pillReminderId, String token) async {
