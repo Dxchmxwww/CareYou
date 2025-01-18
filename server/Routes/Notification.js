@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const sql = require('mssql');
+const sql = require('mysql2');
 const config = require('../config');
 const verifyToken = require('../middleware/verifyToken');
 
@@ -32,9 +32,9 @@ router.get('/GetUpcomingPillReminders', verifyToken, async (req, res) => {
                 CONVERT(VARCHAR, prt.reminderDates, 23) AS reminderDates,
                 CONVERT(VARCHAR, prt.reminder_times, 108) AS reminder_times
             FROM 
-                CareYou.Pill_Reminder pr
+                careyou.Pill_Reminder pr
             JOIN 
-                CareYou.PillReminder_Time prt ON pr.PillReminder_id = prt.PillReminder_id
+                careyou.PillReminder_Time prt ON pr.PillReminder_id = prt.PillReminder_id
             WHERE 
                 pr.elderly_id = @elderly_id 
                 AND prt.reminderDates = @today

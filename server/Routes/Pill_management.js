@@ -2,7 +2,7 @@ const { Router } = require("express");
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-const sql = require("mssql");
+const sql = require('mysql2');
 const config = require("../config");
 const verifyToken = require("../middleware/verifyToken");
 const moment = require("moment");
@@ -63,12 +63,11 @@ router.post(
 		try {
 			const pool = await sql.connect(config.database);
 
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, caregiver_id).query(`
+      const roleCheck = await pool.request().input("id", sql.Int, caregiver_id)
+        .query(`
                 SELECT role FROM CareYou.[Caregiver] WHERE id = @id
                 UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
+                SELECT role FROM careyou.[Elderly] WHERE id = @id
             `);
 
 			if (
@@ -80,25 +79,25 @@ router.post(
 					.send("User is not authorized as a caregiver");
 			}
 
-			const GetCaregiveremail = await pool
-				.request()
-				.input("caregiver_id", sql.Int, caregiver_id)
-				.query(
-					"SELECT email FROM CareYou.[Caregiver] WHERE id = @caregiver_id AND role = 'Caregiver'"
-				);
+      const GetCaregiveremail = await pool
+        .request()
+        .input("caregiver_id", sql.Int, caregiver_id)
+        .query(
+          "SELECT email FROM CareYou.[Caregiver] WHERE id = @caregiver_id AND role = 'Caregiver'"
+        );
 
 			if (GetCaregiveremail.recordset.length === 0) {
 				return res.status(400).send("Caregiver not found");
 			}
 
-			const Caregiver_email = GetCaregiveremail.recordset[0].email;
-			console.log(Caregiver_email);
-			const Getelderly_id = await pool
-				.request()
-				.input("yourcaregiver_email", sql.VarChar, Caregiver_email)
-				.query(
-					"SELECT id FROM CareYou.[Elderly] WHERE yourcaregiver_email = @yourcaregiver_email AND role = 'Elderly'"
-				);
+      const Caregiver_email = GetCaregiveremail.recordset[0].email;
+      console.log(Caregiver_email);
+      const Getelderly_id = await pool
+        .request()
+        .input("yourcaregiver_email", sql.VarChar, Caregiver_email)
+        .query(
+          "SELECT id FROM CareYou.[Elderly] WHERE yourcaregiver_email = @yourcaregiver_email AND role = 'Elderly'"
+        );
 
 			if (Getelderly_id.recordset.length === 0) {
 				return res
@@ -108,8 +107,8 @@ router.post(
 
 			const elderly_id = Getelderly_id.recordset[0].id;
 
-			const createPillReminderRequest = pool.request();
-			const createPillReminderQuery = `
+      const createPillReminderRequest = pool.request();
+      const createPillReminderQuery = `
                 INSERT INTO CareYou.Pill_Reminder 
                 (pill_name, pill_note, pill_type, start_date, end_date, frequency, NumberofPills, pill_Time, caregiver_id, elderly_id) 
                 VALUES 
@@ -139,10 +138,10 @@ router.post(
 
 			const insertReminderTimesPromises = [];
 
-			while (currentDate <= endDate) {
-				reminder_times.forEach((time) => {
-					const insertReminderTimeRequest = pool.request();
-					const insertReminderTimeQuery = `
+      while (currentDate <= endDate) {
+        reminder_times.forEach((time) => {
+          const insertReminderTimeRequest = pool.request();
+          const insertReminderTimeQuery = `
                         INSERT INTO CareYou.PillReminder_Time (PillReminder_id, reminderDates, reminder_times) 
                         VALUES (@PillReminder_id, @reminderDates, @reminder_times);
                     `;
@@ -173,59 +172,68 @@ router.post(
 
 
 router.get(
-	"/ShowPillRemailderListForCaregiver",
-	verifyToken,
-	async (req, res) => {
-		try {
-			const pool = await sql.connect(config);
-			const id = req.user.id;
+  "/ShowPillRemailderListForCaregiver",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const pool = await sql.connect(config);
+      const id = req.user.id;
+      const RoleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
 
-			const RoleCheck = await pool.request().input("id", sql.Int, id)
-				.query(`
-                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
-                UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
-            `);
+      if (RoleCheck.recordset.length === 0) {
+        return res.status(403).send("Unauthorized access");
+      }
 
-			if (RoleCheck.recordset.length > 0) {
-				console.log("This account is Caregiver");
-			}
+      // Determine today's date in SQL-compatible format (YYYY-MM-DD)
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayDate = `${year}-${month}-${day}`;
 
-            const today = new Date().toISOString().split("T")[0];
-            const currentDate = new Date().toLocaleString("en-us", {
-                weekday: "short",
-                day: "numeric",
-                year: "numeric",
-            });
+      // Fetch pill reminders
+      const query = `
+        SELECT 
+          PillReminder_id, pill_name, pill_type, pill_note, frequency, pill_Time 
+        FROM 
+          CareYou.[Pill_Reminder] 
+        WHERE 
+          caregiver_id = @caregiver_id 
+          AND (
+            (Start_date <= @today AND End_date >= @today) OR 
+            (Start_date > @today)
+          )
+      `;
 
-			const CaregiverPillList = await pool
-				.request()
-				.input("caregiver_id", sql.Int, id)
-                .input("today", sql.Date, today)
-				.query(
-					"SELECT PillReminder_id, pill_name, pill_type, pill_note, frequency, pill_Time FROM CareYou.[Pill_Reminder] WHERE caregiver_id = @caregiver_id  AND start_date <= @today AND end_date > @today OR end_date = @today"
-				);
+      const result = await pool
+        .request()
+        .input("caregiver_id", sql.Int, id)
+        .input("today", sql.Date, todayDate)
+        .query(query);
 
-                
-
-			if (CaregiverPillList.recordset.length > 0) {
-				const PillList = CaregiverPillList.recordset.map((row) => ({
-                    PillReminder_id: row.PillReminder_id,
-					pill_name: row.pill_name,
-					pill_type: row.pill_type,
-					pill_note: row.pill_note,
-					frequency: row.frequency,
-					pill_Time: row.pill_Time,
-                    
-				}));
-                res.status(201).json(PillList);
-			}
-			
-		} catch (err) {
-            
-			res.status(500).send(err.message);
-		}
-	}
+      if (result.recordset.length > 0) {
+        const PillList = result.recordset.map((row) => ({
+          PillReminder_id: row.PillReminder_id,
+          pill_name: row.pill_name,
+          pill_type: row.pill_type,
+          pill_note: row.pill_note,
+          frequency: row.frequency,
+          pill_Time: row.pill_Time,
+        }));
+        res.status(201).json(PillList);
+      } else {
+        res.status(204).json({ message: "No pill reminders found" });
+      }
+    } catch (err) {
+      console.error("Error fetching pill reminders:", err);
+      res.status(500).send("Internal Server Error");
+    }
+  }
 );
 
 router.get(
@@ -236,13 +244,13 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			// Check if the user is an elderly
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
-				);
+      // Check if the user is an elderly
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
+        );
 
 			if (roleCheck.recordset.length === 0) {
 				return res.status(403).send("Unauthorized access");
@@ -263,7 +271,7 @@ router.get(
                         pill_Time,
                         Frequency
                     FROM 
-                        CareYou.[Pill_Reminder] 
+                        careyou.[Pill_Reminder] 
                     WHERE 
                         elderly_id = @elderly_id
                         AND start_date <= @today 
@@ -298,13 +306,13 @@ router.get(
             const pool = await sql.connect(config);
             const id = req.user.id;
 
-            // Verify the user role
-            const RoleCheck = await pool
-                .request()
-                .input("id", sql.Int, id)
-                .query(
-                    "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-                );
+      // Verify the user role
+      const RoleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
 
             if (RoleCheck.recordset.length === 0) {
                 return res.status(403).send("Unauthorized access");
@@ -335,9 +343,9 @@ router.get(
                         prt.reminderDates,
                         0 AS status
                     FROM 
-                        CareYou.[Pill_Reminder] as pr
+                        careyou.[Pill_Reminder] as pr
                     JOIN 
-                        CareYou.[PillReminder_Time] as prt 
+                        careyou.[PillReminder_Time] as prt 
                     ON 
                         pr.PillReminder_id = prt.PillReminder_id
                     WHERE 
@@ -357,9 +365,9 @@ router.get(
                         tp.reminderDates AS reminderDates,
                         1 AS status
                     FROM 
-                        CareYou.[Pill_Reminder] as pr
+                        careyou.[Pill_Reminder] as pr
                     JOIN 
-                        CareYou.[TakenPill] as tp 
+                        careyou.[TakenPill] as tp 
                     ON 
                         pr.PillReminder_id = tp.PillReminder_id
                     WHERE 
@@ -408,12 +416,12 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			const RoleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
-				);
+      const RoleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
+        );
 
 			if (RoleCheck.recordset.length === 0) {
 				return res.status(403).send("Unauthorized access");
@@ -440,9 +448,9 @@ router.get(
                         prt.reminderDates,
                         prt.reminder_times
                     FROM 
-                        CareYou.[Pill_Reminder] as pr
+                        careyou.[Pill_Reminder] as pr
                     JOIN 
-                        CareYou.[PillReminder_Time] as prt 
+                        careyou.[PillReminder_Time] as prt 
                     ON 
                         pr.PillReminder_id = prt.PillReminder_id
                     WHERE 
@@ -558,11 +566,11 @@ router.put(
 		try {
 			const pool = await sql.connect(config.database);
 
-			// Check if the user is authorized caregiver
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, caregiver_id)
-				.query("SELECT role FROM CareYou.[Caregiver] WHERE id = @id");
+      // Check if the user is authorized caregiver
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, caregiver_id)
+        .query("SELECT role FROM CareYou.[Caregiver] WHERE id = @id");
 
 			if (
 				roleCheck.recordset.length === 0 ||
@@ -573,8 +581,8 @@ router.put(
 					.send("User is not authorized as a caregiver");
 			}
 
-			// Fetch the existing pill reminder to preserve unchanged fields
-			const fetchPillReminderQuery = `
+      // Fetch the existing pill reminder to preserve unchanged fields
+      const fetchPillReminderQuery = `
                 SELECT * FROM CareYou.Pill_Reminder WHERE PillReminder_id = @PillReminder_id;
             `;
 			const pillReminderResult = await pool
@@ -588,10 +596,10 @@ router.put(
 
 			const existingPillReminder = pillReminderResult.recordset[0];
 
-			// Prepare the update query based on the provided fields
-			const updatePillReminderRequest = pool.request();
-			let updatePillReminderQuery = "UPDATE CareYou.Pill_Reminder SET ";
-			const updateParams = [];
+      // Prepare the update query based on the provided fields
+      const updatePillReminderRequest = pool.request();
+      let updatePillReminderQuery = "UPDATE CareYou.Pill_Reminder SET ";
+      const updateParams = [];
 
 			if (pill_name !== undefined) {
 				updatePillReminderQuery += "pill_name = @pill_name, ";
@@ -744,10 +752,10 @@ router.put(
 				.input("PillReminder_id", sql.Int, PillReminder_id)
 				.query(updatePillReminderQuery);
 
-			// Update reminder times if provided
-			if (reminder_times !== undefined && reminder_times.length > 0) {
-				// First delete existing reminder times
-				const deleteReminderTimesQuery = `
+      // Update reminder times if provided
+      if (reminder_times !== undefined && reminder_times.length > 0) {
+        // First delete existing reminder times
+        const deleteReminderTimesQuery = `
                     DELETE FROM CareYou.PillReminder_Time WHERE PillReminder_id = @PillReminder_id;
                 `;
 				await pool
@@ -755,12 +763,11 @@ router.put(
 					.input("PillReminder_id", sql.Int, PillReminder_id)
 					.query(deleteReminderTimesQuery);
 
-				// Then insert new reminder times
-				const insertReminderTimesPromises = reminder_times.map(
-					async (time) => {
-						const formattedTime = `${time}:00`;
-						const insertReminderTimeRequest = pool.request();
-						const insertReminderTimeQuery = `
+        // Then insert new reminder times
+        const insertReminderTimesPromises = reminder_times.map(async (time) => {
+          const formattedTime = `${time}:00`;
+          const insertReminderTimeRequest = pool.request();
+          const insertReminderTimeQuery = `
                         INSERT INTO CareYou.PillReminder_Time (PillReminder_id, reminder_times) 
                         VALUES (@PillReminder_id, @reminder_times);
                     `;
@@ -823,8 +830,8 @@ router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
             .input("reminder_times", sql.VarChar, reminder_times)
             .query(`
                 SELECT pr.*, prt.reminder_times 
-                FROM CareYou.Pill_Reminder pr
-                JOIN CareYou.PillReminder_Time prt ON pr.PillReminder_id = prt.PillReminder_id
+                FROM careyou.Pill_Reminder pr
+                JOIN careyou.PillReminder_Time prt ON pr.PillReminder_id = prt.PillReminder_id
                 WHERE pr.PillReminder_id = @PillReminder_id 
                   AND pr.elderly_id = @elderly_id
                   AND prt.reminder_times = @reminder_times
@@ -849,9 +856,9 @@ router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
 			const day = String(todays.getDate()).padStart(2, "0");
 			const today = `${year}-${month}-${day}`;
 
-			console.log(today);
-            // Insert into the TakenPill table
-            const insertQuery = `
+      console.log(today);
+      // Insert into the TakenPill table
+      const insertQuery = `
                 INSERT INTO CareYou.[TakenPill] (PillReminder_id,reminderDates, reminderTimes, status)
                 VALUES (@PillReminder_id, @today, @reminderTimes, 1)
             `;
@@ -864,8 +871,8 @@ router.put("/UpdatePillStatus", verifyToken, async (req, res) => {
                 
             console.log("Insert Result:", insertResult);
 
-            // Delete from the PillReminder_Time table
-            const deleteQuery = `
+      // Delete from the PillReminder_Time table
+      const deleteQuery = `
                 DELETE FROM CareYou.[PillReminder_Time]
                 WHERE PillReminder_id = @PillReminder_id 
                   AND reminder_times = @reminderTimes
@@ -904,11 +911,11 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 		const id = req.user.id;
 		const PillReminder_id = req.params.id;
 
-		// Check if the user is a Caregiver or Elderly
-		const RoleCheck = await pool.request().input("id", sql.Int, id).query(`
+    // Check if the user is a Caregiver or Elderly
+    const RoleCheck = await pool.request().input("id", sql.Int, id).query(`
             SELECT role FROM CareYou.[Caregiver] WHERE id = @id
             UNION
-            SELECT role FROM CareYou.[Elderly] WHERE id = @id
+            SELECT role FROM careyou.[Elderly] WHERE id = @id
         `);
 
 		if (RoleCheck.recordset.length === 0) {
@@ -923,13 +930,13 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 			return res.status(403).send("Unauthorized access");
 		}
 
-		// Ensure the pill reminder exists and is associated with the current user
-		const PillReminderCheck = await pool
-			.request()
-			.input("PillReminder_id", sql.Int, PillReminder_id)
-			.query(
-				"SELECT * FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
-			);
+    // Ensure the pill reminder exists and is associated with the current user
+    const PillReminderCheck = await pool
+      .request()
+      .input("PillReminder_id", sql.Int, PillReminder_id)
+      .query(
+        "SELECT * FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
+      );
 
 		if (PillReminderCheck.recordset.length === 0) {
 			return res.status(404).send("Pill reminder not found");
@@ -950,25 +957,28 @@ router.delete("/DeletePillReminder/:id", verifyToken, async (req, res) => {
 			// Delete associated reminder times
             await transaction.begin();
 
-			await transaction.request()
-				.input("PillReminder_id", sql.Int, PillReminder_id)
-				.query(
-					"DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
-				);
+      await transaction
+        .request()
+        .input("PillReminder_id", sql.Int, PillReminder_id)
+        .query(
+          "DELETE FROM CareYou.[PillReminder_Time] WHERE PillReminder_id = @PillReminder_id"
+        );
 
-			// Delete taken pills records
-			await transaction.request()
-				.input("PillReminder_id", sql.Int, PillReminder_id)
-				.query(
-					"DELETE FROM CareYou.[TakenPill] WHERE PillReminder_id = @PillReminder_id"
-				);
+      // Delete taken pills records
+      await transaction
+        .request()
+        .input("PillReminder_id", sql.Int, PillReminder_id)
+        .query(
+          "DELETE FROM CareYou.[TakenPill] WHERE PillReminder_id = @PillReminder_id"
+        );
 
-			// Delete the pill reminder itself
-			await transaction.request()
-				.input("PillReminder_id", sql.Int, PillReminder_id)
-				.query(
-					"DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
-				);
+      // Delete the pill reminder itself
+      await transaction
+        .request()
+        .input("PillReminder_id", sql.Int, PillReminder_id)
+        .query(
+          "DELETE FROM CareYou.[Pill_Reminder] WHERE PillReminder_id = @PillReminder_id"
+        );
 
 			// Commit the transaction if all queries succeed
 			await transaction.commit();

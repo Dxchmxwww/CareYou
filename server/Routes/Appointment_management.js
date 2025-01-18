@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-const sql = require("mssql");
+const sql = require('mysql2');
 const config = require("../config");
 const verifyToken = require("../middleware/verifyToken");
 const moment  = require("moment");
@@ -37,11 +37,11 @@ router.post(
 		try {
 			const pool = await sql.connect(config.database);
 
-			// Check if the user is a caregiver
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, caregiver_id)
-				.query("SELECT role FROM CareYou.[Caregiver] WHERE id = @id");
+      // Check if the user is a caregiver
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, caregiver_id)
+        .query("SELECT role FROM CareYou.[Caregiver] WHERE id = @id");
 
 			if (
 				roleCheck.recordset.length === 0 ||
@@ -52,25 +52,25 @@ router.post(
 					.send("User is not authorized as a caregiver");
 			}
 
-			const GetCaregiveremail = await pool
-				.request()
-				.input("caregiver_id", sql.Int, caregiver_id)
-				.query(
-					"SELECT email FROM CareYou.[Caregiver] WHERE id = @caregiver_id AND role = 'Caregiver'"
-				);
+      const GetCaregiveremail = await pool
+        .request()
+        .input("caregiver_id", sql.Int, caregiver_id)
+        .query(
+          "SELECT email FROM CareYou.[Caregiver] WHERE id = @caregiver_id AND role = 'Caregiver'"
+        );
 
 			if (GetCaregiveremail.recordset.length === 0) {
 				return res.status(400).send("Caregiver not found");
 			}
 
-			const Caregiver_email = GetCaregiveremail.recordset[0].email;
-			console.log(Caregiver_email);
-			const Getelderly_id = await pool
-				.request()
-				.input("yourcaregiver_email", sql.VarChar, Caregiver_email)
-				.query(
-					"SELECT id FROM CareYou.[Elderly] WHERE yourcaregiver_email = @yourcaregiver_email AND role = 'Elderly'"
-				);
+      const Caregiver_email = GetCaregiveremail.recordset[0].email;
+      console.log(Caregiver_email);
+      const Getelderly_id = await pool
+        .request()
+        .input("yourcaregiver_email", sql.VarChar, Caregiver_email)
+        .query(
+          "SELECT id FROM CareYou.[Elderly] WHERE yourcaregiver_email = @yourcaregiver_email AND role = 'Elderly'"
+        );
 
 			if (Getelderly_id.recordset.length === 0) {
 				return res
@@ -80,8 +80,8 @@ router.post(
 
 			const elderly_id = Getelderly_id.recordset[0].id;
 
-			const createAppointmentReminderRequest = pool.request();
-			const createAppointmentReminderQuery = `
+      const createAppointmentReminderRequest = pool.request();
+      const createAppointmentReminderQuery = `
                 INSERT INTO CareYou.Appointment_Reminder 
                 (Appointment_name, Date, StartTime, EndTime, caregiver_id, elderly_id,Location) 
                 VALUES 
@@ -114,13 +114,13 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			// Check if the user is a caregiver
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-				);
+          // Check if the user is a caregiver
+          const roleCheck = await pool
+              .request()
+              .input("id", sql.Int, id)
+              .query(
+                  "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+              );
 
 			if (roleCheck.recordset.length === 0) {
 				return res
@@ -135,15 +135,15 @@ router.get(
 			const day = String(today.getDate()).padStart(2, "0");
 			const todayDate = `${year}-${month}-${day}`;
 
-			const getTodayAppointmentsQuery = `
-        SELECT 
-          Appointment_name, 
-          CONVERT(VARCHAR, StartTime, 108) AS StartTime, -- HH:mm:ss format
-          CONVERT(VARCHAR, EndTime, 108) AS EndTime,     -- HH:mm:ss format
-          Location
-        FROM CareYou.Appointment_reminder 
-        WHERE caregiver_id = @caregiver_id AND CONVERT(DATE, date) = @todayDate
-      `;
+          const getTodayAppointmentsQuery = `
+              SELECT 
+                  Appointment_name, 
+                  CONVERT(VARCHAR, StartTime, 108) AS StartTime, -- HH:mm:ss format
+                  CONVERT(VARCHAR, EndTime, 108) AS EndTime,     -- HH:mm:ss format
+                  Location
+              FROM CareYou.Appointment_reminder 
+              WHERE caregiver_id = @caregiver_id AND CONVERT(DATE, date) = @todayDate
+          `;
 
 			const todayAppointmentsResult = await pool
 				.request()
@@ -174,6 +174,72 @@ router.get(
 	}
 );
 
+// router.get(
+//   "/ShowTodayAppointmentOfElderForCaregiverHome",
+//   verifyToken, // Middleware to verify token
+//   async (req, res) => {
+//     try {
+//       const pool = await sql.connect(config);
+//       const id = req.user.id;
+
+//       // Check if the user is a caregiver
+//       const roleCheck = await pool
+//         .request()
+//         .input("id", sql.Int, id)
+//         .query(
+//           "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+//         );
+
+//       if (roleCheck.recordset.length === 0) {
+//         return res.status(403).send("User is not authorized as a caregiver");
+//       }
+
+//       // Get today's date
+//       const today = new Date();
+//       const year = today.getFullYear();
+//       const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+//       const day = String(today.getDate()).padStart(2, "0");
+//       const todayDate = `${year}-${month}-${day}`;
+
+//       const getTodayAppointmentsQuery = `
+//         SELECT 
+//           Appointment_name, 
+//           CONVERT(VARCHAR, StartTime, 108) AS StartTime, -- HH:mm:ss format
+//           CONVERT(VARCHAR, EndTime, 108) AS EndTime,     -- HH:mm:ss format
+//           Location
+//         FROM CareYou.Appointment_reminder 
+//         WHERE caregiver_id = @caregiver_id AND CONVERT(DATE, date) = @todayDate
+//       `;
+
+//       const todayAppointmentsResult = await pool
+//         .request()
+//         .input("caregiver_id", sql.Int, id)
+//         .input("todayDate", sql.Date, todayDate)
+//         .query(getTodayAppointmentsQuery);
+
+//       if (todayAppointmentsResult.recordset.length === 0) {
+//         return res.status(404).send("No appointments found for today");
+//       }
+
+//       // Format the appointments
+//       const formattedAppointments = todayAppointmentsResult.recordset.map(
+//         (appointment) => ({
+//           Appointment_name: appointment.Appointment_name,
+//           StartTime: appointment.StartTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
+//           EndTime: appointment.EndTime.substring(0, 5), // Extract "HH:mm" from 'HH:mm:ss'
+//           Location: appointment.Location,
+//         })
+//       );
+
+//       console.log("Formatted appointments:", formattedAppointments);
+//       res.status(200).json(formattedAppointments);
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).send("Internal Server Error");
+//     }
+//   }
+// );
+
 router.get(
 	"/ShowAppointmentListForElderlyAppointmentBoxs",
 	verifyToken,
@@ -182,13 +248,13 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			// Check if the user is an elderly
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
-				);
+      // Check if the user is an elderly
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
+        );
 
 			if (roleCheck.recordset.length === 0) {
 				return res.status(403).send("Unauthorized access");
@@ -210,7 +276,7 @@ router.get(
                     SELECT 
                         *
                     FROM 
-                        CareYou.[Appointment_reminder] 
+                        careyou.[Appointment_reminder] 
                     WHERE 
                         elderly_id = @elderly_id
                         AND Date >= @today 
@@ -270,13 +336,13 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			// Check if the user is a caregiver
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-				);
+      // Check if the user is a caregiver
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
 
 			if (roleCheck.recordset.length === 0) {
 				return res
@@ -296,7 +362,7 @@ router.get(
 			// Query to get today's pill reminders
 			const getTodayPillRemindersQuery = `
                 SELECT Pill_name, Dosage, Time
-                FROM CareYou.Pill_reminder 
+                FROM careyou.Pill_reminder 
                 WHERE caregiver_id = @caregiver_id AND date = @todayDate
             `;
 			const todayPillRemindersResult = await pool
@@ -327,13 +393,13 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			// Check if the user is an elderly
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
-				);
+      // Check if the user is an elderly
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
+        );
 
 			if (roleCheck.recordset.length === 0) {
 				return res.status(403).send("Unauthorized access");
@@ -354,7 +420,7 @@ router.get(
                     SELECT 
                         *
                     FROM 
-                        CareYou.[Appointment_reminder] 
+                        careyou.[Appointment_reminder] 
                     WHERE 
                         elderly_id = @elderly_id
                         AND Date >= @today 
@@ -384,26 +450,192 @@ router.get(
 						//     hour12: false
 						// });
 
-						return {
-							Appointment_id: row.Appointment_id,
-							Appointment_name: row.Appointment_name,
-							Date: row.Date,
-							StartTime: row.StartTime,
-							EndTime: row.EndTime,
-							Location: row.Location,
-						};
-					}
-				);
+          return {
+            Appointment_id: row.Appointment_id,
+            Appointment_name: row.Appointment_name,
+            Date: row.Date,
+            StartTime: row.StartTime,
+            EndTime: row.EndTime,
+            Location: row.Location,
+          };
+        });
 
-				res.status(200).json(AppointmentList);
-			} else {
-				
-			}
-		} catch (err) {
-			console.error(err);
-			res.status(500).send("Internal Server Error");
-		}
-	}
+        res.status(200).json(AppointmentList);
+      } else {
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+
+router.get(
+  "/ShowAllInfoAppointmentRemailderforCaregiver",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const pool = await sql.connect(config);
+      const id = req.user.id;
+
+      // Check if the user is a caregiver
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
+
+      if (roleCheck.recordset.length === 0) {
+        return res.status(403).send("User is not authorized as a caregiver");
+      }
+
+      // Get today's date
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayDate = `${year}-${month}-${day}`;
+
+      console.log(todayDate);
+
+      // Query to get today's pill reminders
+      const getTodayPillRemindersQuery = `
+                SELECT Pill_name, Dosage, Time
+                FROM CareYou.Pill_reminder 
+                WHERE caregiver_id = @caregiver_id AND date = @todayDate
+            `;
+      const todayPillRemindersResult = await pool
+        .request()
+        .input("caregiver_id", sql.Int, id)
+        .input("todayDate", sql.Date, todayDate)
+        .query(getTodayPillRemindersQuery);
+
+      if (todayPillRemindersResult.recordset.length === 0) {
+        return res.status(404).send("No pill reminders found for today");
+      }
+
+      res.status(200).json(todayPillRemindersResult.recordset);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+router.get(
+  "/ShowAppointmentReminderListforCaregiver",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const pool = await sql.connect(config);
+      const id = req.user.id;
+
+      const RoleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
+
+      if (RoleCheck.recordset.length > 0) {
+        console.log("User is authorized as a caregiver");
+      }
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
+      const day = String(today.getDate()).padStart(2, "0");
+
+      const todayDate = `${year}-${month}-${day}`;
+      console.log(todayDate);
+
+      const CaregiverAppointmentList = await pool
+        .request()
+        .input("caregiver_id", sql.Int, id)
+        .input("today", sql.Date, todayDate)
+        .query(
+          "SELECT * FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
+        );
+
+      if (CaregiverAppointmentList.recordset.length > 0) {
+        const AppointmentList = CaregiverAppointmentList.recordset.map(
+          (row) => ({
+            Appointment_id: row.Appointment_id,
+            Appointment_name: row.Appointment_name,
+            Date: row.Date,
+            StartTime: row.StartTime,
+            EndTime: row.EndTime,
+            Location: row.Location,
+          })
+        );
+        res.status(200).json(AppointmentList);
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send(err.message);
+    }
+  }
+);
+
+router.get(
+  "/ShowAppointmentListForElderlyAppointmentBoxs",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const pool = await sql.connect(config);
+      const id = req.user.id;
+
+      // Check if the user is an elderly
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
+        );
+
+      if (roleCheck.recordset.length === 0) {
+        return res.status(403).send("Unauthorized access");
+      }
+
+      // Get today's date in 'YYYY-MM-DD' format
+      const today = new Date().toISOString().split("T")[0];
+
+      // Fetch today's appointments for the elderly
+      const elderlyAppointmentList = await pool
+        .request()
+        .input("elderly_id", sql.Int, id)
+        .input("today", sql.Date, today).query(`
+                    SELECT 
+                        Appointment_name, Date, StartTime, EndTime, Location
+                    FROM 
+                        CareYou.[Appointment_reminder] 
+                    WHERE 
+                        elderly_id = @elderly_id
+                        AND Date >= @today 
+                `);
+
+      if (elderlyAppointmentList.recordset.length > 0) {
+        const AppointmentList = elderlyAppointmentList.recordset.map((row) => ({
+          Appointment_name: row.Appointment_name,
+          Date: row.Date,
+          StartTime: new Date(row.StartTime)
+            .toISOString()
+            .split("T")[1]
+            .substring(0, 5), // Format to HH:mm
+          EndTime: new Date(row.EndTime)
+            .toISOString()
+            .split("T")[1]
+            .substring(0, 5), // Format to HH:mm
+          Location: row.Location,
+        }));
+        res.status(200).json(AppointmentList);
+      } else {
+        throw err;
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+    }
+  }
 );
 
 router.get(
@@ -414,23 +646,23 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			const RoleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-				);
+      const RoleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
 
 			if (RoleCheck.recordset.length > 0) {
 				console.log("User is authorized as a caregiver");
 			}
 
-			const CaregiverAppointmentList = await pool
-				.request()
-				.input("caregiver_id", sql.Int, id)
-				.query(
-					"SELECT Appointment_name, Date, StartTime, EndTime,Location FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id"
-				);
+      const CaregiverAppointmentList = await pool
+        .request()
+        .input("caregiver_id", sql.Int, id)
+        .query(
+          "SELECT Appointment_name, Date, StartTime, EndTime,Location FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id"
+        );
 
 			if (CaregiverAppointmentList.recordset.length > 0) {
 				const AppointmentList = CaregiverAppointmentList.recordset.map(
@@ -461,12 +693,12 @@ router.get(
 			const pool = await sql.connect(config);
 			const id = req.user.id;
 
-			const RoleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-				);
+      const RoleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
 
 			if (RoleCheck.recordset.length > 0) {
 				console.log("User is authorized as a caregiver");
@@ -480,13 +712,13 @@ router.get(
 			console.log(todayDate); 
             
 
-			const CaregiverAppointmentList = await pool
-				.request()
-				.input("caregiver_id", sql.Int, id)
-				.input("today", sql.Date, todayDate)
-				.query(
-					"SELECT * FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
-				);
+      const CaregiverAppointmentList = await pool
+        .request()
+        .input("caregiver_id", sql.Int, id)
+        .input("today", sql.Date, todayDate)
+        .query(
+          "SELECT * FROM CareYou.[Appointment_reminder] WHERE caregiver_id = @caregiver_id AND Date >= @today"
+        );
 
 			if (CaregiverAppointmentList.recordset.length > 0) {
 				const AppointmentList = CaregiverAppointmentList.recordset.map(
@@ -518,13 +750,13 @@ router.get(
 			const id = req.user.id;
 			const pool = await sql.connect(config);
 
-			// Check if the user is a caregiver
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
-				);
+      // Check if the user is a caregiver
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Elderly] WHERE id = @id AND role = 'Elderly'"
+        );
 
 			if (roleCheck.recordset.length === 0) {
 				return res
@@ -544,7 +776,7 @@ router.get(
 			// Fetch today's appointments for the elderly user
 			const getTodayAppointmentsQuery = `
                 SELECT Appointment_name, Date, StartTime, EndTime,Location
-                FROM CareYou.Appointment_reminder 
+                FROM careyou.Appointment_reminder 
                 WHERE elderly_id = @elderly_id AND date = @todayDate
             `;
 			const todayAppointmentsResult = await pool
@@ -605,11 +837,11 @@ router.put(
 		try {
 			const pool = await sql.connect(config.database);
 
-			// Check if the user is a caregiver
-			const roleCheck = await pool
-				.request()
-				.input("id", sql.Int, caregiver_id)
-				.query("SELECT role FROM CareYou.[Caregiver] WHERE id = @id");
+      // Check if the user is a caregiver
+      const roleCheck = await pool
+        .request()
+        .input("id", sql.Int, caregiver_id)
+        .query("SELECT role FROM CareYou.[Caregiver] WHERE id = @id");
 
 			if (
 				roleCheck.recordset.length === 0 ||
@@ -623,7 +855,7 @@ router.put(
 			// Fetch the existing appointment reminder to preserve unchanged fields
 			const fetchAppointmentQuery = `
                 SELECT *
-                FROM CareYou.Appointment_reminder
+                FROM careyou.Appointment_reminder
                 WHERE Appointment_id = @Appointment_id
                   AND caregiver_id = @caregiver_id
             `;
@@ -643,11 +875,10 @@ router.put(
 
 			const existingAppointment = fetchAppointmentResult.recordset[0];
 
-			// Prepare the update query based on the provided fields
-			const updateAppointmentRequest = pool.request();
-			let updateAppointmentQuery =
-				"UPDATE CareYou.Appointment_reminder SET ";
-			const updateParams = [];
+      // Prepare the update query based on the provided fields
+      const updateAppointmentRequest = pool.request();
+      let updateAppointmentQuery = "UPDATE CareYou.Appointment_reminder SET ";
+      const updateParams = [];
 
 			if (Appointment_name !== undefined) {
 				updateAppointmentQuery +=
@@ -759,12 +990,12 @@ router.delete(
 
 			const id = req.user.id;
 
-			const RoleCheck = await pool
-				.request()
-				.input("id", sql.Int, id)
-				.query(
-					"SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
-				);
+      const RoleCheck = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query(
+          "SELECT * FROM CareYou.[Caregiver] WHERE id = @id AND role = 'Caregiver'"
+        );
 
 			if (RoleCheck.recordset.length === 0) {
 				return res
@@ -777,11 +1008,11 @@ router.delete(
 			// Check if the appointment exists and belongs to the authenticated user
 			const checkAppointmentQuery = `
                 SELECT *
-                FROM CareYou.Appointment_reminder
+                FROM careyou.Appointment_reminder
                 WHERE Appointment_id = @Appointment_id
                   AND caregiver_id = (
                       SELECT id
-                      FROM CareYou.[Caregiver]
+                      FROM careyou.[Caregiver]
                       WHERE id = @id
                   )
             `;
@@ -797,8 +1028,8 @@ router.delete(
 				});
 			}
 
-			// Delete the appointment
-			const deleteAppointmentQuery = `
+      // Delete the appointment
+      const deleteAppointmentQuery = `
                 DELETE FROM CareYou.Appointment_reminder
                 WHERE Appointment_id = @Appointment_id
             `;

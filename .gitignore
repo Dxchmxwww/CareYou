@@ -1,4 +1,4 @@
-
+.env
 careyou/pubspec.lock
-node_modules/
+server/node_modules/
 *.lock

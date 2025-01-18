@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const sql = require("mssql");
+const sql = require('mysql2');
 const config = require("../config");
 const bcrypt = require("bcryptjs");
 const verifyToken = require("../middleware/verifyToken");
@@ -13,9 +13,9 @@ router.get("/Caregiver", verifyToken, async (req, res) => {
 		// Check if the user is a caregiver
 		const roleCheck = await pool.request().input("id", sql.Int, caregiverId)
 			.query(`
-                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
+                SELECT role FROM careyou.[Caregiver] WHERE id = @id
                 UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
+                SELECT role FROM careyou.[Elderly] WHERE id = @id
             `);
 
 		if (roleCheck.recordset[0].role !== "Caregiver") {
@@ -28,7 +28,7 @@ router.get("/Caregiver", verifyToken, async (req, res) => {
 		// Fetch caregiver information (username, email, yourelderly_email)
 		const caregiverInfoQuery = `
             SELECT username, email, password, yourelderly_email ,yourelderly_relation
-            FROM CareYou.[Caregiver] 
+            FROM careyou.[Caregiver] 
             WHERE id = @id
         `;
 		const caregiverInfoResult = await pool
@@ -44,7 +44,7 @@ router.get("/Caregiver", verifyToken, async (req, res) => {
 
 		const elderInfoQuery = `
             SELECT username
-            FROM CareYou.[Elderly]
+            FROM careyou.[Elderly]
             WHERE email = @yourelderly_email
         `;
 		const elderInfoResult = await pool
@@ -89,70 +89,70 @@ router.get("/Caregiver", verifyToken, async (req, res) => {
 
 router.get("/Elderly", verifyToken, async (req, res) => {
 	try {
-		const elderlyId = req.user.id;
-		const pool = await sql.connect(config);
-
-		// Check if the user is an elderly
-		const roleCheck = await pool.request().input("id", sql.Int, elderlyId)
-			.query(`
-                SELECT role FROM CareYou.[Caregiver] WHERE id = @id
-                UNION
-                SELECT role FROM CareYou.[Elderly] WHERE id = @id
-            `);
-
-		if (roleCheck.recordset[0] == "Elderly") {
-			console.log(roleCheck.recordset[0]);
-			// If user is not a caregiver, send appropriate response
-			return res.status(403).send("User is not authorized as a Elderly");
-		}
-
-		const elderlyInfoQuery = `
-            SELECT username, email, yourcaregiver_email
-            FROM CareYou.[Elderly] 
-            WHERE id = @id
-        `;
-		const elderlyInfoResult = await pool
-			.request()
-			.input("id", sql.Int, elderlyId)
-			.query(elderlyInfoQuery);
-
-		if (elderlyInfoResult.recordset.length === 0) {
-			return res.status(404).send("Elderly information not found");
-		}
-
-		const elderlyInfo = elderlyInfoResult.recordset[0];
-		const caregiverEmail = elderlyInfo.yourcaregiver_email;
-
+	  const elderlyId = req.user.id;
+	  const pool = await sql.connect(config);
+  
+	  // Check if the user is an elderly
+	  const roleCheck = await pool.request().input("id", sql.Int, elderlyId)
+		.query(`
+		  SELECT role FROM CareYou.[Caregiver] WHERE id = @id
+		  UNION
+		  SELECT role FROM CareYou.[Elderly] WHERE id = @id
+		`);
+  
+	  if (roleCheck.recordset[0].role !== "Elderly") {
+		// If user is not an elderly, send appropriate response
+		return res.status(403).send("User is not authorized as an Elderly");
+	  }
+  
+	  // Fetch elderly information
+	  const elderlyInfoQuery = `
+		SELECT username, email, yourcaregiver_email
+		FROM CareYou.[Elderly] 
+		WHERE id = @id
+	  `;
+	  const elderlyInfoResult = await pool.request()
+		.input("id", sql.Int, elderlyId)
+		.query(elderlyInfoQuery);
+  
+	  if (elderlyInfoResult.recordset.length === 0) {
+		return res.status(404).send("Elderly information not found");
+	  }
+  
+	  const elderlyInfo = elderlyInfoResult.recordset[0];
+	  const caregiverEmail = elderlyInfo.yourcaregiver_email;
+  
+	  // Fetch caregiver username based on email
+	  let caregiverUsername = "You don't have a caregiver.";
+	  if (caregiverEmail) {
 		const caregiverUsernameQuery = `
-            SELECT username
-            FROM CareYou.[Caregiver] 
-            WHERE email = @yourcaregiver_email
-        `;
-		const caregiverUsernameResult = await pool
-			.request()
-			.input("yourcaregiver_email", sql.VarChar, caregiverEmail)
-			.query(caregiverUsernameQuery);
-
-		if (caregiverUsernameResult.recordset.length === 0) {
-			return res
-				.status(404)
-				.send("Caregiver username information not found");
+		  SELECT username
+		  FROM CareYou.[Caregiver] 
+		  WHERE email = @yourcaregiver_email
+		`;
+		const caregiverUsernameResult = await pool.request()
+		  .input("yourcaregiver_email", sql.VarChar, caregiverEmail)
+		  .query(caregiverUsernameQuery);
+  
+		if (caregiverUsernameResult.recordset.length > 0) {
+		  caregiverUsername = caregiverUsernameResult.recordset[0].username;
 		}
-
-		const caregiverUsername = caregiverUsernameResult.recordset[0];
-
-		const currentDate = new Date().toLocaleString("en-us", {
-			weekday: "short",
-			day: "numeric",
-			year: "numeric",
-		});
-
-		res.json({
-			username: elderlyInfo.username,
-			email: elderlyInfo.email,
-			your_caregiver: caregiverUsername.username,
-			currentDate: currentDate,
-		});
+	  }
+  
+	  // Format current date
+	  const currentDate = new Date().toLocaleString("en-us", {
+		weekday: "short",
+		day: "numeric",
+		year: "numeric",
+	  });
+  
+	  res.json({
+		username: elderlyInfo.username,
+		email: elderlyInfo.email,
+		your_caregiver: caregiverUsername,
+		currentDate: currentDate,
+	  });
+  
 	} catch (err) {
 		console.error(err);
 		res.status(500).send("Internal Server Error");
@@ -174,9 +174,9 @@ router.put("/EditPassword", verifyToken, async (req, res) => {
 
 		// Check if the user is a caregiver or elderly
 		const roleCheckQuery = `
-            SELECT 'Caregiver' AS role FROM CareYou.[Caregiver] WHERE id = @id
+            SELECT 'Caregiver' AS role FROM careyou.[Caregiver] WHERE id = @id
             UNION
-            SELECT 'Elderly' AS role FROM CareYou.[Elderly] WHERE id = @id
+            SELECT 'Elderly' AS role FROM careyou.[Elderly] WHERE id = @id
         `;
 		const roleCheckResult = await pool
 			.request()
@@ -194,14 +194,14 @@ router.put("/EditPassword", verifyToken, async (req, res) => {
 		if (userRole === "Caregiver") {
 			fetchPasswordQuery = `
                 SELECT password
-                FROM CareYou.[Caregiver]
+                FROM careyou.[Caregiver]
                 WHERE id = @id
             `;
 			tableName = "Caregiver";
 		} else if (userRole === "Elderly") {
 			fetchPasswordQuery = `
                 SELECT password
-                FROM CareYou.[Elderly]
+                FROM careyou.[Elderly]
                 WHERE id = @id
             `;
 			tableName = "Elderly";
@@ -231,7 +231,7 @@ router.put("/EditPassword", verifyToken, async (req, res) => {
 
 		// Update the password in the appropriate table
 		const updatePasswordQuery = `
-            UPDATE CareYou.[${tableName}]
+            UPDATE careyou.[${tableName}]
             SET password = @hashedNewPassword
             WHERE id = @id
         `;
@@ -256,9 +256,9 @@ router.get("/Showusername", verifyToken, async (req, res) => {
 
 		// Check if the user is a caregiver or elderly
 		const roleCheckQuery = `
-            SELECT 'Caregiver' AS role FROM CareYou.[Caregiver] WHERE id = @id
+            SELECT 'Caregiver' AS role FROM careyou.[Caregiver] WHERE id = @id
             UNION
-            SELECT 'Elderly' AS role FROM CareYou.[Elderly] WHERE id = @id
+            SELECT 'Elderly' AS role FROM careyou.[Elderly] WHERE id = @id
         `;
 		const roleCheckResult = await pool
 			.request()
@@ -275,12 +275,12 @@ router.get("/Showusername", verifyToken, async (req, res) => {
 		// Determine query and table based on user role
 		if (userRole === "Caregiver") {
 			usernameQuery = `
-                SELECT username FROM CareYou.[Caregiver] WHERE id = @id
+                SELECT username FROM careyou.[Caregiver] WHERE id = @id
             `;
 			tableName = "Caregiver";
 		} else if (userRole === "Elderly") {
 			usernameQuery = `
-                SELECT username FROM CareYou.[Elderly] WHERE id = @id
+                SELECT username FROM careyou.[Elderly] WHERE id = @id
             `;
 			tableName = "Elderly";
 		}
@@ -324,9 +324,9 @@ router.put("/EditUsername", verifyToken, async (req, res) => {
 
 		// Check if the user is a caregiver or elderly
 		const roleCheckQuery = `
-            SELECT 'Caregiver' AS role FROM CareYou.[Caregiver] WHERE id = @id
+            SELECT 'Caregiver' AS role FROM careyou.[Caregiver] WHERE id = @id
             UNION
-            SELECT 'Elderly' AS role FROM CareYou.[Elderly] WHERE id = @id
+            SELECT 'Elderly' AS role FROM careyou.[Elderly] WHERE id = @id
         `;
 		const roleCheckResult = await pool
 			.request()
@@ -343,14 +343,14 @@ router.put("/EditUsername", verifyToken, async (req, res) => {
 		// Determine query and table based on user role
 		if (userRole === "Caregiver") {
 			updateUsernameQuery = `
-                UPDATE CareYou.[Caregiver]
+                UPDATE careyou.[Caregiver]
                 SET username = @newUsername
                 WHERE id = @id
             `;
 			tableName = "Caregiver";
 		} else if (userRole === "Elderly") {
 			updateUsernameQuery = `
-                UPDATE CareYou.[Elderly]
+                UPDATE careyou.[Elderly]
                 SET username = @newUsername
                 WHERE id = @id
             `;

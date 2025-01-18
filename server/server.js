@@ -10,6 +10,15 @@ const verifyToken = require("./middleware/verifyToken");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const port = 8000;
+const baseUrl = process.env.BASE_URL;
+const androidUrl = process.env.ANDROID_URL;
+
+console.log(`Base URL: ${baseUrl}`);
+console.log(`Android URL: ${androidUrl}`);
+
+app.get('/', (req, res) => {
+	res.send('Hello World!');
+});
 
 app.use(corsMiddleware);
 
@@ -26,6 +35,8 @@ app.use('/appointments', AppointmentRoutes);
 app.use('/profiles', profileRoutes);
 app.use('/notifications', notificationsRoutes);
 
-app.listen(port, () => {
-	console.log(`Server is running on http://localhost:${port}`);
+
+
+app.listen(port, '0.0.0.0' ,() => {
+	console.log(`Server is running on ${port}`);
 });
