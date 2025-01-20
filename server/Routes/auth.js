@@ -11,131 +11,6 @@ const {pool} = require("../config");
 //-----------------------------------Register------------------------------------
 
 //http://localhost:8000/auth/register
-// router.post("/register", async (req, res) => {
-// 	const {
-// 		username,
-// 		password,
-// 		email,
-// 		role,
-// 		yourelderly_email,
-// 		yourelderly_relation,
-// 	} = req.body;
-
-// 	if (!role || (role !== "Caregiver" && role !== "Elderly")) {
-// 		return res.status(400).send("Invalid role");
-// 	}
-
-// 	try {
-// 		const pool = await sql.connect(config.database);
-
-// 		// Check if username or email already exists in both tables
-// 		const userCheck = await pool
-// 			.request()
-// 			.input("username", sql.VarChar, username)
-// 			.input("email", sql.VarChar, email).query(`
-//               SELECT username, email FROM careyou.[Caregiver] WHERE username = @username OR email = @email
-//               UNION
-//               SELECT username, email FROM careyou.[Elderly] WHERE username = @username OR email = @email
-//           `);
-
-// 		if (userCheck.recordset.length > 0) {
-// 			return res.status(400).send("Username or Email already exists");
-// 		}
-
-// 		const hashedPassword = await bcrypt.hash(password, 10);
-
-// 		if (role === "Caregiver") {
-// 			if (!username || !password || !email) {
-// 				return res
-// 					.status(400)
-// 					.send(
-// 						"Username, password, and email are required for Caregiver role"
-// 					);
-// 			}
-
-// 			if (yourelderly_email) {
-// 				const checkelderlyemail = await pool
-// 					.request()
-// 					.input("yourelderly_email", sql.VarChar, yourelderly_email)
-// 					.query(
-// 						"SELECT * FROM careyou.[Elderly] WHERE email = @yourelderly_email"
-// 					);
-
-// 				if (checkelderlyemail.recordset.length === 0) {
-// 					return res
-// 						.status(402)
-// 						.send("Elderly user not found with provided email");
-// 				}
-
-// 				const checkRepeatemail = await pool
-// 					.request()
-// 					.input("yourelderly_email", sql.VarChar, yourelderly_email)
-// 					.query(
-// 						"SELECT * FROM CareYou.[Caregiver] WHERE yourelderly_email = @yourelderly_email"
-// 					);
-
-// 				if (checkRepeatemail.recordset.length > 0) {
-// 					return res
-// 						.status(401)
-// 						.send("Elderly user already has caregiver");
-// 				}
-// 			}
-
-// 			await pool
-// 				.request()
-// 				.input("username", sql.VarChar, username)
-// 				.input("password", sql.VarChar, hashedPassword)
-// 				.input("email", sql.VarChar, email)
-// 				.input("role", sql.VarChar, role)
-// 				.input("yourelderly_email", sql.VarChar, yourelderly_email)
-// 				.input(
-// 					"yourelderly_relation",
-// 					sql.VarChar,
-// 					yourelderly_relation
-// 				)
-// 				.query(
-// 					"INSERT INTO careyou.[Caregiver] (username, password, email, role, yourelderly_email, yourelderly_relation) VALUES (@username, @password, @email, @role, @yourelderly_email, @yourelderly_relation)"
-// 				);
-
-// 			if (yourelderly_email) {
-// 				await pool
-// 					.request()
-// 					.input("yourcaregiver_email", sql.VarChar, email)
-// 					.input("yourelderly_email", sql.VarChar, yourelderly_email)
-// 					.query(
-// 						"UPDATE CareYou.[Elderly] SET yourcaregiver_email = @yourcaregiver_email WHERE email = @yourelderly_email"
-// 					);
-// 			}
-
-// 			res.status(201).send("Caregiver registered successfully");
-// 		} else if (role === "Elderly") {
-// 			if (!username || !password || !email) {
-// 				return res
-// 					.status(400)
-// 					.send(
-// 						"Username, password, and email are required for Elderly role"
-// 					);
-// 			}
-
-// 			await pool
-// 				.request()
-// 				.input("username", sql.VarChar, username)
-// 				.input("password", sql.VarChar, hashedPassword)
-// 				.input("email", sql.VarChar, email)
-// 				.input("role", sql.NVarChar, role)
-// 				.query(
-// 					"INSERT INTO careyou.[Elderly] (username, password, email, role) VALUES (@username, @password, @email, @role)"
-// 				);
-
-// 			res.status(201).send("Elderly registered successfully");
-// 		}
-	
-// 	} catch (error) {
-// 		console.error(error);
-// 		res.status(500).send("Server error");
-// 	}
-// });
-
 router.post("/register", async (req, res) => {
 	const {
 	  username,
@@ -229,14 +104,7 @@ router.post("/register", async (req, res) => {
 //-----------------------------------Authentication------------------------------------
 async function authenticateUser(email, password, selectedRole) {
 	try {
-		//const pool = await sql.connect(config.database);
-		// const userCheck = await pool
-		// 	.request()
-		// 	.input("email", sql.VarChar, email).query(`
-        //       SELECT id, email, password, role FROM careyou.[Caregiver] WHERE email = @email
-        //       UNION
-        //       SELECT id, email, password, role FROM careyou.[Elderly] WHERE email = @email 
-        //   `);
+		
 		const [userCheck] = await pool.promise().query(`
 			SELECT id, email, password, role 
 			FROM careyou.Caregiver 
